@@ -6,7 +6,7 @@ import { useTheme } from "@/components/ThemeProvider";
 import {
   LayoutDashboard, FolderKanban, CheckSquare, BarChart3,
   AlertTriangle, User, Settings, LogOut, Sun, Moon,
-  ChevronLeft, ChevronRight, Building2, BookOpen,
+  ChevronLeft, ChevronRight, Building2, BookOpen, Activity,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -22,6 +22,7 @@ const allNavItems: NavItem[] = [
   { label: "Proyectos", href: "/projects", icon: <FolderKanban size={18} /> },
   { label: "Tareas", href: "/tasks", icon: <CheckSquare size={18} /> },
   { label: "Estratégico", href: "/strategic", icon: <BarChart3 size={18} /> },
+  { label: "Tráfico", href: "/traffic", icon: <Activity size={18} /> },
   { label: "Alertas", href: "/alerts", icon: <AlertTriangle size={18} /> },
   { label: "Guias", href: "/guias", icon: <BookOpen size={18} /> },
   { label: "Perfil", href: "/profile", icon: <User size={18} /> },
