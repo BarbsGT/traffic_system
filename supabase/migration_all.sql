@@ -349,21 +349,10 @@ CREATE OR REPLACE TRIGGER trg_task_history
   FOR EACH ROW EXECUTE FUNCTION log_task_change();
 
 -- =============================================
--- PART 7: RBAC v2 Helper Functions (migration_rbac_v2_p1 + p2)
+-- PART 7: RBAC v2 Helper Functions
 -- =============================================
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
-    CREATE TYPE user_role AS ENUM ('SUPERADMIN', 'SYSADMIN', 'DIRECTOR', 'COLABORADOR');
-  END IF;
-END $$;
-
-ALTER TABLE profiles ALTER COLUMN role TYPE text;
-DROP TYPE IF EXISTS user_role CASCADE;
-CREATE TYPE user_role AS ENUM ('SUPERADMIN', 'SYSADMIN', 'DIRECTOR', 'COLABORADOR');
-ALTER TABLE profiles ALTER COLUMN role TYPE user_role USING role::user_role;
-ALTER TABLE profiles ALTER COLUMN role SET DEFAULT 'COLABORADOR';
+-- Note: user_role type is already created in PART 1 with all values.
 
 CREATE OR REPLACE FUNCTION is_superadmin()
 RETURNS BOOLEAN AS $$
