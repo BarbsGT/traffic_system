@@ -1,8 +1,7 @@
-# Kairos — El momento exacto
+# AgencyGrid — Visibilidad 360° para tu agencia
 
-Sistema de gestión de tráfico Synapse con autenticación Supabase,
-panel de vidrio esmerilado (glassmorphism), y jerarquía de 5 niveles:
-Agencia → Cuenta → Equipo → Proyecto → Tarea.
+Web App SaaS B2B para agencias de publicidad. Gestión multi-cuenta con
+visibilidad 360°, aislamiento multi-marca y trazabilidad total tiempo/costo por cliente.
 
 ## Stack
 

@@ -4,9 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import {
-  LayoutDashboard, FolderKanban, CheckSquare, BarChart3,
-  AlertTriangle, User, Settings, LogOut, Sun, Moon,
-  ChevronLeft, ChevronRight, Building2, BookOpen, Activity,
+  LayoutDashboard, AlertTriangle, User, Settings, LogOut, Sun, Moon,
+  ChevronLeft, ChevronRight, Building2, Activity,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -19,14 +18,10 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
-  { label: "Proyectos", href: "/projects", icon: <FolderKanban size={18} /> },
-  { label: "Tareas", href: "/tasks", icon: <CheckSquare size={18} /> },
-  { label: "Estratégico", href: "/strategic", icon: <BarChart3 size={18} /> },
-  { label: "Tráfico", href: "/traffic", icon: <Activity size={18} /> },
+  { label: "Mesa de Tráfico", href: "/traffic", icon: <Activity size={18} /> },
   { label: "Alertas", href: "/alerts", icon: <AlertTriangle size={18} /> },
-  { label: "Guias", href: "/guias", icon: <BookOpen size={18} /> },
   { label: "Perfil", href: "/profile", icon: <User size={18} /> },
-  { label: "Admin", href: "/admin/catalogos", icon: <Settings size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
+  { label: "Admin", href: "/admin/catalogos", icon: <Settings size={18} />, roles: ["SUPERADMIN", "SYSADMIN", "DIRECTOR"] },
   { label: "Usuarios", href: "/admin/users", icon: <Building2 size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
 ];
 
@@ -60,7 +55,7 @@ export function SidebarNav({ user }: { user: { id: string } }) {
       <div className="flex items-center gap-2 px-4 h-14 border-b shrink-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
         {!collapsed && (
           <span className="font-bold text-sm tracking-wide" style={{ color: "var(--accent-cyan)" }}>
-            KAIROS
+            AGENCYGRID
           </span>
         )}
         <button

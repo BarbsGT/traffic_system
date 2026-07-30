@@ -1,5 +1,5 @@
-# Kairos — El momento exacto
-## Synapse Traffic System
+# AgencyGrid — Visibilidad 360° para tu agencia
+## Web App SaaS B2B para agencias de publicidad
 
 ### Next.js 16 + Supabase + Tailwind CSS + Glassmorphism
 

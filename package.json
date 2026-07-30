@@ -1,8 +1,8 @@
 {
-  "name": "kairos",
+  "name": "agencygrid",
   "version": "1.0.0",
   "private": true,
-  "description": "Kairos — El momento exacto. Synapse Traffic System.",
+  "description": "AgencyGrid — Visibilidad 360° para tu agencia",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

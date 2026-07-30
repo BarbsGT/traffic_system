@@ -1,4 +1,4 @@
-# Kairos — Design System
+# AgencyGrid — Design System
 
 ## Glassmorphism
 - `.glass`: backdrop-filter blur, semi-transparent bg, border, shadow
@@ -7,7 +7,7 @@
 
 ## Theme
 - `data-theme` attribute on `<html>`
-- `kairos-theme` localStorage key
+- `agencygrid-theme` localStorage key
 - FOUC prevention script in `<head>`
 
 ## Typography

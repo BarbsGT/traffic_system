@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("kairos-theme") as Theme | null;
+      const stored = localStorage.getItem("agencygrid-theme") as Theme | null;
       if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
         setTheme("dark");
         document.documentElement.setAttribute("data-theme", "dark");
@@ -37,7 +37,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme(next);
     document.documentElement.setAttribute("data-theme", next);
     try {
-      localStorage.setItem("kairos-theme", next);
+      localStorage.setItem("agencygrid-theme", next);
     } catch {}
   };
 

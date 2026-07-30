@@ -8,7 +8,7 @@ export default function HomePage() {
     <div className="flex min-h-screen flex-col" style={{ background: "var(--background)" }}>
       <header className="flex items-center justify-between px-8 py-4">
         <span className="text-xl font-bold" style={{ color: "var(--accent-cyan)" }}>
-          KAIROS
+          AGENCYGRID
         </span>
         <div className="flex gap-4">
           <Link
@@ -24,14 +24,14 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center justify-center px-4 text-center">
         <div className="glass p-12 max-w-2xl animate-fadeIn">
           <h1 className="text-5xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-            Kairos
+            AgencyGrid
           </h1>
           <p className="text-xl mb-8" style={{ color: "var(--accent-cyan)" }}>
-            El momento exacto
+            Visibilidad 360° para tu agencia
           </p>
           <p className="mb-10 max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
-            Sistema de gestión de tráfico Synapse — Controla tus proyectos, tareas y equipo
-            con una interfaz de vidrio esmerilado diseñada para la productividad.
+            Gestiona múltiples cuentas, marcas, equipos y proyectos con trazabilidad total
+            de tiempo y costo por cliente.
           </p>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">

@@ -62,11 +62,11 @@ function IntroContent() {
   return (
     <div>
       <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-        Bienvenido a Kairos
+        Bienvenido a AgencyGrid
       </h2>
       <p className="mb-4" style={{ color: "var(--text-secondary)" }}>
-        Kairos es el sistema de gestión de tráfico Synapse. Te permite administrar
-        proyectos, tareas, equipos y recursos en un solo lugar.
+        AgencyGrid es una Web App SaaS B2B para agencias de publicidad. Te permite administrar
+        múltiples cuentas, marcas, equipos y proyectos con trazabilidad total.
       </p>
       <div className="glass p-6 mb-4">
         <h3 className="font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Flujo de Trabajo</h3>

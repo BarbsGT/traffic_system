@@ -1,5 +1,5 @@
 -- =============================================
--- Kairos — El momento exacto
+-- AgencyGrid — Visibilidad 360° para tu agencia
 -- Full Schema Migration
 -- =============================================
 

@@ -20,10 +20,9 @@ CREATE POLICY "domains_delete" ON domains FOR DELETE USING (is_superadmin());
 -- Seed domains for Grupo Lo Bueno and related organizations
 INSERT INTO domains (id, name, display_name) VALUES
   ('d0000000-0000-0000-0000-000000000001', 'lobueno.co', 'Grupo Lo Bueno'),
-  ('d0000000-0000-0000-0000-000000000002', 'semillasrt.com', 'Semillas RT'),
-  ('d0000000-0000-0000-0000-000000000003', 'agenciacentral.com', 'Agencia Central'),
-  ('d0000000-0000-0000-0000-000000000004', 'agenciadigital.mx', 'Agencia Digital'),
-  ('d0000000-0000-0000-0000-000000000005', 'creativastudio.com', 'Creativa Studio');
+  ('d0000000-0000-0000-0000-000000000002', 'agenciacentral.com', 'Agencia Central'),
+  ('d0000000-0000-0000-0000-000000000003', 'agenciadigital.mx', 'Agencia Digital'),
+  ('d0000000-0000-0000-0000-000000000004', 'creativastudio.com', 'Creativa Studio');
 
 -- Domain validation helper
 CREATE OR REPLACE FUNCTION is_valid_domain(email TEXT)

@@ -5,8 +5,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "Kairos — El momento exacto",
-  description: "Synapse Traffic System — Gestión de tráfico y proyectos",
+  title: "AgencyGrid — Visibilidad 360° para tu agencia",
+  description: "AgencyGrid — Web App SaaS B2B para agencias de publicidad",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -18,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             __html: `
               (function() {
                 try {
-                  var t = localStorage.getItem("kairos-theme");
+                  var t = localStorage.getItem("agencygrid-theme");
                   if (t !== "light" && t !== "dark") t = "dark";
                   document.documentElement.setAttribute("data-theme", t);
                 } catch(e) {}

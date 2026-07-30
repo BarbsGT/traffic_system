@@ -19,15 +19,36 @@ interface Profile {
 export function ProfileForm() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [userEmail, setUserEmail] = useState<string>("");
   const supabase = createClient();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) return;
-      supabase.from("profiles").select("*").eq("id", data.user.id).single().then(({ data: p }) => {
-        if (p) setProfile(p);
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data, error: authErr }) => {
+      if (cancelled) return;
+      if (!data.user || authErr) {
+        setProfile(null);
+        setError("No se pudo autenticar. Inicia sesión de nuevo.");
+        return;
+      }
+      setUserEmail(data.user.email || "");
+      supabase.from("profiles").select("*").eq("id", data.user.id).single().then(({ data: p, error: profErr }) => {
+        if (cancelled) return;
+        if (profErr || !p) {
+          setProfile(null);
+          setError(`Perfil no encontrado para ${data.user.email}. Ejecuta fix_jose_complete.sql en Supabase SQL Editor.`);
+          return;
+        }
+        setProfile(p);
       });
+    }).catch(() => {
+      if (!cancelled) {
+        setProfile(null);
+        setError("Error de conexión con Supabase.");
+      }
     });
+    return () => { cancelled = true; };
   }, [supabase]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -42,6 +63,17 @@ export function ProfileForm() {
     }).eq("id", profile.id);
     setSaving(false);
   };
+
+  if (error) {
+    return (
+      <div className="animate-fadeIn max-w-2xl">
+        <h1 className="text-2xl font-bold mb-6" style={{ color: "var(--text-primary)" }}>Perfil</h1>
+        <div className="rounded-xl p-6" style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
+          <p className="text-sm" style={{ color: "var(--accent-rose)" }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile) {
     return (

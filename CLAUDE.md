@@ -1,4 +1,4 @@
-# Kairos — El momento exacto
+# AgencyGrid — Visibilidad 360° para tu agencia
 
 ## Stack
 - Next.js 16 (App Router)
@@ -13,7 +13,7 @@
 - Use `var(--text-primary)`, `var(--accent-cyan)`, etc. for all colors
 - No hardcoded dark mode colors (e.g., `text-white`, `bg-gray-900`)
 - Glassmorphism: `.glass` for cards, `.sidebar-glass` for sidebar
-- Theme toggle sets `data-theme` on `<html>` + localStorage `kairos-theme`
+- Theme toggle sets `data-theme` on `<html>` + localStorage `agencygrid-theme`
 
 ## Database
 - Tables: profiles, projects, tasks, comments, project_messages

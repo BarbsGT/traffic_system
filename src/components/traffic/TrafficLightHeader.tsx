@@ -1,15 +1,10 @@
 "use client";
 
-import { useState } from "react";
-
-type ViewType = "list" | "board" | "analytics" | "calendar" | "table";
+type ViewType = "list" | "table";
 
 const views: { key: ViewType; label: string; icon: string }[] = [
-  { key: "list", label: "Lista", icon: "📋" },
-  { key: "board", label: "Tablero", icon: "🎴" },
-  { key: "analytics", label: "Analytics", icon: "📊" },
-  { key: "calendar", label: "Calendario", icon: "📅" },
-  { key: "table", label: "Tabla", icon: "⚙️" },
+  { key: "table", label: "Tabla", icon: "\u2699\uFE0F" },
+  { key: "list", label: "Lista", icon: "\uD83D\uDCCB" },
 ];
 
 export function TrafficLightHeader({ activeView, onViewChange }: { activeView: ViewType; onViewChange: (v: ViewType) => void }) {

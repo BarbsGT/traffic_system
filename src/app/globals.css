@@ -8,6 +8,7 @@
   --text-muted: #94A3B8;
   --border: #E2E8F0;
   --border-light: #F1F5F9;
+  --glass-bg: #FFFFFF;
 
   --accent-cyan: #0EA5E9;
   --accent-purple: #8B5CF6;
@@ -71,6 +72,7 @@
   --header-bg: #1E293B;
   --hover-bg: #1E293B;
   --card-bg: #1E293B;
+  --glass-bg: #1E293B;
   --card-border: #334155;
   --accordion-bg: #1E293B;
   --input-bg: #1E293B;
@@ -92,6 +94,34 @@ body {
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+
+.glass {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.glass:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border);
+}
+
+.sidebar-glass {
+  background: #0F172A;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.8);
+  --sidebar-text: rgba(255,255,255,0.65);
+  --sidebar-hover: rgba(255,255,255,0.08);
+}
+
+[data-theme="light"] .sidebar-glass {
+  background: #FFFFFF;
+  border-right: 1px solid var(--border);
+  color: var(--text-primary);
+  --sidebar-text: var(--text-secondary);
+  --sidebar-hover: var(--table-row-hover);
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }

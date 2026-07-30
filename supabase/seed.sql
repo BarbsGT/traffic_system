@@ -1,4 +1,4 @@
--- Seed data for Kairos
+-- Seed data for AgencyGrid
 -- All UUIDs use valid hex chars (0-9, a-f)
 
 -- Note: auth.users must have records first (handled by Supabase Auth)

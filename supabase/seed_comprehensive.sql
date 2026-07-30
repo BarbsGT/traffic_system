@@ -1,5 +1,5 @@
 -- =============================================
--- Kairos — Comprehensive Seed for Ad Agency Exercises
+-- AgencyGrid — Comprehensive Seed for Ad Agency Exercises
 -- =============================================
 -- INSTRUCTIONS:
 -- 1. First create users in Supabase Auth Dashboard with these emails
@@ -14,20 +14,16 @@
 -- SUPERADMIN:
 --   ana.admin@lobueno.co / Test1234!
 --   carlos.director@lobueno.co (DIRECTOR)
--- SYSADMIN:
---   luis.sys@semillasrt.com / Test1234!
 -- DIRECTORES:
 --   maria.directora@agenciacentral.com / Test1234!
 --   pedro.director@agenciadigital.mx / Test1234!
 -- COLABORADORES:
 --   sofia.colab@lobueno.co / Test1234!
---   jorge.colab@semillasrt.com / Test1234!
 --   ana.creativa@creativastudio.com / Test1234!
 --   luis.diseno@agenciacentral.com / Test1234!
 --   carmen.redaccion@agenciacentral.com / Test1234!
 --   diego.data@agenciadigital.mx / Test1234!
 --   valeria.social@lobueno.co / Test1234!
---   roberto.dev@semillasrt.com / Test1234!
 
 -- =============================================
 -- PROFILES (run AFTER auth.users exist)
@@ -49,11 +45,13 @@
 -- a0000000-... Agencia Digital
 -- a0000000-... Agencia Creativa
 
--- Additional agencies for exercises
+-- Base agencies (core Grupo Lo Bueno)
 INSERT INTO agencies (id, name, code) VALUES
+  ('a0000000-0000-0000-0000-000000000001', 'Agencia Central', 'AC'),
+  ('a0000000-0000-0000-0000-000000000002', 'Agencia Digital', 'AD'),
+  ('a0000000-0000-0000-0000-000000000003', 'Agencia Creativa', 'CR'),
   ('a0000000-0000-0000-0000-000000000010', 'Lo Bueno Publicidad', 'LBP'),
-  ('a0000000-0000-0000-0000-000000000011', 'Semillas RT Media', 'SRT'),
-  ('a0000000-0000-0000-0000-000000000012', 'Creativa Studio MX', 'CSM')
+  ('a0000000-0000-0000-0000-000000000011', 'Creativa Studio MX', 'CSM')
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================
@@ -63,7 +61,7 @@ ON CONFLICT (id) DO NOTHING;
 INSERT INTO accounts (id, name, agency_id, code) VALUES
   -- Agencia Central (a0000000-...-001)
   ('c0000000-0000-0000-0000-000000000010', 'Coca-Cola México', 'a0000000-0000-0000-0000-000000000001', 'CC-MX'),
-  ('c0000000-0000-0000-0000-000000000011', 'Nike Sport', 'a0000000-0000-0000-0000-000000000001', 'NK-SP'),
+  ('c0000000-0000-0000-0000-000000000011', 'Under Armour México', 'a0000000-0000-0000-0000-000000000001', 'UA-MX'),
   ('c0000000-0000-0000-0000-000000000012', 'Samsung Mobile', 'a0000000-0000-0000-0000-000000000001', 'SS-MOB'),
   -- Agencia Digital (a0000000-...-002)
   ('c0000000-0000-0000-0000-000000000013', 'Mercado Libre', 'a0000000-0000-0000-0000-000000000002', 'ML-LATAM'),
@@ -76,12 +74,9 @@ INSERT INTO accounts (id, name, agency_id, code) VALUES
   -- Lo Bueno Publicidad (a0000000-...-010)
   ('c0000000-0000-0000-0000-000000000019', 'Grupo Modelo', 'a0000000-0000-0000-0000-000000000010', 'GM-CER'),
   ('c0000000-0000-0000-0000-000000000020', 'Bimbo Global', 'a0000000-0000-0000-0000-000000000010', 'BB-GLB'),
-  -- Semillas RT Media
-  ('c0000000-0000-0000-0000-000000000021', 'Telcel México', 'a0000000-0000-0000-0000-000000000011', 'TC-MX'),
-  ('c0000000-0000-0000-0000-000000000022', 'BBVA México', 'a0000000-0000-0000-0000-000000000011', 'BBVA-MX'),
-  -- Creativa Studio MX
-  ('c0000000-0000-0000-0000-000000000023', 'Vans LatAm', 'a0000000-0000-0000-0000-000000000012', 'VN-LAT'),
-  ('c0000000-0000-0000-0000-000000000024', 'Adidas Originals', 'a0000000-0000-0000-0000-000000000012', 'AD-ORI')
+  -- Creativa Studio MX (a0000000-...-011)
+  ('c0000000-0000-0000-0000-000000000021', 'Under Armour LatAm', 'a0000000-0000-0000-0000-000000000011', 'UA-LAT'),
+  ('c0000000-0000-0000-0000-000000000022', 'Under Armour Performance', 'a0000000-0000-0000-0000-000000000011', 'UA-PRF')
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================
@@ -92,8 +87,8 @@ INSERT INTO teams (id, name, account_id, code) VALUES
   -- Coca-Cola México
   ('e0000000-0000-0000-0000-000000000010', 'Creative Coke', 'c0000000-0000-0000-0000-000000000010', 'CC-CR'),
   ('e0000000-0000-0000-0000-000000000011', 'Media Coke', 'c0000000-0000-0000-0000-000000000010', 'CC-MD'),
-  -- Nike Sport
-  ('e0000000-0000-0000-0000-000000000012', 'Nike Digital', 'c0000000-0000-0000-0000-000000000011', 'NK-DG'),
+  -- Under Armour México
+  ('e0000000-0000-0000-0000-000000000012', 'UA Digital', 'c0000000-0000-0000-0000-000000000011', 'UA-DG'),
   -- Samsung Mobile
   ('e0000000-0000-0000-0000-000000000013', 'Samsung Ads', 'c0000000-0000-0000-0000-000000000012', 'SS-AD'),
   -- Mercado Libre
@@ -106,10 +101,10 @@ INSERT INTO teams (id, name, account_id, code) VALUES
   ('e0000000-0000-0000-0000-000000000018', 'NF Social', 'c0000000-0000-0000-0000-000000000016', 'NF-SO'),
   -- Grupo Modelo
   ('e0000000-0000-0000-0000-000000000019', 'Modelo Brands', 'c0000000-0000-0000-0000-000000000019', 'GM-BR'),
-  -- Telcel
-  ('e0000000-0000-0000-0000-000000000020', 'Telcel Digital', 'c0000000-0000-0000-0000-000000000021', 'TC-DG'),
-  -- BBVA
-  ('e0000000-0000-0000-0000-000000000021', 'BBVA Fintech', 'c0000000-0000-0000-0000-000000000022', 'BBVA-FT')
+  -- Under Armour LatAm
+  ('e0000000-0000-0000-0000-000000000020', 'UA Lifestyle', 'c0000000-0000-0000-0000-000000000021', 'UA-LS'),
+  -- Under Armour Performance
+  ('e0000000-0000-0000-0000-000000000021', 'UA Performance', 'c0000000-0000-0000-0000-000000000022', 'UA-PR')
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================
@@ -120,9 +115,9 @@ INSERT INTO projects (id, name, description, status, priority, start_date, end_d
   -- Coca-Cola "Comparte una Coca-Cola" campaign
   ('f0000000-0000-0000-0000-000000000100', 'Comparte una Coca-Cola Verano', 'Campaña 360° para temporada de verano con activaciones digitales y OOH', 'IN_PROGRESS', 'HIGH', '2025-06-01', '2025-09-15', '#ED1C16'),
   ('f0000000-0000-0000-0000-000000000101', 'Coca-Cola Navidad 2025', 'Campaña navideña multicanal', 'PENDING', 'URGENT', '2025-10-01', '2025-12-31', '#ED1C16'),
-  -- Nike "Just Do It" Mexico
-  ('f0000000-0000-0000-0000-000000000102', 'Nike Run Club App', 'Lanzamiento de app para comunidad runner', 'IN_PROGRESS', 'HIGH', '2025-05-01', '2025-08-30', '#000000'),
-  ('f0000000-0000-0000-0000-000000000103', 'Nike Air Max Day', 'Campaña de lanzamiento Air Max 2025', 'COMPLETED', 'MEDIUM', '2025-03-15', '2025-04-30', '#000000'),
+  -- Under Armour "I WILL" Mexico
+  ('f0000000-0000-0000-0000-000000000102', 'UA Community App', 'Lanzamiento de app para comunidad fitness', 'IN_PROGRESS', 'HIGH', '2025-05-01', '2025-08-30', '#000000'),
+  ('f0000000-0000-0000-0000-000000000103', 'UA HOVR Launch', 'Campaña de lanzamiento新品 HOVR 2025', 'COMPLETED', 'MEDIUM', '2025-03-15', '2025-04-30', '#000000'),
   -- Samsung Galaxy Launch
   ('f0000000-0000-0000-0000-000000000104', 'Samsung Galaxy S25 Launch', 'Estrategia de lanzamiento para nuevo flagship', 'IN_PROGRESS', 'URGENT', '2025-07-01', '2025-10-31', '#1428A0'),
   ('f0000000-0000-0000-0000-000000000105', 'Galaxy AI Campaign', 'Campaña de adopción de funcionalidades AI', 'PENDING', 'HIGH', '2025-08-01', '2025-12-31', '#1428A0'),
@@ -135,12 +130,8 @@ INSERT INTO projects (id, name, description, status, priority, start_date, end_d
   -- Grupo Modelo
   ('f0000000-0000-0000-0000-000000000110', 'Corona Sunset Fest', 'Festival de verano Corona', 'IN_PROGRESS', 'HIGH', '2025-06-01', '2025-08-31', '#FBBF24'),
   ('f0000000-0000-0000-0000-000000000111', 'Modelo Especial FIFA', 'Activación Mundial de Clubes', 'PENDING', 'MEDIUM', '2025-09-01', '2025-12-31', '#1E293B'),
-  -- Telcel
-  ('f0000000-0000-0000-0000-000000000112', 'Telcel 5G Expansion', 'Campaña de adopción 5G', 'IN_PROGRESS', 'HIGH', '2025-04-01', '2025-12-31', '#E30019'),
-  -- BBVA
-  ('f0000000-0000-0000-0000-000000000113', 'BBVA App Banking', 'Campaña de adopción de banca móvil', 'PENDING', 'MEDIUM', '2025-08-01', '2025-11-30', '#0033A0'),
-  -- Adidas
-  ('f0000000-0000-0000-0000-000000000114', 'Adidas Originals Drop', 'Lanzamiento colección verano', 'COMPLETED', 'MEDIUM', '2025-04-01', '2025-06-30', '#000000')
+  -- Under Armour
+  ('f0000000-0000-0000-0000-000000000112', 'UA HOVR Collection Drop', 'Lanzamiento colección verano', 'COMPLETED', 'MEDIUM', '2025-04-01', '2025-06-30', '#000000')
 ON CONFLICT (id) DO NOTHING;
 
 -- =============================================
@@ -154,10 +145,10 @@ INSERT INTO tasks (id, title, description, status, priority, project_id, estimat
   ('f0000000-0000-0000-0000-000000000202', 'Producción spot TV', 'Grabar y editar comercial 30s', 'PENDING', 'URGENT', 'f0000000-0000-0000-0000-000000000100', 80, '2025-07-01', '2025-08-15'),
   ('f0000000-0000-0000-0000-000000000203', 'Compra de medios digitales', 'Plan de medios Meta + Google + TikTok', 'IN_PROGRESS', 'HIGH', 'f0000000-0000-0000-0000-000000000100', 24, '2025-06-15', '2025-07-30'),
   ('f0000000-0000-0000-0000-000000000204', 'Reporte semanal KPIs', 'Dashboard semanal de rendimiento', 'PENDING', 'MEDIUM', 'f0000000-0000-0000-0000-000000000100', 6, '2025-07-01', '2025-09-15'),
-  -- Nike Run Club
-  ('f0000000-0000-0000-0000-000000000205', 'Diseño UI/UX App', 'Diseñar interfaz de app runner', 'COMPLETED', 'URGENT', 'f0000000-0000-0000-0000-000000000102', 60, '2025-05-01', '2025-06-15'),
+  -- UA Community App
+  ('f0000000-0000-0000-0000-000000000205', 'Diseño UI/UX App', 'Diseñar interfaz de app fitness', 'COMPLETED', 'URGENT', 'f0000000-0000-0000-0000-000000000102', 60, '2025-05-01', '2025-06-15'),
   ('f0000000-0000-0000-0000-000000000206', 'Desarrollo iOS', 'Desarrollar app para iOS Swift', 'IN_PROGRESS', 'HIGH', 'f0000000-0000-0000-0000-000000000102', 120, '2025-06-01', '2025-08-01'),
-  ('f0000000-0000-0000-0000-000000000207', 'Estrategia influencers', 'Contactar 10 runners influencers', 'PENDING', 'MEDIUM', 'f0000000-0000-0000-0000-000000000102', 16, '2025-07-15', '2025-08-15'),
+  ('f0000000-0000-0000-0000-000000000207', 'Estrategia influencers', 'Contactar 10 fitness influencers', 'PENDING', 'MEDIUM', 'f0000000-0000-0000-0000-000000000102', 16, '2025-07-15', '2025-08-15'),
   ('f0000000-0000-0000-0000-000000000208', 'Evento lanzamiento CDMX', 'Organizar evento presencial', 'PENDING', 'HIGH', 'f0000000-0000-0000-0000-000000000102', 40, '2025-07-01', '2025-08-30'),
   -- Samsung Galaxy S25
   ('f0000000-0000-0000-0000-000000000209', 'Estrategia de contenidos', 'Plan de contenido para lanzamiento', 'COMPLETED', 'URGENT', 'f0000000-0000-0000-0000-000000000104', 20, '2025-07-01', '2025-07-15'),
@@ -176,29 +167,12 @@ INSERT INTO tasks (id, title, description, status, priority, project_id, estimat
   ('f0000000-0000-0000-0000-000000000219', 'Identidad visual festival', 'Crear branding del evento', 'COMPLETED', 'HIGH', 'f0000000-0000-0000-0000-000000000110', 24, '2025-06-01', '2025-06-20'),
   ('f0000000-0000-0000-0000-000000000220', 'Activaciones digitales', 'Estrategia de ads para el festival', 'IN_PROGRESS', 'HIGH', 'f0000000-0000-0000-0000-000000000110', 32, '2025-06-20', '2025-08-01'),
   ('f0000000-0000-0000-0000-000000000221', 'Coordinación de talento', 'Gestión de artistas y performers', 'BLOCKED', 'URGENT', 'f0000000-0000-0000-0000-000000000110', 20, '2025-07-01', '2025-08-15'),
-  -- Telcel 5G
-  ('f0000000-0000-0000-0000-000000000222', 'Campaña redes 5G', 'Creatividades para lanzamiento 5G', 'IN_PROGRESS', 'HIGH', 'f0000000-0000-0000-0000-000000000112', 40, '2025-04-15', '2025-06-30'),
-  ('f0000000-0000-0000-0000-000000000223', 'Material POP tiendas', 'Diseñar material para puntos de venta', 'PENDING', 'MEDIUM', 'f0000000-0000-0000-0000-000000000112', 20, '2025-07-01', '2025-08-31'),
-  -- BBVA App Banking
-  ('f0000000-0000-0000-0000-000000000224', 'Video tutorial app', 'Producir video explicativo de la app', 'PENDING', 'MEDIUM', 'f0000000-0000-0000-0000-000000000113', 16, '2025-08-15', '2025-09-15'),
-  -- Adidas Drop
-  ('f0000000-0000-0000-0000-000000000225', 'Shoot campaign', 'Sesión fotográfica para colección', 'COMPLETED', 'HIGH', 'f0000000-0000-0000-0000-000000000114', 24, '2025-04-01', '2025-04-20'),
-  ('f0000000-0000-0000-0000-000000000226', 'Lanzamiento tienda online', 'Activación digital para drop', 'COMPLETED', 'HIGH', 'f0000000-0000-0000-0000-000000000114', 32, '2025-04-20', '2025-05-15')
+  -- UA HOVR Collection
+  ('f0000000-0000-0000-0000-000000000222', 'Shoot campaign', 'Sesión fotográfica para colección', 'COMPLETED', 'HIGH', 'f0000000-0000-0000-0000-000000000112', 24, '2025-04-01', '2025-04-20'),
+  ('f0000000-0000-0000-0000-000000000223', 'Lanzamiento tienda online', 'Activación digital para drop', 'COMPLETED', 'HIGH', 'f0000000-0000-0000-0000-000000000112', 32, '2025-04-20', '2025-05-15')
 ON CONFLICT (id) DO NOTHING;
 
--- =============================================
--- COMMENTS (task discussions)
--- =============================================
-
-INSERT INTO comments (id, task_id, content) VALUES
-  ('f0000000-0000-0000-0000-000000000300', 'f0000000-0000-0000-0000-000000000201', 'Revisar tono de marca con el cliente antes de finalizar'),
-  ('f0000000-0000-0000-0000-000000000301', 'f0000000-0000-0000-0000-000000000202', 'Esperando confirmación de locación para grabación'),
-  ('f0000000-0000-0000-0000-000000000302', 'f0000000-0000-0000-0000-000000000206', 'Build de prueba lista para QA'),
-  ('f0000000-0000-0000-0000-000000000303', 'f0000000-0000-0000-0000-000000000210', 'Revisar versión mobile responsive'),
-  ('f0000000-0000-0000-0000-000000000304', 'f0000000-0000-0000-0000-000000000221', 'Bloqueado por presupuesto no aprobado — escalar con dirección'),
-  ('f0000000-0000-0000-0000-000000000305', 'f0000000-0000-0000-0000-000000000214', 'Meta Business Suite configurado, pendiente revisión'),
-  ('f0000000-0000-0000-0000-000000000306', 'f0000000-0000-0000-0000-000000000216', 'Aprobación de key art pendiente de Netflix')
-ON CONFLICT (id) DO NOTHING;
+-- Comments are inserted in seed_test_users.sql (need real profile IDs)
 
 -- =============================================
 -- EXCEL COLUMNS (add campaign columns)
@@ -229,21 +203,20 @@ ON CONFLICT DO NOTHING;
 --   ana.admin@lobueno.co
 --
 -- ROL: SYSADMIN
---   luis.sys@semillasrt.com
+--   luis.sys@lobueno.co
 --
 -- ROL: DIRECTOR
 --   maria.directora@agenciacentral.com
 --   pedro.director@agenciadigital.mx
+--   carlos.director@creativastudio.com
 --
 -- ROL: COLABORADOR
 --   sofia.colab@lobueno.co
---   jorge.colab@semillasrt.com
 --   ana.creativa@creativastudio.com
 --   luis.diseno@agenciacentral.com
 --   carmen.redaccion@agenciacentral.com
 --   diego.data@agenciadigital.mx
 --   valeria.social@lobueno.co
---   roberto.dev@semillasrt.com
 --
 -- Luego ejecuta el script SQL que asigna profiles y relaciones
 -- (Ver migration_assign_users.sql)

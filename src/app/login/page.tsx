@@ -3,63 +3,261 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff, LogIn, Mail, ArrowLeft, CheckCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [checking, setChecking] = useState(true);
+
+  const [view, setView] = useState<"login" | "forgot" | "sent">("login");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
 
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) router.push("/dashboard");
+      else setChecking(false);
     });
   }, [router]);
 
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${location.origin}/auth/callback` },
-    });
-    if (error) {
-      console.error(error);
-      setLoading(false);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim() || !password) {
+      setError("Ingresa tu correo y contraseña");
+      return;
     }
+    setLoading(true);
+    setError("");
+    const supabase = createClient();
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (authError) {
+      setError(
+        authError.message.includes("Invalid login")
+          ? "Correo o contraseña incorrectos"
+          : authError.message
+      );
+      setLoading(false);
+      return;
+    }
+    router.push("/dashboard");
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      setForgotError("Ingresa tu correo");
+      return;
+    }
+    setForgotLoading(true);
+    setForgotError("");
+    const supabase = createClient();
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
+      redirectTo: `${location.origin}/auth/reset-password`,
+    });
+    if (resetError) {
+      setForgotError(resetError.message);
+      setForgotLoading(false);
+      return;
+    }
+    setForgotLoading(false);
+    setView("sent");
+  };
+
+  if (checking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg-primary)" }}>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-solid" style={{ borderColor: "var(--accent-cyan)", borderTopColor: "transparent" }} />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--background)" }}>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg-primary)" }}>
       <div className="glass p-10 w-full max-w-sm animate-fadeIn text-center">
         <h1 className="text-3xl font-bold mb-1" style={{ color: "var(--text-primary)" }}>
-          Kairos
+          AgencyGrid
         </h1>
         <p className="text-sm mb-8" style={{ color: "var(--accent-cyan)" }}>
-          El momento exacto
+          Visibilidad 360°
         </p>
-        <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
-          Inicia sesión con tu cuenta corporativa
+
+        {/* ===== LOGIN VIEW ===== */}
+        {view === "login" && (
+          <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+                {error}
+              </div>
+            )}
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Correo electrónico</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-all"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-cyan)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--input-border)"; }}
+                autoFocus
+                autoComplete="email"
+              />
+            </div>
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Contraseña</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full rounded-lg px-3 py-2.5 pr-10 text-sm outline-none transition-all"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}
+                  onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-cyan)"; }}
+                  onBlur={(e) => { e.currentTarget.style.borderColor = "var(--input-border)"; }}
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded transition-opacity hover:opacity-70"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => { setView("forgot"); setForgotEmail(email); setForgotError(""); }}
+                className="text-xs font-medium transition-opacity hover:opacity-70"
+                style={{ color: "var(--accent-cyan)" }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !email.trim() || !password}
+              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
+              style={{ background: "var(--accent-cyan)" }}
+            >
+              {loading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <LogIn size={18} />
+                  Iniciar Sesión
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* ===== FORGOT PASSWORD VIEW ===== */}
+        {view === "forgot" && (
+          <form onSubmit={handleForgotPassword} className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setView("login")}
+              className="flex items-center gap-1.5 text-xs font-medium transition-opacity hover:opacity-70 mx-auto"
+              style={{ color: "var(--text-muted)" }}
+            >
+              <ArrowLeft size={14} />
+              Volver al login
+            </button>
+
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.
+            </p>
+
+            {forgotError && (
+              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+                {forgotError}
+              </div>
+            )}
+
+            <div className="space-y-1.5 text-left">
+              <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Correo electrónico</label>
+              <input
+                type="email"
+                value={forgotEmail}
+                onChange={(e) => setForgotEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-all"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "var(--accent-cyan)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--input-border)"; }}
+                autoFocus
+                autoComplete="email"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={forgotLoading || !forgotEmail.trim()}
+              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
+              style={{ background: "var(--accent-cyan)" }}
+            >
+              {forgotLoading ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              ) : (
+                <>
+                  <Mail size={18} />
+                  Enviar Enlace
+                </>
+              )}
+            </button>
+          </form>
+        )}
+
+        {/* ===== SENT VIEW ===== */}
+        {view === "sent" && (
+          <div className="space-y-4">
+            <div className="flex justify-center">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)" }}>
+                <CheckCircle size={28} style={{ color: "var(--accent-green)" }} />
+              </div>
+            </div>
+            <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>Revisa tu correo</h2>
+            <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+              Enviamos un enlace de restablecimiento a
+            </p>
+            <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>{forgotEmail}</p>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              ¿No lo recibiste? Revisa tu carpeta de spam o intenta de nuevo.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setView("login"); setEmail(forgotEmail); setPassword(""); }}
+              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-all"
+              style={{ background: "var(--accordion-bg)", color: "var(--text-secondary)", border: "1px solid var(--border)" }}
+            >
+              <ArrowLeft size={16} />
+              Volver al Login
+            </button>
+          </div>
+        )}
+
+        <p className="text-[11px] mt-6" style={{ color: "var(--text-muted)" }}>
+          AgencyGrid — Grupo Lo Bueno
         </p>
-        <button
-          onClick={handleGoogleLogin}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all disabled:opacity-50"
-          style={{ background: "var(--accent-cyan)", color: "#fff" }}
-        >
-          {loading ? (
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <>
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Google
-            </>
-          )}
-        </button>
       </div>
     </div>
   );
