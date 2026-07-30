@@ -8,10 +8,22 @@
 -- PART 1: Base Schema (migration.sql)
 -- =============================================
 
--- ENUMS
-CREATE TYPE user_role AS ENUM ('SUPERADMIN', 'SYSADMIN', 'DIRECTOR', 'COLABORADOR');
-CREATE TYPE task_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'REVIEW');
-CREATE TYPE task_priority AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+-- ENUMS (idempotent: IF NOT EXISTS)
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role') THEN
+    CREATE TYPE user_role AS ENUM ('SUPERADMIN', 'SYSADMIN', 'DIRECTOR', 'COLABORADOR');
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'task_status') THEN
+    CREATE TYPE task_status AS ENUM ('PENDING', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'REVIEW');
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'task_priority') THEN
+    CREATE TYPE task_priority AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+  END IF;
+END $$;
 
 -- PROFILES
 CREATE TABLE profiles (
