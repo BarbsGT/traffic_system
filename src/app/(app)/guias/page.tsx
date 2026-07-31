@@ -65,7 +65,7 @@ function IntroContent() {
         Bienvenido a AgencyGrid
       </h2>
       <p className="mb-4" style={{ color: "var(--text-secondary)" }}>
-        AgencyGrid es una Web App SaaS B2B para agencias de publicidad. Te permite administrar
+        AgencyGrid es una Web App para agencias de publicidad. Te permite administrar
         múltiples cuentas, marcas, equipos y proyectos con trazabilidad total.
       </p>
       <div className="glass p-6 mb-4">
@@ -114,23 +114,84 @@ function EquipoContent() {
 }
 
 function RolesContent() {
+  const roles = [
+    {
+      role: "SUPERADMIN",
+      color: "var(--accent-rose)",
+      bg: "rgba(244,63,94,0.15)",
+      desc: "Acceso total al sistema. Puede crear, editar y eliminar proyectos, tareas, usuarios, directores de cuenta, cuentas, agencias y equipos.",
+    },
+    {
+      role: "SYSADMIN",
+      color: "var(--accent-purple)",
+      bg: "rgba(139,92,246,0.15)",
+      desc: "Gestión completa de recursos. Crea y edita proyectos, tareas, usuarios, cuentas y equipos. No puede eliminar registros críticos.",
+    },
+    {
+      role: "DIRECTOR",
+      color: "var(--accent-amber)",
+      bg: "rgba(245,158,11,0.15)",
+      desc: "Administra equipos y proyectos. Crea, edita proyectos y tareas. Asigna colaboradores a cuentas y equipos. Gestiona el día a día operativo.",
+    },
+    {
+      role: "COLABORADOR",
+      color: "var(--accent-green)",
+      bg: "rgba(16,185,129,0.15)",
+      desc: "Usuario base. Visualiza proyectos y tareas. Puede actualizar el estado y descripción de sus tareas asignadas.",
+    },
+  ];
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Roles y Permisos</h2>
-      <div className="flex flex-col gap-3">
-        {[
-          { role: "SUPERADMIN", desc: "Acceso total al sistema" },
-          { role: "SYSADMIN", desc: "Gestión completa de recursos" },
-          { role: "DIRECTOR", desc: "Administra equipos y proyectos" },
-          { role: "COLABORADOR", desc: "Tareas asignadas" },
-        ].map((r) => (
-          <div key={r.role} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "var(--card-bg)" }}>
-            <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: "rgba(14,165,233,0.15)", color: "var(--accent-cyan)" }}>
-              {r.role}
-            </span>
-            <span style={{ color: "var(--text-secondary)" }}>{r.desc}</span>
+      <div className="flex flex-col gap-4">
+        {roles.map((r) => (
+          <div key={r.role} className="p-4 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: r.bg, color: r.color }}>
+                {r.role}
+              </span>
+            </div>
+            <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>{r.desc}</p>
           </div>
         ))}
+      </div>
+
+      <h3 className="text-lg font-semibold mt-8 mb-3" style={{ color: "var(--text-primary)" }}>Matriz de Permisos</h3>
+      <div className="overflow-x-auto rounded-lg" style={{ border: "1px solid var(--card-border)" }}>
+        <table className="w-full text-xs">
+          <thead>
+            <tr style={{ background: "var(--table-header)" }}>
+              <th className="p-2 text-left font-semibold" style={{ color: "var(--text-muted)" }}>Recurso</th>
+              <th className="p-2 text-center font-semibold" style={{ color: "var(--accent-rose)" }}>SUPER</th>
+              <th className="p-2 text-center font-semibold" style={{ color: "var(--accent-purple)" }}>SYS</th>
+              <th className="p-2 text-center font-semibold" style={{ color: "var(--accent-amber)" }}>DIR</th>
+              <th className="p-2 text-center font-semibold" style={{ color: "var(--accent-green)" }}>COL</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { resource: "Proyectos (CRUD)", super: "✓", sys: "✓", dir: "✓", col: "—" },
+              { resource: "Tareas (Crear)", super: "✓", sys: "✓", dir: "✓", col: "—" },
+              { resource: "Tareas (Editar)", super: "✓", sys: "✓", dir: "✓", col: "Solo propias" },
+              { resource: "Tareas (Eliminar)", super: "✓", sys: "✓", dir: "—", col: "—" },
+              { resource: "Comentarios", super: "✓", sys: "✓", dir: "✓", col: "Solo propios" },
+              { resource: "Usuarios (Crear/Editar)", super: "✓", sys: "✓", dir: "—", col: "—" },
+              { resource: "Usuarios (Eliminar)", super: "✓", sys: "—", dir: "—", col: "—" },
+              { resource: "Directores de Cuenta (CRUD)", super: "✓", sys: "✓", dir: "—", col: "—" },
+              { resource: "Agencias/Cuentas/Equipos", super: "✓", sys: "✓", dir: "Editar", col: "—" },
+              { resource: "Asignar a Cuentas/Equipos", super: "✓", sys: "✓", dir: "✓", col: "—" },
+            ].map((row, i) => (
+              <tr key={i} style={{ borderTop: "1px solid var(--divider)" }}>
+                <td className="p-2 font-medium" style={{ color: "var(--text-primary)" }}>{row.resource}</td>
+                <td className="p-2 text-center" style={{ color: "var(--accent-rose)" }}>{row.super}</td>
+                <td className="p-2 text-center" style={{ color: "var(--accent-purple)" }}>{row.sys}</td>
+                <td className="p-2 text-center" style={{ color: "var(--accent-amber)" }}>{row.dir}</td>
+                <td className="p-2 text-center" style={{ color: "var(--accent-green)" }}>{row.col}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -151,7 +212,7 @@ function FAQContent() {
       <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>Preguntas Frecuentes</h2>
       <div className="flex flex-col gap-4">
         {[
-          { q: "¿Cómo creo un proyecto?", a: "Ve a Proyectos &gt; Nuevo Proyecto. Solo ADMIN puede crear proyectos." },
+          { q: "¿Cómo creo un proyecto?", a: "Ve a Proyectos &gt; Nuevo Proyecto. SUPERADMIN, SYSADMIN y DIRECTOR pueden crear proyectos." },
           { q: "¿Cómo asigno una tarea?", a: "Abre el proyecto, crea una tarea y asigna un colaborador." },
           { q: "¿Qué significa BLOCKED?", a: "Una tarea bloqueada necesita intervención para continuar." },
         ].map((faq, i) => (

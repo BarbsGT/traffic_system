@@ -110,7 +110,7 @@ export function TrafficTable({ filterAgencyId, filterAccountId, filterProjectId,
   const fetchData = useCallback(async () => {
     setLoading(true);
 
-    const [tasksRes, profilesRes, agenciesRes, accountsRes] = await Promise.all([
+    const [tasksRes, meRes, agenciesRes, accountsRes] = await Promise.all([
       supabase.from("tasks").select(`
         id, title, status, start_date, due_date, estimated_hours, assignee_id,
         description, delivery_timeliness, compliance_status, notes,
@@ -118,10 +118,39 @@ export function TrafficTable({ filterAgencyId, filterAccountId, filterProjectId,
           accounts!inner(id, name, agency_id, agencies!inner(id, name))
         )
       `),
-      supabase.from("profiles").select("id, full_name, avatar_url"),
+      supabase.auth.getUser(),
       supabase.from("agencies").select("id, name"),
       supabase.from("accounts").select("id, name, agency_id"),
     ]);
+
+    const myRole = meRes.data?.user?.id
+      ? (await supabase.from("profiles").select("role").eq("id", meRes.data.user.id).single()).data?.role
+      : null;
+
+    let profilesRes;
+    if (myRole === "DIRECTOR" && meRes.data?.user?.id) {
+      const { data: myAccounts } = await supabase
+        .from("profile_accounts")
+        .select("account_id")
+        .eq("profile_id", meRes.data.user.id);
+      const accountIds = myAccounts?.map((a) => a.account_id) || [];
+      if (accountIds.length > 0) {
+        const { data: collaboratorIds } = await supabase
+          .from("profile_accounts")
+          .select("profile_id")
+          .in("account_id", accountIds);
+        const cids = [...new Set(collaboratorIds?.map((c) => c.profile_id) || [])];
+        if (cids.length > 0) {
+          profilesRes = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", cids);
+        } else {
+          profilesRes = { data: [] };
+        }
+      } else {
+        profilesRes = { data: [] };
+      }
+    } else {
+      profilesRes = await supabase.from("profiles").select("id, full_name, avatar_url");
+    }
 
     if (profilesRes.data) setProfiles(profilesRes.data);
     if (agenciesRes.data) setAgencies(agenciesRes.data);

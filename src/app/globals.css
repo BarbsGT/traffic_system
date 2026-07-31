@@ -2,6 +2,7 @@
 
 :root {
   --bg-primary: #F8FAFC;
+  --background: #F8FAFC;
   --bg-secondary: #FFFFFF;
   --text-primary: #0F172A;
   --text-secondary: #64748B;
@@ -44,6 +45,7 @@
 
 [data-theme="dark"] {
   --bg-primary: #0F172A;
+  --background: #0F172A;
   --bg-secondary: #1E293B;
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;
@@ -134,3 +136,5 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-slideUp { animation: slideUp 0.4s ease-out; }
+.animate-slideLeft { animation: slideLeft 0.3s ease-out; }
+@keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }

@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   LayoutDashboard, AlertTriangle, User, Settings, LogOut, Sun, Moon,
-  ChevronLeft, ChevronRight, Building2, Activity,
+  ChevronLeft, ChevronRight, Building2, Briefcase, BookOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -17,12 +17,13 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
-  { label: "Mesa de Tráfico", href: "/traffic", icon: <Activity size={18} /> },
-  { label: "Alertas", href: "/alerts", icon: <AlertTriangle size={18} /> },
+  { label: "Panel General", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
+  { label: "Dashboard Ejecutivo", href: "/projects/account-dashboard", icon: <Briefcase size={18} /> },
+  { label: "Alertas y Recomendaciones", href: "/alerts", icon: <AlertTriangle size={18} /> },
   { label: "Perfil", href: "/profile", icon: <User size={18} /> },
-  { label: "Admin", href: "/admin/catalogos", icon: <Settings size={18} />, roles: ["SUPERADMIN", "SYSADMIN", "DIRECTOR"] },
+  { label: "Catálogos", href: "/admin/catalogos", icon: <Settings size={18} />, roles: ["SUPERADMIN", "SYSADMIN", "DIRECTOR"] },
   { label: "Usuarios", href: "/admin/users", icon: <Building2 size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
+  { label: "Guía de Uso", href: "/guias", icon: <BookOpen size={18} /> },
 ];
 
 export function SidebarNav({ user }: { user: { id: string } }) {

@@ -40,13 +40,48 @@ export function CreateTaskModal({ open, onClose, onCreated, defaultProjectId }: 
     setDescription("");
     setError("");
 
-    Promise.all([
-      supabase.from("projects").select("id, name, account_id, accounts(name)").order("name"),
-      supabase.from("profiles").select("id, full_name").order("full_name"),
-    ]).then(([projRes, profRes]) => {
+    (async () => {
+      const [projRes, meRes] = await Promise.all([
+        supabase.from("projects").select("id, name, account_id, accounts(name)").order("name"),
+        supabase.auth.getUser(),
+      ]);
       if (projRes.data) setProjects(projRes.data);
-      if (profRes.data) setProfiles(profRes.data);
-    });
+
+      const myRole = meRes.data?.user?.id
+        ? (await supabase.from("profiles").select("role").eq("id", meRes.data.user.id).single()).data?.role
+        : null;
+
+      if (myRole === "DIRECTOR" && meRes.data?.user?.id) {
+        const { data: myAccounts } = await supabase
+          .from("profile_accounts")
+          .select("account_id")
+          .eq("profile_id", meRes.data.user.id);
+        const accountIds = myAccounts?.map((a) => a.account_id) || [];
+
+        if (accountIds.length > 0) {
+          const { data: collaboratorIds } = await supabase
+            .from("profile_accounts")
+            .select("profile_id")
+            .in("account_id", accountIds);
+          const cids = [...new Set(collaboratorIds?.map((c) => c.profile_id) || [])];
+          if (cids.length > 0) {
+            const { data } = await supabase
+              .from("profiles")
+              .select("id, full_name")
+              .in("id", cids)
+              .order("full_name");
+            if (data) setProfiles(data);
+          } else {
+            setProfiles([]);
+          }
+        } else {
+          setProfiles([]);
+        }
+      } else {
+        const { data } = await supabase.from("profiles").select("id, full_name").order("full_name");
+        if (data) setProfiles(data);
+      }
+    })();
   }, [open, supabase, defaultProjectId]);
 
   if (!open) return null;

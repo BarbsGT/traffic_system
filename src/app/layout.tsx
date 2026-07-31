@@ -6,7 +6,7 @@ import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
   title: "AgencyGrid — Visibilidad 360° para tu agencia",
-  description: "AgencyGrid — Web App SaaS B2B para agencias de publicidad",
+  description: "AgencyGrid — Web App para agencias de publicidad",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

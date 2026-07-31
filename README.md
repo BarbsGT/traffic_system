@@ -1,6 +1,6 @@
 # AgencyGrid — Visibilidad 360° para tu agencia
 
-Web App SaaS B2B para agencias de publicidad. Gestión multi-cuenta con
+Web App para agencias de publicidad. Gestión multi-cuenta con
 visibilidad 360°, aislamiento multi-marca y trazabilidad total tiempo/costo por cliente.
 
 ## Stack

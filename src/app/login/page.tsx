@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LogIn, Mail, ArrowLeft, CheckCircle } from "lucide-react";
+
+const LOGIN_COOLDOWN_MS = 2000;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,6 +20,8 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
+  const lastLoginRef = useRef(0);
+  const lastForgotRef = useRef(0);
 
   useEffect(() => {
     const supabase = createClient();
@@ -29,6 +33,9 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const now = Date.now();
+    if (now - lastLoginRef.current < LOGIN_COOLDOWN_MS) return;
+    lastLoginRef.current = now;
     if (!email.trim() || !password) {
       setError("Ingresa tu correo y contraseña");
       return;
@@ -54,6 +61,9 @@ export default function LoginPage() {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    const now = Date.now();
+    if (now - lastForgotRef.current < LOGIN_COOLDOWN_MS) return;
+    lastForgotRef.current = now;
     if (!forgotEmail.trim()) {
       setForgotError("Ingresa tu correo");
       return;

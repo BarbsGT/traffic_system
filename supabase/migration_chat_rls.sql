@@ -15,7 +15,7 @@ BEGIN
     )
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 DROP POLICY IF EXISTS "messages_select" ON project_messages;
 CREATE POLICY "messages_select" ON project_messages FOR SELECT
