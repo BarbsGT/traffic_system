@@ -5,9 +5,10 @@ import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   LayoutDashboard, AlertTriangle, User, Settings, LogOut, Sun, Moon,
-  ChevronLeft, ChevronRight, Building2, Briefcase, BookOpen,
+  Building2, Briefcase, BookOpen,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { SidebarHeader } from "./SidebarHeader";
 
 interface NavItem {
   label: string;
@@ -53,20 +54,7 @@ export function SidebarNav({ user }: { user: { id: string } }) {
       className="sidebar-glass flex flex-col h-full transition-all duration-300"
       style={{ width: collapsed ? 64 : 240 }}
     >
-      <div className="flex items-center gap-2 px-4 h-14 border-b shrink-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        {!collapsed && (
-          <span className="font-bold text-sm tracking-wide" style={{ color: "var(--accent-cyan)" }}>
-            AGENCYGRID
-          </span>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto p-1 rounded hover:opacity-70"
-          style={{ color: "var(--sidebar-text)" }}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
-      </div>
+      <SidebarHeader collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
 
       <nav className="flex-1 py-2 overflow-y-auto">
         {items.map((item) => {

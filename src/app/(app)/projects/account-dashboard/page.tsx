@@ -2,6 +2,7 @@
 
 import { AccountExecutiveDashboard } from "@/components/AccountExecutiveDashboard";
 import { UATrafficMatrix } from "@/components/traffic/UATrafficMatrix";
+import { DailyGanttModule } from "@/components/gantt/DailyGanttModule";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { ChevronDown } from "lucide-react";
@@ -11,7 +12,7 @@ interface AccountOption {
   name: string;
 }
 
-type Tab = "dashboard" | "matrix";
+type Tab = "dashboard" | "matrix" | "timeline";
 
 export default function AccountDashboardPage() {
   const [tab, setTab] = useState<Tab>("dashboard");
@@ -90,6 +91,17 @@ export default function AccountDashboardPage() {
           >
             Matriz de Tráfico
           </button>
+          <button
+            onClick={() => setTab("timeline")}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all"
+            style={{
+              background: tab === "timeline" ? "var(--accent-cyan)" : "var(--glass-bg)",
+              color: tab === "timeline" ? "#fff" : "var(--text-secondary)",
+              border: tab === "timeline" ? "none" : "1px solid var(--card-border)",
+            }}
+          >
+            Timeline
+          </button>
         </div>
       </div>
 
@@ -102,6 +114,7 @@ export default function AccountDashboardPage() {
             />
           )}
           {tab === "matrix" && <UATrafficMatrix accountId={selectedAccountId} />}
+          {tab === "timeline" && <DailyGanttModule filters={{ accountId: selectedAccountId }} />}
         </>
       )}
     </div>

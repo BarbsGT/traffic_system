@@ -17,7 +17,7 @@ interface UARow {
   budget: number;
   brief_date: string;
   resp_bt: string;
-  deadline: string;
+  end_date: string;
   working_days: number;
   launch_date: string;
   presentation_date: string;
@@ -27,6 +27,7 @@ interface UARow {
   brief_link: string;
   decks_link: string;
   team_notes: string;
+  delivered_at: string;
 }
 
 interface UATask {
@@ -39,6 +40,7 @@ interface UATask {
   priority: string;
   start_date: string;
   due_date: string;
+  delivered_at: string | null;
 }
 
 interface Profile {
@@ -176,12 +178,20 @@ export function UATrafficMatrix({ accountId }: Props) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({
     project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "",
-    resp_bt: "", deadline: "", launch_date: "", presentation_date: "",
+    resp_bt: "", end_date: "", launch_date: "", presentation_date: "",
     creative_status: "To do", status_btlive: "", status_migrante: "",
     brief_link: "", decks_link: "", team_notes: "",
   });
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
   const [showColumnMenu, setShowColumnMenu] = useState(false);
+  const [deliveryModal, setDeliveryModal] = useState<{
+    kind: "project" | "task";
+    id: string;
+    projectId: string;
+    nextStatus: string;
+    taskTitle?: string;
+  } | null>(null);
+  const [deliveryDate, setDeliveryDate] = useState("");
 
   const inputRef = useRef<HTMLInputElement | HTMLSelectElement>(null);
   const notesRef = useRef<HTMLTextAreaElement>(null);
@@ -193,7 +203,7 @@ export function UATrafficMatrix({ accountId }: Props) {
     { key: "project_name", label: "PROYECTO", width: "220px", defaultVisible: true },
     { key: "budget", label: "BUDGET", width: "90px", defaultVisible: true },
     { key: "brief_date", label: "BRIEF", width: "75px", defaultVisible: true },
-    { key: "deadline", label: "DEADLINE", width: "110px", defaultVisible: true },
+    { key: "end_date", label: "DEADLINE", width: "110px", defaultVisible: true },
     { key: "creative_status", label: "STATUS", width: "100px", defaultVisible: true },
     { key: "launch_date", label: "LANZAM.", width: "75px", defaultVisible: true },
     { key: "presentation_date", label: "PRESENT.", width: "75px", defaultVisible: false },
@@ -312,10 +322,20 @@ export function UATrafficMatrix({ accountId }: Props) {
     setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, assignee_id: assigneeId || null } : t)); return u; });
   };
 
-  const updateTaskStatus = async (taskId: string, status: string) => {
-    const { error } = await supabase.from("tasks").update({ status }).eq("id", taskId);
-    if (error) { console.error("Error actualizando tarea:", JSON.stringify(error)); return; }
-    setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, status } : t)); return u; });
+  const updateTaskStatus = async (taskId: string, status: string, deliveredAt?: string) => {
+    const payload: { status: string; completed_at: string | null; delivered_at: string | null } = { status, completed_at: null, delivered_at: null };
+    if (status === "COMPLETED") {
+      payload.completed_at = new Date().toISOString();
+      payload.delivered_at = deliveredAt || new Date().toISOString().slice(0, 10);
+    }
+    const { error } = await supabase.from("tasks").update(payload).eq("id", taskId);
+    if (error && (error.code === "PGRST204" || error.message?.includes("completed_at") || error.message?.includes("delivered_at"))) {
+      const { error: e2 } = await supabase.from("tasks").update({ status }).eq("id", taskId);
+      if (e2) { console.error("Error actualizando tarea:", JSON.stringify(e2)); return; }
+    } else if (error) {
+      console.error("Error actualizando tarea:", JSON.stringify(error)); return;
+    }
+    setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, status, completed_at: status === "COMPLETED" ? payload.completed_at : null, delivered_at: status === "COMPLETED" ? payload.delivered_at : null } : t)); return u; });
   };
 
   const updateTaskPriority = async (taskId: string, priority: string) => {
@@ -368,8 +388,8 @@ export function UATrafficMatrix({ accountId }: Props) {
       if (col === "budget") parsed = parseFloat(value) || 0;
       if (col === "working_days") parsed = parseInt(value) || 0;
       const updated = { ...r, [col]: parsed };
-      if ((col === "brief_date" || col === "deadline") && updated.brief_date && updated.deadline) {
-        updated.working_days = computeWorkingDays(updated.brief_date, updated.deadline);
+      if ((col === "brief_date" || col === "end_date") && updated.brief_date && updated.end_date) {
+        updated.working_days = computeWorkingDays(updated.brief_date, updated.end_date);
       }
       supabase.from("projects").update({ [col]: parsed }).eq("id", rowId).then(({ error }) => {
         if (error) console.error("Error guardando:", JSON.stringify(error));
@@ -379,6 +399,25 @@ export function UATrafficMatrix({ accountId }: Props) {
   }
 
   function cancelEdit() { setEditing(null); }
+
+  const requestDeliveryDate = (kind: "project" | "task", id: string, projectId: string, nextStatus: string, taskTitle?: string) => {
+    setDeliveryDate(new Date().toISOString().slice(0, 10));
+    setDeliveryModal({ kind, id, projectId, nextStatus, taskTitle });
+  };
+
+  const confirmDelivery = async () => {
+    if (!deliveryModal) return;
+    const { kind, id, nextStatus } = deliveryModal;
+    const delivered = deliveryDate || new Date().toISOString().slice(0, 10);
+    if (kind === "project") {
+      const { error } = await supabase.from("projects").update({ creative_status: nextStatus, delivered_at: delivered }).eq("id", id);
+      if (error) { console.error("Error guardando entrega:", JSON.stringify(error)); return; }
+      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, creative_status: nextStatus, delivered_at: delivered } : r)));
+    } else {
+      await updateTaskStatus(id, nextStatus, delivered);
+    }
+    setDeliveryModal(null);
+  };
 
   async function handleCreateProject() {
     if (!createForm.project_name.trim()) return;
@@ -393,7 +432,7 @@ export function UATrafficMatrix({ accountId }: Props) {
     const mapped = { ...data, project_name: (data as any).name } as UARow;
     setRows((prev) => [mapped, ...prev]);
     setShowCreateModal(false);
-    setCreateForm({ project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "", resp_bt: "", deadline: "", launch_date: "", presentation_date: "", creative_status: "To do", status_btlive: "", status_migrante: "", brief_link: "", decks_link: "", team_notes: "" });
+    setCreateForm({ project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "", resp_bt: "", end_date: "", launch_date: "", presentation_date: "", creative_status: "To do", status_btlive: "", status_migrante: "", brief_link: "", decks_link: "", team_notes: "" });
     setTimeout(() => newRowRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
@@ -444,12 +483,12 @@ export function UATrafficMatrix({ accountId }: Props) {
   }
 
   function renderDeadline(row: UARow) {
-    const days = daysRemaining(row.deadline);
+    const days = daysRemaining(row.end_date);
     const isOverdue = days !== null && days < 0;
     return (
       <div className="flex items-center gap-1.5">
         <span className="text-[11px] font-mono" style={{ color: isOverdue ? "var(--accent-rose)" : "var(--text-primary)" }}>
-          {formatDate(row.deadline) || "—"}
+          {formatDate(row.end_date) || "—"}
         </span>
         {days !== null && (
           <span className={`px-1 py-0.5 rounded text-[9px] font-semibold leading-none ${isOverdue ? "" : ""}`}
@@ -502,7 +541,7 @@ export function UATrafficMatrix({ accountId }: Props) {
 
   function renderCell(row: UARow, colKey: string) {
     if (colKey === "project_name") return renderProjectHero(row);
-    if (colKey === "deadline") return renderDeadline(row);
+    if (colKey === "end_date") return renderDeadline(row);
     if (colKey === "actions") return renderActions(row);
 
     const col = colKey as EditableCol;
@@ -515,7 +554,14 @@ export function UATrafficMatrix({ accountId }: Props) {
       if (isEditing) {
         return (
           <select ref={inputRef as React.Ref<HTMLSelectElement>} defaultValue={strVal}
-            onChange={(e) => commitEdit(row.id, col, e.target.value)}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (next !== strVal && (next === "Approved" || next === "Send")) {
+                requestDeliveryDate("project", row.id, row.id, next);
+              } else {
+                commitEdit(row.id, col, next);
+              }
+            }}
             onBlur={(e) => { if (e.currentTarget.value !== strVal) commitEdit(row.id, col, e.currentTarget.value); else cancelEdit(); }}
             autoFocus
             className="w-full px-1 py-0.5 rounded text-[11px] outline-none"
@@ -786,7 +832,14 @@ export function UATrafficMatrix({ accountId }: Props) {
                                     style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                       <select value={task.status}
-                                        onChange={(e) => updateTaskStatus(task.id, e.target.value)}
+                                        onChange={(e) => {
+                                          const next = e.target.value;
+                                          if (next === "COMPLETED" && task.status !== "COMPLETED") {
+                                            requestDeliveryDate("task", task.id, task.project_id, next, task.title);
+                                          } else {
+                                            updateTaskStatus(task.id, next);
+                                          }
+                                        }}
                                         className="px-1.5 py-0.5 rounded text-[10px] font-medium outline-none cursor-pointer border-0"
                                         style={{ background: statusStyle.bg, color: statusStyle.text }}>
                                         {TASK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
@@ -972,7 +1025,7 @@ export function UATrafficMatrix({ accountId }: Props) {
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
               </div>
               <div>
-                <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable BT</label>
+                <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable</label>
                 <input type="text" value={createForm.resp_bt} onChange={(e) => setCreateForm((p) => ({ ...p, resp_bt: e.target.value }))}
                   className="w-full mt-0.5 px-3 py-2 rounded-lg text-[12px] outline-none"
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
@@ -985,7 +1038,7 @@ export function UATrafficMatrix({ accountId }: Props) {
               </div>
               <div>
                 <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Deadline</label>
-                <input type="date" value={createForm.deadline} onChange={(e) => setCreateForm((p) => ({ ...p, deadline: e.target.value }))}
+                <input type="date" value={createForm.end_date} onChange={(e) => setCreateForm((p) => ({ ...p, end_date: e.target.value }))}
                   className="w-full mt-0.5 px-3 py-2 rounded-lg text-[12px] outline-none"
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
               </div>
@@ -1096,7 +1149,7 @@ export function UATrafficMatrix({ accountId }: Props) {
                 <div className="mt-1.5 grid grid-cols-2 gap-2">
                   {[
                     { label: "Brief", value: drawerProject.brief_date },
-                    { label: "Deadline", value: drawerProject.deadline },
+                    { label: "Deadline", value: drawerProject.end_date },
                     { label: "Días habiles", value: String(drawerProject.working_days || "—") },
                     { label: "Lanzamiento", value: drawerProject.launch_date },
                     { label: "Presentación", value: drawerProject.presentation_date },
@@ -1116,7 +1169,7 @@ export function UATrafficMatrix({ accountId }: Props) {
                   <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{drawerProject.client_owner || "—"}</p>
                 </div>
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-                  <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable BT</span>
+                  <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable</span>
                   <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{drawerProject.resp_bt || "—"}</p>
                 </div>
               </div>
@@ -1184,6 +1237,42 @@ export function UATrafficMatrix({ accountId }: Props) {
                   className="w-full mt-1.5 px-3 py-2 rounded-lg text-[12px] outline-none resize-none"
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Date Modal */}
+      {deliveryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.4)" }} onClick={() => setDeliveryModal(null)} />
+          <div className="relative w-full max-w-sm rounded-xl p-6 animate-fadeIn"
+            style={{ background: "var(--background)", border: "1px solid var(--border)", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Fecha real de entrega</h2>
+              <button onClick={() => setDeliveryModal(null)} className="p-1 rounded hover:opacity-70" style={{ color: "var(--text-muted)" }}><X size={16} /></button>
+            </div>
+            <p className="text-[12px] mb-4" style={{ color: "var(--text-muted)" }}>
+              {deliveryModal.kind === "task"
+                ? `La tarea "${deliveryModal.taskTitle}" está por marcarse como ${deliveryModal.nextStatus}.`
+                : `El proyecto está por marcarse como ${deliveryModal.nextStatus}.`}{" "}
+              Indica la fecha en que se entregó realmente:
+            </p>
+            <input type="date" value={deliveryDate}
+              onChange={(e) => setDeliveryDate(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-[12px] outline-none mb-4"
+              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+            <div className="flex items-center justify-end gap-2">
+              <button onClick={() => setDeliveryModal(null)}
+                className="px-3 py-2 rounded-lg text-[11px] font-medium"
+                style={{ color: "var(--text-muted)" }}>
+                Cancelar
+              </button>
+              <button onClick={confirmDelivery}
+                className="px-4 py-2 rounded-lg text-[11px] font-semibold text-white"
+                style={{ background: "var(--accent-green)" }}>
+                Confirmar entrega
+              </button>
             </div>
           </div>
         </div>

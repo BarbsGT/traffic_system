@@ -22,6 +22,8 @@ export default function LoginPage() {
   const [forgotError, setForgotError] = useState("");
   const lastLoginRef = useRef(0);
   const lastForgotRef = useRef(0);
+  const [loginCooldown, setLoginCooldown] = useState(false);
+  const [forgotCooldown, setForgotCooldown] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -41,6 +43,7 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
+    setLoginCooldown(true);
     setError("");
     const supabase = createClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
@@ -54,6 +57,7 @@ export default function LoginPage() {
           : authError.message
       );
       setLoading(false);
+      setTimeout(() => setLoginCooldown(false), LOGIN_COOLDOWN_MS);
       return;
     }
     router.push("/dashboard");
@@ -69,6 +73,7 @@ export default function LoginPage() {
       return;
     }
     setForgotLoading(true);
+    setForgotCooldown(true);
     setForgotError("");
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(forgotEmail.trim(), {
@@ -77,6 +82,7 @@ export default function LoginPage() {
     if (resetError) {
       setForgotError(resetError.message);
       setForgotLoading(false);
+      setTimeout(() => setForgotCooldown(false), LOGIN_COOLDOWN_MS);
       return;
     }
     setForgotLoading(false);
@@ -164,7 +170,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || !email.trim() || !password}
+              disabled={loading || loginCooldown || !email.trim() || !password}
               className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
               style={{ background: "var(--accent-cyan)" }}
             >
@@ -221,7 +227,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={forgotLoading || !forgotEmail.trim()}
+              disabled={forgotLoading || forgotCooldown || !forgotEmail.trim()}
               className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
               style={{ background: "var(--accent-cyan)" }}
             >

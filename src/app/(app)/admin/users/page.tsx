@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Modal } from "@/components/ui/Modal";
@@ -192,6 +192,9 @@ export default function UsersPage() {
   );
 }
 
+const VALID_ROLES = ["COLABORADOR", "DIRECTOR", "SYSADMIN", "SUPERADMIN"] as const;
+const MIN_PASSWORD_LENGTH = 8;
+
 function CreateUserForm({ onDone }: { onDone: () => void }) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);
@@ -204,11 +207,31 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
     const form = e.target as HTMLFormElement;
     const data = Object.fromEntries(new FormData(form));
 
+    const email = (data.email as string || "").trim();
+    const password = data.password as string || "";
+    const full_name = (data.full_name as string || "").trim();
+
+    if (!full_name) {
+      setError("El nombre es obligatorio");
+      setSaving(false);
+      return;
+    }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Ingresa un correo válido");
+      setSaving(false);
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`);
+      setSaving(false);
+      return;
+    }
+
     const { error: signUpErr } = await supabase.auth.signUp({
-      email: data.email as string,
-      password: data.password as string,
+      email,
+      password,
       options: {
-        data: { full_name: data.full_name as string },
+        data: { full_name },
       },
     });
 
@@ -243,7 +266,7 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Contraseña</label>
-        <input name="password" type="password" required
+        <input name="password" type="password" required minLength={MIN_PASSWORD_LENGTH}
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
       </div>
@@ -264,18 +287,35 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
 
   if (!profile) return null;
 
+  const [error, setError] = useState("");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setError("");
     const form = e.target as HTMLFormElement;
     const data = Object.fromEntries(new FormData(form));
 
+    const role = data.role as string;
+    if (!VALID_ROLES.includes(role as typeof VALID_ROLES[number])) {
+      setError("Rol no válido");
+      setSaving(false);
+      return;
+    }
+
+    const capacity = parseInt(data.capacity as string) || 100;
+    if (capacity < 0 || capacity > 100) {
+      setError("La capacidad debe ser entre 0 y 100");
+      setSaving(false);
+      return;
+    }
+
     await supabase.from("profiles").update({
-      role: data.role,
+      role,
       position: data.position,
       position_description: data.position_description,
       manager_id: data.manager_id || null,
-      capacity: parseInt(data.capacity as string) || 100,
+      capacity,
     }).eq("id", profile.id);
 
     setSaving(false);
@@ -284,6 +324,11 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {error && (
+        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+          {error}
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Nombre</label>
         <input value={profile.full_name} disabled
@@ -331,8 +376,8 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
         </select>
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Capacidad (horas)</label>
-        <input name="capacity" type="number" defaultValue={profile.capacity}
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Capacidad (%)</label>
+        <input name="capacity" type="number" min={0} max={100} defaultValue={profile.capacity}
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
       </div>
@@ -355,13 +400,15 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
   const [profileAccounts, setProfileAccounts] = useState<ProfileAccount[]>([]);
   const [profileTeams, setProfileTeams] = useState<ProfileTeam[]>([]);
   const [saving, setSaving] = useState(false);
+  const accountSelectRef = useRef<HTMLSelectElement>(null);
+  const teamSelectRef = useRef<HTMLSelectElement>(null);
 
   const refresh = useCallback(async () => {
     const [acRes, tRes, paRes, ptRes] = await Promise.all([
       supabase.from("accounts").select("id, name, code").order("name"),
       supabase.from("teams").select("id, name, code, account_id").order("name"),
-      selectedUser ? supabase.from("profile_accounts").select("*").eq("profile_id", selectedUser) : { data: [] },
-      selectedUser ? supabase.from("profile_teams").select("*").eq("profile_id", selectedUser) : { data: [] },
+      selectedUser ? supabase.from("profile_accounts").select("*").eq("profile_id", selectedUser) : Promise.resolve({ data: [] as ProfileAccount[] }),
+      selectedUser ? supabase.from("profile_teams").select("*").eq("profile_id", selectedUser) : Promise.resolve({ data: [] as ProfileTeam[] }),
     ]);
     if (acRes.data) setAccounts(acRes.data);
     if (tRes.data) setTeams(tRes.data);
@@ -444,15 +491,17 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
               )}
             </div>
             <div className="mt-3 flex gap-2">
-              <select id="add-account"
+              <select ref={accountSelectRef} id="add-account"
                 className="flex-1 px-2 py-1.5 rounded text-xs outline-none"
                 style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
                 <option value="">-- Agregar cuenta --</option>
                 {availableAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
               <button onClick={() => {
-                const sel = document.getElementById("add-account") as HTMLSelectElement;
-                addAccount(sel.value); sel.value = "";
+                if (accountSelectRef.current) {
+                  addAccount(accountSelectRef.current.value);
+                  accountSelectRef.current.value = "";
+                }
               }} disabled={saving}
                 className="px-3 py-1.5 rounded text-xs font-semibold text-white disabled:opacity-50"
                 style={{ background: "var(--accent-cyan)" }}>+</button>
@@ -481,7 +530,7 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
               )}
             </div>
             <div className="mt-3 flex gap-2">
-              <select id="add-team"
+              <select ref={teamSelectRef} id="add-team"
                 className="flex-1 px-2 py-1.5 rounded text-xs outline-none"
                 style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
                 <option value="">-- Agregar equipo --</option>
@@ -492,8 +541,10 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
                 ))}
               </select>
               <button onClick={() => {
-                const sel = document.getElementById("add-team") as HTMLSelectElement;
-                addTeam(sel.value); sel.value = "";
+                if (teamSelectRef.current) {
+                  addTeam(teamSelectRef.current.value);
+                  teamSelectRef.current.value = "";
+                }
               }} disabled={saving}
                 className="px-3 py-1.5 rounded text-xs font-semibold text-white disabled:opacity-50"
                 style={{ background: "var(--accent-cyan)" }}>+</button>

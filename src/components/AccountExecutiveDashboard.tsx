@@ -17,13 +17,21 @@ interface UARow {
   budget: number;
   brief_date: string;
   resp_bt: string;
-  deadline: string;
+  end_date: string;
   working_days: number;
   launch_date: string;
   presentation_date: string;
   creative_status: string;
   status_btlive: string;
   status_migrante: string;
+}
+
+interface SupabaseProjectRow {
+  id: string;
+  name: string;
+  account_id: string;
+  type?: string;
+  [key: string]: unknown;
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -56,9 +64,26 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
       supabase.from("projects").select("*").eq("type", "ua_traffic").eq("account_id", accountId),
       supabase.from("projects").select("*").eq("type", "ua_traffic"),
     ]).then(([accountResult, allResult]) => {
-      const mapRow = (r: any) => ({ ...r, project_name: r.name });
-      setData((accountResult.data || []).map(mapRow) as UARow[]);
-      setAllAccountsData((allResult.data || []).map(mapRow) as UARow[]);
+      const mapRow = (r: SupabaseProjectRow): UARow => ({
+        id: r.id,
+        account_id: r.account_id,
+        client_owner: String(r.client_owner || ""),
+        area: String(r.area || ""),
+        project_name: r.name,
+        tier: String(r.tier || ""),
+        budget: Number(r.budget || 0),
+        brief_date: String(r.brief_date || ""),
+        resp_bt: String(r.resp_bt || ""),
+        end_date: String(r.end_date || ""),
+        working_days: Number(r.working_days || 0),
+        launch_date: String(r.launch_date || ""),
+        presentation_date: String(r.presentation_date || ""),
+        creative_status: String(r.creative_status || ""),
+        status_btlive: String(r.status_btlive || ""),
+        status_migrante: String(r.status_migrante || ""),
+      });
+      setData((accountResult.data || []).map(mapRow));
+      setAllAccountsData((allResult.data || []).map(mapRow));
       setLoading(false);
     });
   }, [accountId]);
@@ -81,7 +106,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
   const completedCount = data.filter((r) => r.creative_status === "Approved" || r.creative_status === "Send").length;
   const healthPct = data.length ? Math.round((completedCount / data.length) * 100) : 0;
   const overdueCount = data.filter(
-    (r) => r.deadline && new Date(r.deadline) < new Date() && r.creative_status !== "Approved" && r.creative_status !== "Send"
+    (r) => r.end_date && new Date(r.end_date) < new Date() && r.creative_status !== "Approved" && r.creative_status !== "Send"
   ).length;
   const ajustesCount = data.filter((r) => r.creative_status === "Ajustes").length;
 
@@ -123,9 +148,9 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
   // Overdue projects list
   const overdueProjects = data
     .filter(
-      (r) => r.deadline && new Date(r.deadline) < new Date() && r.creative_status !== "Approved" && r.creative_status !== "Send"
+      (r) => r.end_date && new Date(r.end_date) < new Date() && r.creative_status !== "Approved" && r.creative_status !== "Send"
     )
-    .sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime())
+    .sort((a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime())
     .slice(0, 5);
 
   // Cross-account comparison
@@ -339,7 +364,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="glass p-5 space-y-4">
           <h3 className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-            Carga por Responsable BT
+            Carga por Responsable
           </h3>
           {workloadData.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>Sin datos de responsables</p>
@@ -419,7 +444,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
                     <span style={{ color: "var(--text-muted)" }}>Resp: {p.resp_bt || "—"} · {p.area}</span>
                   </div>
                   <span className="font-mono ml-2 shrink-0" style={{ color: "var(--accent-rose)" }}>
-                    Venció: {p.deadline ? new Date(p.deadline).toLocaleDateString("es") : "—"}
+                    Venció: {p.end_date ? new Date(p.end_date).toLocaleDateString("es") : "—"}
                   </span>
                 </div>
               ))}

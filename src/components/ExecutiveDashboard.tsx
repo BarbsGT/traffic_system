@@ -10,7 +10,27 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 
 interface Agency { id: string; name: string }
 interface Account { id: string; name: string; agency_id: string }
-interface Project { id: string; name: string; account_id: string }
+interface Project { id: string; name: string; account_id: string; status?: string }
+
+interface TaskRow {
+  id: string;
+  title: string;
+  status: string;
+  due_date: string | null;
+  estimated_hours: number | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  assignee_id: string | null;
+  project_id: string;
+  projects: { id: string; name: string; account_id: string };
+}
+
+interface ProfileRow {
+  id: string;
+  full_name: string | null;
+  capacity: number | null;
+}
 
 interface CollaboratorLoad {
   id: string;
@@ -63,6 +83,7 @@ export function ExecutiveDashboard() {
   const [activeTrend, setActiveTrend] = useState(0);
   const [blockedCount, setBlockedCount] = useState(0);
   const [efficiency, setEfficiency] = useState(0);
+  const [efficiencyInfo, setEfficiencyInfo] = useState({ onTime: 0, completedWithDue: 0 });
   const [alert48Count, setAlert48Count] = useState(0);
 
   const [statusData, setStatusData] = useState<{ status: string; count: number }[]>([]);
@@ -70,20 +91,26 @@ export function ExecutiveDashboard() {
   const [alertTasks, setAlertTasks] = useState<AlertTask[]>([]);
 
   const fetchData = useCallback(async () => {
-    let projectFilter: any = {};
-    if (selectedProject) projectFilter = { id: selectedProject };
-
     const { data: allTasks } = await supabase.from("tasks").select(`
-      id, title, status, due_date, estimated_hours, created_at, updated_at,
+      id, title, status, due_date, estimated_hours, created_at, updated_at, completed_at,
       assignee_id,
       project_id, projects!inner(id, name, account_id)
-    `);
+    `).then((res) => {
+      if (res.error?.code === "PGRST204" && res.error.message?.includes("completed_at")) {
+        return supabase.from("tasks").select(`
+          id, title, status, due_date, estimated_hours, created_at, updated_at,
+          assignee_id,
+          project_id, projects!inner(id, name, account_id)
+        `);
+      }
+      return res;
+    }) as unknown as { data: TaskRow[] | null };
 
     const { data: allProfiles } = await supabase
       .from("profiles")
-      .select("id, full_name, capacity");
+      .select("id, full_name, capacity") as { data: ProfileRow[] | null };
 
-    const { data: allProjects } = await supabase.from("projects").select("id, name, status");
+    const { data: allProjects } = await supabase.from("projects").select("id, name, status") as { data: Project[] | null };
 
     if (!allTasks || !allProjects) return;
 
@@ -91,40 +118,45 @@ export function ExecutiveDashboard() {
     if (selectedProject) {
       filteredProjectIds = [selectedProject];
     } else if (selectedAccount) {
-      filteredProjectIds = (allTasks || [])
-        .filter((t: any) => t.projects?.account_id === selectedAccount)
-        .map((t: any) => t.project_id);
+      filteredProjectIds = allTasks
+        .filter((t) => t.projects?.account_id === selectedAccount)
+        .map((t) => t.project_id);
       filteredProjectIds = [...new Set(filteredProjectIds)];
     } else if (selectedAgency) {
       const agencyAccountIds = accounts.filter((a) => a.agency_id === selectedAgency).map((a) => a.id);
-      filteredProjectIds = (allTasks || [])
-        .filter((t: any) => agencyAccountIds.includes(t.projects?.account_id))
-        .map((t: any) => t.project_id);
+      filteredProjectIds = allTasks
+        .filter((t) => agencyAccountIds.includes(t.projects?.account_id))
+        .map((t) => t.project_id);
       filteredProjectIds = [...new Set(filteredProjectIds)];
     }
 
     const tasks = selectedProject || selectedAccount || selectedAgency
-      ? (allTasks || []).filter((t: any) => filteredProjectIds.includes(t.project_id))
-      : allTasks || [];
+      ? allTasks.filter((t) => filteredProjectIds.includes(t.project_id))
+      : allTasks;
 
     const projectsForCount = selectedProject || selectedAccount || selectedAgency
-      ? (allProjects || []).filter((p: any) => filteredProjectIds.includes(p.id))
-      : allProjects || [];
+      ? allProjects.filter((p) => filteredProjectIds.includes(p.id))
+      : allProjects;
 
-    const activeProjects = projectsForCount.filter((p: any) => p.status !== "COMPLETED");
+    const activeProjects = projectsForCount.filter((p) => p.status !== "COMPLETED");
     setTotalActive(activeProjects.length);
     setActiveTrend(Math.round((activeProjects.length / Math.max(projectsForCount.length, 1)) * 100));
 
-    const blocked = tasks.filter((t: any) => t.status === "BLOCKED");
+    const blocked = tasks.filter((t) => t.status === "BLOCKED");
     setBlockedCount(blocked.length);
 
-    const total = tasks.length;
-    const completed = tasks.filter((t: any) => t.status === "COMPLETED");
-    setEfficiency(total > 0 ? Math.round((completed.length / total) * 100) : 0);
+    const completed = tasks.filter((t) => t.status === "COMPLETED");
+    const completedWithDue = completed.filter((t) => t.due_date);
+    const onTime = completedWithDue.filter((t) => {
+      const doneAt = t.completed_at || t.updated_at;
+      return doneAt && new Date(doneAt) <= new Date(`${t.due_date}T23:59:59`);
+    });
+    setEfficiency(completedWithDue.length > 0 ? Math.round((onTime.length / completedWithDue.length) * 100) : 0);
+    setEfficiencyInfo({ onTime: onTime.length, completedWithDue: completedWithDue.length });
 
     const now = new Date();
     const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-    const dueSoon = tasks.filter((t: any) => {
+    const dueSoon = tasks.filter((t) => {
       if (!t.due_date || t.status === "COMPLETED") return false;
       const d = new Date(t.due_date);
       return d <= in48h && d >= now;
@@ -132,7 +164,7 @@ export function ExecutiveDashboard() {
     setAlert48Count(dueSoon.length);
 
     const statusCounts: Record<string, number> = {};
-    tasks.forEach((t: any) => {
+    tasks.forEach((t) => {
       statusCounts[t.status] = (statusCounts[t.status] || 0) + 1;
     });
     setStatusData(
@@ -140,23 +172,21 @@ export function ExecutiveDashboard() {
     );
 
     if (allProfiles) {
-      const nowHour = new Date();
       const load: CollaboratorLoad[] = allProfiles
-        .filter((p: any) => p.capacity && p.capacity > 0)
-        .map((p: any) => {
-          const profileTasks = tasks.filter((t: any) => t.assignee_id === p.id);
-          const totalH = profileTasks.reduce((s: number, t: any) => s + (Number(t.estimated_hours) || 0), 0);
+        .filter((p) => p.capacity && p.capacity > 0)
+        .map((p) => {
+          const profileTasks = tasks.filter((t) => t.assignee_id === p.id);
+          const totalH = profileTasks.reduce((s, t) => s + (Number(t.estimated_hours) || 0), 0);
 
           const overloads: { taskId: string; taskTitle: string; suggestedAssignee: string }[] = [];
-          if (totalH > p.capacity) {
-            const overage = totalH - p.capacity;
+          if (totalH > (p.capacity || 0)) {
             const sortedByHours = [...profileTasks].sort(
-              (a: any, b: any) => (Number(b.estimated_hours) || 0) - (Number(a.estimated_hours) || 0)
+              (a, b) => (Number(b.estimated_hours) || 0) - (Number(a.estimated_hours) || 0)
             );
             for (const t of sortedByHours) {
               if (overloads.length >= 2) break;
               const altAssignee = allProfiles.find(
-                (ap: any) => ap.id !== p.id && ap.capacity > 0
+                (ap) => ap.id !== p.id && (ap.capacity || 0) > 0
               );
               if (altAssignee) {
                 overloads.push({
@@ -172,7 +202,7 @@ export function ExecutiveDashboard() {
             id: p.id,
             name: p.full_name || "Sin nombre",
             totalHours: totalH,
-            capacity: p.capacity,
+            capacity: p.capacity || 0,
             overloadTasks: overloads,
           };
         });
@@ -180,16 +210,16 @@ export function ExecutiveDashboard() {
     }
 
     const profileMap = new Map(
-      (allProfiles || []).map((p: any) => [p.id, p.full_name || ""])
+      (allProfiles || []).map((p) => [p.id, p.full_name || ""])
     );
     const projectMap = new Map(
-      (allProjects || []).map((p: any) => [p.id, p.name])
+      (allProjects || []).map((p) => [p.id, p.name])
     );
-    const alerts: AlertTask[] = dueSoon.map((t: any) => ({
+    const alerts: AlertTask[] = dueSoon.map((t) => ({
       id: t.id,
       title: t.title,
-      dueDate: t.due_date,
-      assigneeName: profileMap.get(t.assignee_id) || "Sin asignar",
+      dueDate: t.due_date || "",
+      assigneeName: (t.assignee_id ? profileMap.get(t.assignee_id) : null) || "Sin asignar",
       assigneeAvatar: "",
       status: t.status,
       projectName: projectMap.get(t.project_id) || "",
@@ -218,9 +248,9 @@ export function ExecutiveDashboard() {
     : accounts;
 
   const filteredProjects = selectedAccount
-    ? projects.filter((p: any) => p.account_id === selectedAccount)
+    ? projects.filter((p) => p.account_id === selectedAccount)
     : selectedAgency
-      ? projects.filter((p: any) =>
+      ? projects.filter((p) =>
           filteredAccounts.some((a) => a.id === p.account_id)
         )
       : projects;
@@ -246,12 +276,15 @@ export function ExecutiveDashboard() {
     },
     {
       label: "Eficiencia Global",
-      value: `${efficiency}%`,
+      value: efficiencyInfo.completedWithDue > 0 ? `${efficiency}%` : "—",
       metric: "Entregas a tiempo",
+      detail: efficiencyInfo.completedWithDue > 0
+        ? `De ${efficiencyInfo.completedWithDue} tareas completadas con fecha límite, ${efficiencyInfo.onTime} se entregaron dentro de plazo.`
+        : "Sin entregas completadas con fecha límite aún.",
       icon: <TrendingUp size={20} />,
-      color: efficiency >= 70 ? "var(--accent-green)" : "var(--accent-amber)",
-      bg: efficiency >= 70 ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
-      trend: efficiency,
+      color: efficiencyInfo.completedWithDue > 0 && efficiency >= 70 ? "var(--accent-green)" : "var(--accent-amber)",
+      bg: efficiencyInfo.completedWithDue > 0 && efficiency >= 70 ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+      trend: efficiencyInfo.completedWithDue > 0 ? efficiency : 0,
     },
     {
       label: "Alertas 48h",
@@ -365,6 +398,11 @@ export function ExecutiveDashboard() {
             <p className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{kpi.value}</p>
             <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>{kpi.label}</p>
             <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{kpi.metric}</p>
+            {"detail" in kpi && kpi.detail ? (
+              <p className="text-[11px] mt-2 leading-snug" style={{ color: "var(--text-muted)", borderTop: "1px solid var(--card-border)", paddingTop: 8 }}>
+                {kpi.detail}
+              </p>
+            ) : null}
           </div>
         ))}
       </div>

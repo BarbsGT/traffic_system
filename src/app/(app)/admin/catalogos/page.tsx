@@ -12,7 +12,10 @@ interface Area { id: string; name: string; code: string; is_active: boolean }
 interface Agency { id: string; name: string; code: string; is_active: boolean }
 interface Account { id: string; name: string; agency_id: string; code: string; is_active: boolean }
 interface Team { id: string; name: string; account_id: string; code: string; is_active: boolean; director_id: string | null }
-interface Director { id: string; profile_id: string; account_id: string | null; is_active: boolean }
+interface Director { id: string; profile_id: string; account_id: string | null; is_active: boolean; name?: string }
+
+type CatalogItem = Area | Agency | Account | Team | Director;
+type CatalogFormData = Record<string, unknown>;
 
 export default function CatalogosPage() {
   const [tab, setTab] = useState<Tab>("agencies");
@@ -23,8 +26,8 @@ export default function CatalogosPage() {
   const [directors, setDirectors] = useState<Director[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
-  const [confirmDelete, setConfirmDelete] = useState<any>(null);
+  const [editing, setEditing] = useState<unknown>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ table: string; id: string; name: string } | null>(null);
 
   const supabase = createClient();
 
@@ -53,7 +56,7 @@ export default function CatalogosPage() {
     fetchData();
   };
 
-  const openEdit = (item: any) => {
+  const openEdit = (item: unknown) => {
     setEditing(item);
     setShowModal(true);
   };
@@ -210,7 +213,7 @@ export default function CatalogosPage() {
               className="px-4 py-2 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>
               Cancelar
             </button>
-            <button onClick={() => handleDelete(confirmDelete?.table, confirmDelete?.id)}
+            <button onClick={() => confirmDelete && handleDelete(confirmDelete.table, confirmDelete.id)}
               className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--accent-rose)" }}>
               Eliminar
             </button>
@@ -229,7 +232,7 @@ function Headers({ cols }: { cols: string[] }) {
   ));
 }
 
-function Row({ item, onEdit, onDelete, children }: { item: any; onEdit: (item: any) => void; onDelete: () => void; children: React.ReactNode }) {
+function Row({ item, onEdit, onDelete, children }: { item: unknown; onEdit: (item: unknown) => void; onDelete: () => void; children: React.ReactNode }) {
   return (
     <tr style={{ borderTop: "1px solid var(--divider)" }}>
       {children}
@@ -246,31 +249,33 @@ function Row({ item, onEdit, onDelete, children }: { item: any; onEdit: (item: a
 }
 
 function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone }: {
-  tab: string; editing: any; agencies: Agency[]; accounts: Account[]; teams: Team[]; profiles: { id: string; full_name: string }[]; onDone: () => void;
+  tab: string; editing: unknown; agencies: Agency[]; accounts: Account[]; teams: Team[]; profiles: { id: string; full_name: string }[]; onDone: () => void;
 }) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);
+  const editData = (editing && typeof editing === "object" ? editing : null) as Record<string, unknown> | null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     const form = e.target as HTMLFormElement;
     const data = Object.fromEntries(new FormData(form));
+    const editId = editing && typeof editing === "object" && "id" in editing ? (editing as { id: string }).id : null;
 
     if (tab === "areas") {
-      if (editing) await supabase.from("areas").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editing.id);
+      if (editId) await supabase.from("areas").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("areas").insert({ name: data.name, code: data.code });
     } else if (tab === "agencies") {
-      if (editing) await supabase.from("agencies").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editing.id);
+      if (editId) await supabase.from("agencies").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("agencies").insert({ name: data.name, code: data.code });
     } else if (tab === "accounts") {
-      if (editing) await supabase.from("accounts").update({ name: data.name, agency_id: data.agency_id, code: data.code, is_active: data.is_active === "on" }).eq("id", editing.id);
+      if (editId) await supabase.from("accounts").update({ name: data.name, agency_id: data.agency_id, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("accounts").insert({ name: data.name, agency_id: data.agency_id, code: data.code });
     } else if (tab === "teams") {
-      if (editing) await supabase.from("teams").update({ name: data.name, account_id: data.account_id, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editing.id);
+      if (editId) await supabase.from("teams").update({ name: data.name, account_id: data.account_id, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("teams").insert({ name: data.name, account_id: data.account_id, code: data.code, director_id: data.director_id || null });
     } else if (tab === "directors") {
-      if (editing) await supabase.from("directors").update({ profile_id: data.profile_id, account_id: data.account_id || null, is_active: data.is_active === "on" }).eq("id", editing.id);
+      if (editId) await supabase.from("directors").update({ profile_id: data.profile_id, account_id: data.account_id || null, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("directors").insert({ profile_id: data.profile_id, account_id: data.account_id || null });
     }
     setSaving(false);
@@ -282,7 +287,7 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
       {tab !== "directors" && (
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Nombre</label>
-          <input name="name" defaultValue={editing?.name || ""} required
+          <input name="name" defaultValue={String(editData?.name || "")} required
             className="rounded-lg px-3 py-2 text-sm outline-none"
             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
         </div>
@@ -291,7 +296,7 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
       {tab === "accounts" && (
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Agencia</label>
-          <select name="agency_id" defaultValue={editing?.agency_id || ""} required
+          <select name="agency_id" defaultValue={String(editData?.agency_id || "")} required
             className="rounded-lg px-3 py-2 text-sm outline-none"
             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="">Seleccionar...</option>
@@ -304,7 +309,7 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
         <>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Cuenta</label>
-            <select name="account_id" defaultValue={editing?.account_id || ""} required
+            <select name="account_id" defaultValue={String(editData?.account_id || "")} required
               className="rounded-lg px-3 py-2 text-sm outline-none"
               style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
               <option value="">Seleccionar...</option>
@@ -313,7 +318,7 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Director</label>
-            <select name="director_id" defaultValue={editing?.director_id || ""}
+            <select name="director_id" defaultValue={String(editData?.director_id || "")}
               className="rounded-lg px-3 py-2 text-sm outline-none"
               style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
               <option value="">Sin director</option>
@@ -327,7 +332,7 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
         <>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Perfil</label>
-            <select name="profile_id" defaultValue={editing?.profile_id || ""} required
+            <select name="profile_id" defaultValue={String(editData?.profile_id || "")} required
               className="rounded-lg px-3 py-2 text-sm outline-none"
               style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
               <option value="">Seleccionar...</option>
@@ -336,7 +341,7 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Cuenta / Marca</label>
-            <select name="account_id" defaultValue={editing?.account_id || ""}
+            <select name="account_id" defaultValue={String(editData?.account_id || "")}
               className="rounded-lg px-3 py-2 text-sm outline-none"
               style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
               <option value="">Sin cuenta</option>
@@ -349,15 +354,15 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
       {tab !== "directors" && (
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Código</label>
-          <input name="code" defaultValue={editing?.code || ""}
+          <input name="code" defaultValue={String(editData?.code || "")}
             className="rounded-lg px-3 py-2 text-sm outline-none"
             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
         </div>
       )}
 
-      {editing && (
+      {editData && (
         <div className="flex items-center gap-2">
-          <input name="is_active" type="checkbox" defaultChecked={editing?.is_active !== false} id="is_active" className="rounded" />
+          <input name="is_active" type="checkbox" defaultChecked={editData?.is_active !== false} id="is_active" className="rounded" />
           <label htmlFor="is_active" className="text-xs" style={{ color: "var(--text-secondary)" }}>Activo</label>
         </div>
       )}

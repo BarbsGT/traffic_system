@@ -17,3 +17,6 @@ yarn-debug.log*
 yarn-error.log*
 .vercel
 .DS_Store
+test-results/
+playwright-report/
+.opencode/

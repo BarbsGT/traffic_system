@@ -51,16 +51,30 @@ export function ProfileForm() {
     return () => { cancelled = true; };
   }, [supabase]);
 
+  const [saveError, setSaveError] = useState<string>("");
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+    if (!profile.full_name?.trim()) {
+      setSaveError("El nombre es obligatorio");
+      return;
+    }
+    if (profile.capacity < 0 || profile.capacity > 100) {
+      setSaveError("La capacidad debe ser entre 0 y 100");
+      return;
+    }
     setSaving(true);
-    await supabase.from("profiles").update({
-      full_name: profile.full_name,
+    setSaveError("");
+    const { error } = await supabase.from("profiles").update({
+      full_name: profile.full_name.trim(),
       position: profile.position,
       position_description: profile.position_description,
       capacity: profile.capacity,
     }).eq("id", profile.id);
+    if (error) {
+      setSaveError("Error al guardar. Intenta de nuevo.");
+    }
     setSaving(false);
   };
 
@@ -69,7 +83,12 @@ export function ProfileForm() {
       <div className="animate-fadeIn max-w-2xl">
         <h1 className="text-2xl font-bold mb-6" style={{ color: "var(--text-primary)" }}>Perfil</h1>
         <div className="rounded-xl p-6" style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
-          <p className="text-sm" style={{ color: "var(--accent-rose)" }}>{error}</p>
+          <p className="text-sm mb-4" style={{ color: "var(--accent-rose)" }}>{error}</p>
+          <button onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-80"
+            style={{ background: "var(--accent-cyan)", color: "#fff" }}>
+            Reintentar
+          </button>
         </div>
       </div>
     );
@@ -89,9 +108,15 @@ export function ProfileForm() {
 
       <GlassCard className="p-6">
         <form onSubmit={handleSave} className="flex flex-col gap-4">
+          {saveError && (
+            <div className="px-3 py-2 rounded-lg text-xs flex items-center justify-between" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+              <span>{saveError}</span>
+              <button type="button" onClick={() => setSaveError("")} className="font-semibold hover:opacity-70">✕</button>
+            </div>
+          )}
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold"
-              style={{ background: "rgba(14,165,233,0.15)", color: "var(--accent-cyan)" }}>
+              style={{ background: "rgba(14,165,233,0.15)", color: "var(--accent-cyan)", border: "2px solid var(--accent-cyan)" }}>
               {profile.full_name?.charAt(0) || "?"}
             </div>
             <div>
@@ -128,7 +153,7 @@ export function ProfileForm() {
           </Field>
 
           <Field label="Capacidad (%)">
-            <input type="number" min={0} max={100} value={profile.capacity} onChange={(e) => setProfile({ ...profile, capacity: Number(e.target.value) })}
+            <input type="number" min={0} max={100} value={profile.capacity} onChange={(e) => setProfile({ ...profile, capacity: Math.min(100, Math.max(0, Number(e.target.value))) })}
               className="w-full rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
           </Field>
 
