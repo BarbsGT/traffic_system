@@ -150,6 +150,24 @@ function daysRemaining(dateStr: string) {
   return diff;
 }
 
+function deadlineInfo(row: UARow): { label: string; overdue: boolean } {
+  if (!row.end_date) return { label: "—", overdue: false };
+  if (row.delivered_at) {
+    const delivered = new Date(row.delivered_at);
+    const end = new Date(row.end_date);
+    const diff = Math.ceil((delivered.getTime() - end.getTime()) / (1000 * 60 * 60 * 24));
+    if (diff > 0) return { label: `${diff}d ret`, overdue: true };
+    if (diff === 0) return { label: "A tiempo", overdue: false };
+    return { label: `${Math.abs(diff)}d antes`, overdue: false };
+  }
+  if (row.creative_status === "Approved" || row.creative_status === "Send") {
+    return { label: "A tiempo", overdue: false };
+  }
+  const days = daysRemaining(row.end_date);
+  if (days !== null && days < 0) return { label: `${Math.abs(days)}d ret`, overdue: true };
+  return { label: `${days}d`, overdue: false };
+}
+
 function getUniqueClientOwners(data: UARow[]): string[] {
   return [...new Set(data.map((r) => r.client_owner).filter(Boolean))].sort();
 }
@@ -530,20 +548,20 @@ export function UATrafficMatrix({ accountId }: Props) {
   }
 
   function renderDeadline(row: UARow) {
-    const days = daysRemaining(row.end_date);
-    const isOverdue = days !== null && days < 0;
+    const info = deadlineInfo(row);
+    const isOverdue = info.overdue;
     return (
       <div className="flex items-center gap-1.5">
         <span className="text-[11px] font-mono" style={{ color: isOverdue ? "var(--accent-rose)" : "var(--text-primary)" }}>
           {formatDate(row.end_date) || "—"}
         </span>
-        {days !== null && (
+        {info.label !== "—" && (
           <span className={`px-1 py-0.5 rounded text-[9px] font-semibold leading-none ${isOverdue ? "" : ""}`}
             style={{
               background: isOverdue ? "rgba(244,63,94,0.15)" : "rgba(148,163,184,0.15)",
               color: isOverdue ? "rgb(244,63,94)" : "var(--text-muted)",
             }}>
-            {isOverdue ? `${Math.abs(days)}d ret` : `${days}d`}
+            {info.label}
           </span>
         )}
       </div>
