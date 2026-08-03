@@ -16,7 +16,7 @@ DROP POLICY IF EXISTS "areas_delete" ON areas;
 
 CREATE POLICY "areas_select" ON areas FOR SELECT USING (true);
 CREATE POLICY "areas_insert" ON areas FOR INSERT WITH CHECK (is_sysadmin());
-CREATE POLICY "areas_update" ON areas FOR UPDATE USING (is_director());
+CREATE POLICY "areas_update" ON areas FOR UPDATE USING (is_sysadmin());
 CREATE POLICY "areas_delete" ON areas FOR DELETE USING (is_superadmin());
 
 INSERT INTO areas (name, code) VALUES

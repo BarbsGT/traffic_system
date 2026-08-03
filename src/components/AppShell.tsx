@@ -8,7 +8,7 @@ import { SidebarNav } from "@/components/layout/SidebarNav";
 
 const publicRoutes = ["/login", "/auth/callback"];
 
-const adminOnlyRoutes = ["/dashboard"];
+const adminOnlyRoutes = ["/dashboard", "/admin"];
 
 const adminRoles = ["SUPERADMIN", "SYSADMIN"];
 

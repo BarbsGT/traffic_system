@@ -22,7 +22,7 @@ const allNavItems: NavItem[] = [
   { label: "Dashboard Ejecutivo", href: "/projects/account-dashboard", icon: <Briefcase size={18} /> },
   { label: "Alertas y Recomendaciones", href: "/alerts", icon: <AlertTriangle size={18} /> },
   { label: "Perfil", href: "/profile", icon: <User size={18} /> },
-  { label: "Catálogos", href: "/admin/catalogos", icon: <Settings size={18} />, roles: ["SUPERADMIN", "SYSADMIN", "DIRECTOR"] },
+  { label: "Catálogos", href: "/admin/catalogos", icon: <Settings size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
   { label: "Usuarios", href: "/admin/users", icon: <Building2 size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
   { label: "Guía de Uso", href: "/guias", icon: <BookOpen size={18} /> },
 ];
