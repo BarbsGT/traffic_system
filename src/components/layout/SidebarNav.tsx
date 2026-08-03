@@ -5,7 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { useTheme } from "@/components/ThemeProvider";
 import {
   LayoutDashboard, AlertTriangle, User, Settings, LogOut, Sun, Moon,
-  Building2, Briefcase, BookOpen,
+  Building2, Briefcase, BookOpen, Folder,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SidebarHeader } from "./SidebarHeader";
@@ -19,6 +19,7 @@ interface NavItem {
 
 const allNavItems: NavItem[] = [
   { label: "Panel General", href: "/dashboard", icon: <LayoutDashboard size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
+  { label: "Proyectos", href: "/projects", icon: <Folder size={18} /> },
   { label: "Dashboard Ejecutivo", href: "/projects/account-dashboard", icon: <Briefcase size={18} /> },
   { label: "Alertas y Recomendaciones", href: "/alerts", icon: <AlertTriangle size={18} /> },
   { label: "Perfil", href: "/profile", icon: <User size={18} /> },
@@ -58,7 +59,7 @@ export function SidebarNav({ user }: { user: { id: string } }) {
 
       <nav className="flex-1 py-2 overflow-y-auto">
         {items.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = item.href === "/projects" ? pathname === "/projects" : pathname.startsWith(item.href);
           return (
             <a
               key={item.href}
