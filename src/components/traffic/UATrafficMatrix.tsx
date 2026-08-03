@@ -254,11 +254,14 @@ export function UATrafficMatrix({ accountId }: Props) {
         : null;
 
       if (myRole === "DIRECTOR" && meRes.data?.user?.id) {
-        const { data: myAccounts } = await supabase
-          .from("profile_accounts")
-          .select("account_id")
-          .eq("profile_id", meRes.data.user.id);
-        const accountIds = myAccounts?.map((a) => a.account_id) || [];
+        const [{ data: myAccounts }, { data: managedAccounts }] = await Promise.all([
+          supabase.from("profile_accounts").select("account_id").eq("profile_id", meRes.data.user.id),
+          supabase.from("profile_accounts").select("account_id").eq("manager_id", meRes.data.user.id),
+        ]);
+        const accountIds = [...new Set([
+          ...(myAccounts?.map((a) => a.account_id) || []),
+          ...(managedAccounts?.map((a) => a.account_id) || []),
+        ])];
         if (accountIds.length > 0) {
           const { data: collaboratorIds } = await supabase
             .from("profile_accounts")
