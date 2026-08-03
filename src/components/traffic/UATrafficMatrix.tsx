@@ -216,6 +216,14 @@ export function UATrafficMatrix({ accountId }: Props) {
     return ALL_COLUMNS.filter((c) => columnVisibility[c.key] ?? c.defaultVisible);
   }, [columnVisibility]);
 
+  const blockedCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    Object.entries(tasks).forEach(([projectId, list]) => {
+      counts[projectId] = list.filter((t) => t.status === "BLOCKED").length;
+    });
+    return counts;
+  }, [tasks]);
+
   useEffect(() => {
     if (!accountId) return;
     (async () => {
@@ -225,6 +233,21 @@ export function UATrafficMatrix({ accountId }: Props) {
       ]);
       const raw = (projectsResult.data as any[]) || [];
       setRows(raw.map((r) => ({ ...r, project_name: r.name })) as UARow[]);
+
+      const projectIds = raw.map((r) => r.id);
+      if (projectIds.length > 0) {
+        const { data: allTasks } = await supabase
+          .from("tasks")
+          .select("*")
+          .in("project_id", projectIds);
+        if (allTasks) {
+          const grouped: Record<string, UATask[]> = {};
+          (allTasks as UATask[]).forEach((t) => {
+            (grouped[t.project_id] = grouped[t.project_id] || []).push(t);
+          });
+          setTasks(grouped);
+        }
+      }
 
       const myRole = meRes.data?.user?.id
         ? (await supabase.from("profiles").select("role").eq("id", meRes.data.user.id).single()).data?.role
@@ -338,7 +361,7 @@ export function UATrafficMatrix({ accountId }: Props) {
     setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, status, completed_at: status === "COMPLETED" ? payload.completed_at : null, delivered_at: status === "COMPLETED" ? payload.delivered_at : null } : t)); return u; });
   };
 
-  const toggleTaskBlock = async (taskId: string, currentlyBlocked: boolean) => {
+  const toggleTaskBlock = async (taskId: string, projectId: string, currentlyBlocked: boolean) => {
     if (currentlyBlocked) {
       const { error } = await supabase.from("tasks").update({ status: "IN_PROGRESS", alert_status: "DESBLOQUEADA" }).eq("id", taskId);
       if (error) { console.error("Error desbloqueando:", JSON.stringify(error)); return; }
@@ -464,12 +487,22 @@ export function UATrafficMatrix({ accountId }: Props) {
   function renderProjectHero(row: UARow) {
     const tierStyle = TIER_STYLE[row.tier];
     const areaColor = AREA_COLORS[row.area] || "var(--text-muted)";
+    const blocked = blockedCounts[row.id] || 0;
     return (
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="text-[12px] font-semibold truncate leading-tight" style={{ color: "var(--text-primary)" }}>
           {row.project_name}
         </span>
         <div className="flex items-center gap-1 flex-wrap">
+          {blocked > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); if (!expandedRows.has(row.id)) toggleExpand(row.id); }}
+              className="px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none inline-flex items-center gap-0.5 hover:opacity-80 transition-all"
+              style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}
+              title="Ver tareas bloqueadas">
+              <Lock size={9} /> {blocked} BLOQUEADA{blocked > 1 ? "S" : ""}
+            </button>
+          )}
           {row.tier && (
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold leading-none"
               style={{ background: tierStyle?.bg, color: tierStyle?.text }}>
@@ -861,7 +894,7 @@ export function UATrafficMatrix({ accountId }: Props) {
                                         </span>
                                       )}
                                       <button
-                                        onClick={() => toggleTaskBlock(task.id, task.status === "BLOCKED")}
+                                        onClick={() => toggleTaskBlock(task.id, task.project_id, task.status === "BLOCKED")}
                                         title={task.status === "BLOCKED" ? "Desbloquear tarea" : "Marcar como bloqueada"}
                                         className="p-1 rounded hover:opacity-70 transition-all"
                                         style={{ color: task.status === "BLOCKED" ? "var(--accent-rose)" : "var(--text-muted)" }}>
