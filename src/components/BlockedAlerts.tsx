@@ -3,9 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
-import { AlertTriangle, CheckCheck, CircleDot, RotateCcw } from "lucide-react";
+import { AlertTriangle, CheckCheck, CircleDot, RotateCcw, X } from "lucide-react";
 
 type AlertStatus = "PENDING" | "GESTIONADA" | "DESBLOQUEADA";
+
+const UNBLOCK_STATUSES = ["IN_PROGRESS", "REVIEW", "COMPLETED", "PENDING"];
 
 interface BlockedTask {
   id: string;
@@ -29,6 +31,8 @@ export function BlockedAlerts() {
   const [tab, setTab] = useState<Tab>("activas");
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [unblockTarget, setUnblockTarget] = useState<BlockedTask | null>(null);
+  const [unblockStatus, setUnblockStatus] = useState("IN_PROGRESS");
 
   const supabase = createClient();
 
@@ -65,15 +69,23 @@ export function BlockedAlerts() {
     loadAlerts();
   }, [loadAlerts]);
 
-  const changeStatus = async (task: BlockedTask, newStatus: AlertStatus) => {
+  const changeStatus = async (task: BlockedTask, newStatus: AlertStatus, newTaskStatus?: string) => {
     setBusyId(task.id);
-    const update: Record<string, string> = { alert_status: newStatus };
+    const update: Record<string, string | null> = { alert_status: newStatus };
     if (newStatus === "GESTIONADA" || newStatus === "DESBLOQUEADA") {
       update.alert_status_at = new Date().toISOString();
     }
+    if (newStatus === "DESBLOQUEADA" && newTaskStatus) {
+      update.status = newTaskStatus;
+    }
     const { error } = await supabase.from("tasks").update(update).eq("id", task.id);
     setBusyId(null);
-    if (!error) loadAlerts();
+    if (!error) { setUnblockTarget(null); loadAlerts(); }
+  };
+
+  const openUnblock = (task: BlockedTask) => {
+    setUnblockTarget(task);
+    setUnblockStatus(task.status === "BLOCKED" ? "IN_PROGRESS" : task.status || "IN_PROGRESS");
   };
 
   const resetStatus = async (task: BlockedTask) => {
@@ -178,7 +190,7 @@ export function BlockedAlerts() {
                   <div className="flex flex-col gap-1.5 shrink-0">
                     {!isUnblocked && (
                       <button
-                        onClick={() => changeStatus(t, isManaged ? "DESBLOQUEADA" : "GESTIONADA")}
+                        onClick={() => (isManaged ? openUnblock(t) : changeStatus(t, "GESTIONADA"))}
                         disabled={busyId === t.id}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
                         style={{ background: isManaged ? "var(--accent-green)" : "var(--accent-amber)" }}
@@ -203,6 +215,42 @@ export function BlockedAlerts() {
               </GlassCard>
             );
           })}
+        </div>
+      )}
+
+      {/* Unblock status modal */}
+      {unblockTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.4)" }} onClick={() => setUnblockTarget(null)} />
+          <div className="relative w-full max-w-sm rounded-xl p-6 animate-fadeIn"
+            style={{ background: "var(--background)", border: "1px solid var(--border)", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-bold" style={{ color: "var(--text-primary)" }}>Desbloquear alerta</h2>
+              <button onClick={() => setUnblockTarget(null)} className="p-1 rounded hover:opacity-70" style={{ color: "var(--text-muted)" }}><X size={16} /></button>
+            </div>
+            <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+              La tarea <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{unblockTarget.title}</span> fue desbloqueada.
+              ¿A qué estado debe pasar?
+            </p>
+            <select value={unblockStatus} onChange={(e) => setUnblockStatus(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg text-sm outline-none mb-4"
+              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+              {UNBLOCK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
+            </select>
+            <div className="flex items-center justify-end gap-2">
+              <button onClick={() => setUnblockTarget(null)}
+                className="px-4 py-2 rounded-lg text-sm font-medium"
+                style={{ color: "var(--text-muted)" }}>
+                Cancelar
+              </button>
+              <button onClick={() => changeStatus(unblockTarget, "DESBLOQUEADA", unblockStatus)}
+                disabled={busyId === unblockTarget.id}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+                style={{ background: "var(--accent-green)" }}>
+                Desbloquear
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

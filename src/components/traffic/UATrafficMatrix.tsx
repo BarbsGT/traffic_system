@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { createClient } from "@/utils/supabase/client";
 import {
   Search, Plus, ChevronDown, ChevronRight, ExternalLink, FileText,
-  MessageSquare, X, Eye, EyeOff,
+  MessageSquare, X, Eye, EyeOff, Lock, LockOpen,
 } from "lucide-react";
 
 interface UARow {
@@ -336,6 +336,16 @@ export function UATrafficMatrix({ accountId }: Props) {
       console.error("Error actualizando tarea:", JSON.stringify(error)); return;
     }
     setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, status, completed_at: status === "COMPLETED" ? payload.completed_at : null, delivered_at: status === "COMPLETED" ? payload.delivered_at : null } : t)); return u; });
+  };
+
+  const toggleTaskBlock = async (taskId: string, currentlyBlocked: boolean) => {
+    if (currentlyBlocked) {
+      const { error } = await supabase.from("tasks").update({ status: "IN_PROGRESS", alert_status: "DESBLOQUEADA" }).eq("id", taskId);
+      if (error) { console.error("Error desbloqueando:", JSON.stringify(error)); return; }
+      setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, status: "IN_PROGRESS", alert_status: "DESBLOQUEADA" } : t)); return u; });
+    } else {
+      await updateTaskStatus(taskId, "BLOCKED");
+    }
   };
 
   const updateTaskPriority = async (taskId: string, priority: string) => {
@@ -844,6 +854,19 @@ export function UATrafficMatrix({ accountId }: Props) {
                                         style={{ background: statusStyle.bg, color: statusStyle.text }}>
                                         {TASK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
                                       </select>
+                                      {task.status === "BLOCKED" && (
+                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap"
+                                          style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}>
+                                          <Lock size={9} className="inline mr-0.5 -mt-0.5" /> BLOQUEADA
+                                        </span>
+                                      )}
+                                      <button
+                                        onClick={() => toggleTaskBlock(task.id, task.status === "BLOCKED")}
+                                        title={task.status === "BLOCKED" ? "Desbloquear tarea" : "Marcar como bloqueada"}
+                                        className="p-1 rounded hover:opacity-70 transition-all"
+                                        style={{ color: task.status === "BLOCKED" ? "var(--accent-rose)" : "var(--text-muted)" }}>
+                                        {task.status === "BLOCKED" ? <LockOpen size={13} /> : <Lock size={13} />}
+                                      </button>
                                       <span className="flex-1 min-w-0 font-medium truncate" style={{ color: "var(--text-primary)" }}>{task.title}</span>
                                       <select value={task.priority}
                                         onChange={(e) => updateTaskPriority(task.id, e.target.value)}
