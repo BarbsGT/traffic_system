@@ -7,6 +7,19 @@ import { Eye, EyeOff, LogIn, Mail, ArrowLeft, CheckCircle } from "lucide-react";
 
 const LOGIN_COOLDOWN_MS = 2000;
 
+async function homePathFor(userId: string): Promise<string> {
+  if (!userId) return "/login";
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+  const role = data?.role;
+  if (role === "SUPERADMIN" || role === "SYSADMIN") return "/dashboard";
+  return "/projects";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -27,9 +40,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) router.push("/dashboard");
-      else setChecking(false);
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (data.user) {
+        router.push(await homePathFor(data.user.id));
+      } else setChecking(false);
     });
   }, [router]);
 
@@ -60,7 +74,8 @@ export default function LoginPage() {
       setTimeout(() => setLoginCooldown(false), LOGIN_COOLDOWN_MS);
       return;
     }
-    router.push("/dashboard");
+    const { data: userData } = await supabase.auth.getUser();
+    router.push(await homePathFor(userData.user?.id || ""));
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {

@@ -4,7 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Modal } from "@/components/ui/Modal";
-import { Edit2, Trash2, Plus, X } from "lucide-react";
+import { Edit2, Trash2, Plus, X, Check, Upload, FileDown } from "lucide-react";
+import { adminCreateUser, adminUpdateUser, adminToggleActive, adminBulkCreateUsers, type CreateUserInput } from "@/app/actions/users";
+import { parseCSV, downloadCSV, type CsvRow } from "@/utils/csv";
 
 type Tab = "usuarios" | "colaboradores" | "asignaciones";
 
@@ -23,7 +25,7 @@ interface Profile {
 interface Account { id: string; name: string; code: string }
 interface Team { id: string; name: string; code: string; account_id: string }
 
-interface ProfileAccount { id: string; profile_id: string; account_id: string; assigned_at: string }
+interface ProfileAccount { id: string; profile_id: string; account_id: string; manager_id: string | null; assigned_at: string }
 interface ProfileTeam { id: string; profile_id: string; team_id: string; assigned_at: string }
 
 export default function UsersPage() {
@@ -33,6 +35,7 @@ export default function UsersPage() {
   const [confirmDelete, setConfirmDelete] = useState<Profile | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false);
 
   const supabase = createClient();
 
@@ -49,7 +52,7 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from("profiles").update({ is_active: false }).eq("id", id);
+    await adminToggleActive(id, false);
     setConfirmDelete(null);
     fetchData();
   };
@@ -71,13 +74,22 @@ export default function UsersPage() {
     <div className="animate-fadeIn">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>Usuarios</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
-          style={{ background: "var(--accent-cyan)" }}
-        >
-          <Plus size={16} /> Nuevo Usuario
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowBulkModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+            style={{ color: "var(--accent-cyan)", background: "var(--glass-bg)", border: "1px solid var(--accent-cyan)" }}
+          >
+            <Upload size={16} /> Subir CSV
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+            style={{ background: "var(--accent-cyan)" }}
+          >
+            <Plus size={16} /> Nuevo Usuario
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -186,7 +198,11 @@ export default function UsersPage() {
       </Modal>
 
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Nuevo Usuario">
-        <CreateUserForm onDone={() => { setShowCreateModal(false); fetchData(); }} />
+        <CreateUserForm profiles={profiles} onDone={() => { setShowCreateModal(false); fetchData(); }} />
+      </Modal>
+
+      <Modal isOpen={showBulkModal} onClose={() => setShowBulkModal(false)} title="Carga masiva de usuarios (CSV)">
+        <BulkUsersForm profiles={profiles} />
       </Modal>
     </div>
   );
@@ -195,10 +211,216 @@ export default function UsersPage() {
 const VALID_ROLES = ["COLABORADOR", "DIRECTOR", "SYSADMIN", "SUPERADMIN"] as const;
 const MIN_PASSWORD_LENGTH = 8;
 
-function CreateUserForm({ onDone }: { onDone: () => void }) {
+const BULK_TEMPLATE = [
+  "email,password,full_name,role,position,position_description,capacity,manager_email,accounts,teams",
+  "juan@correo.com,Contrasena123,Juan Pérez,COLABORADOR,Diseñador,Area creativa,100,maria.directora@agenciacentral.com,CUENTA-001;CUENTA-002,EQUIPO-001",
+];
+
+function BulkUsersForm({ profiles }: { profiles: Profile[] }) {
+  const supabase = createClient();
+  const [csvText, setCsvText] = useState("");
+  const [parsed, setParsed] = useState<CsvRow[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [result, setResult] = useState<{ created: number; errors: { row: number; email: string; error: string }[] } | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("accounts").select("id, name, code").order("name"),
+      supabase.from("teams").select("id, name, code, account_id").order("name"),
+    ]).then(([accRes, teamRes]) => {
+      if (accRes.data) setAccounts(accRes.data);
+      if (teamRes.data) setTeams(teamRes.data);
+    });
+  }, [supabase]);
+
+  const accountByName = (v: string) => accounts.find((a) => a.name.toLowerCase() === v.toLowerCase() || a.code.toLowerCase() === v.toLowerCase());
+  const teamByName = (v: string) => teams.find((t) => t.name.toLowerCase() === v.toLowerCase() || t.code.toLowerCase() === v.toLowerCase());
+  const profileByEmail = (v: string) => profiles.find((p) => p.email.toLowerCase() === v.toLowerCase());
+  const profileByName = (v: string) => profiles.find((p) => p.full_name.toLowerCase() === v.toLowerCase());
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || "");
+      setCsvText(text);
+      setParsed(parseCSV(text));
+      setResult(null);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleSubmit = async () => {
+    if (parsed.length === 0) return;
+    setSaving(true);
+    setResult(null);
+
+    const inputs: CreateUserInput[] = [];
+    const errors: { row: number; email: string; error: string }[] = [];
+
+    parsed.forEach((row, idx) => {
+      const rowNumber = idx + 2;
+      const email = (row.email || "").trim();
+      const full_name = (row.full_name || "").trim();
+      const password = row.password || "";
+      const role = ((row.role || "COLABORADOR").toUpperCase()) as CreateUserInput["role"];
+
+      const managerRef = (row.manager_email || "").trim();
+      const manager = managerRef ? (profileByEmail(managerRef) || profileByName(managerRef)) : undefined;
+      if (managerRef && !manager) {
+        errors.push({ row: rowNumber, email, error: `Manager "${managerRef}" no encontrado` });
+        return;
+      }
+
+      const accountInputs = (row.accounts || "")
+        .split(/[;|]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((name) => accountByName(name))
+        .filter((a) => !!a) as Account[];
+      const unknownAccounts = (row.accounts || "").split(/[;|]/).map((s) => s.trim()).filter(Boolean).filter((n) => !accountByName(n));
+      if (unknownAccounts.length > 0) {
+        errors.push({ row: rowNumber, email, error: `Cuentas no encontradas: ${unknownAccounts.join(", ")}` });
+        return;
+      }
+
+      const teamIds = (row.teams || "")
+        .split(/[;|]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .filter((n) => !teamByName(n));
+      if (teamIds.length > 0) {
+        errors.push({ row: rowNumber, email, error: `Equipos no encontrados: ${teamIds.join(", ")}` });
+        return;
+      }
+      const teamsSelected = (row.teams || "").split(/[;|]/).map((s) => s.trim()).filter(Boolean).map((n) => teamByName(n)!.id);
+
+      inputs.push({
+        email,
+        password,
+        full_name,
+        role: VALID_ROLES.includes(role) ? role : "COLABORADOR",
+        position: row.position || "",
+        position_description: row.position_description || "",
+        manager_id: manager?.id || null,
+        capacity: parseInt(row.capacity || "100") || 100,
+        accounts: accountInputs.map((a) => ({ account_id: a.id, manager_id: null })),
+        teams: teamsSelected,
+      });
+    });
+
+    if (errors.length > 0) {
+      setSaving(false);
+      setResult({ created: 0, errors });
+      return;
+    }
+
+    const res = await adminBulkCreateUsers(inputs);
+    setSaving(false);
+    setResult({ created: res.created, errors: res.errors });
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
+        Sube un archivo CSV con las columnas: <code className="px-1 rounded" style={{ background: "var(--accordion-bg)" }}>email,password,full_name,role,position,position_description,capacity,manager_email,accounts,teams</code>.
+        Usa <code className="px-1 rounded" style={{ background: "var(--accordion-bg)" }}>;</code> para separar múltiples cuentas o equipos. El manager, cuentas y equipos se resuelven por nombre, código o email.
+      </div>
+
+      <button
+        onClick={() => downloadCSV("plantilla_usuarios.csv", BULK_TEMPLATE.join("\n"))}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium w-fit"
+        style={{ color: "var(--accent-cyan)", background: "var(--glass-bg)", border: "1px solid var(--accent-cyan)" }}
+      >
+        <FileDown size={14} /> Descargar plantilla CSV
+      </button>
+
+      <label className="flex flex-col items-center justify-center gap-2 p-6 rounded-xl cursor-pointer border border-dashed"
+        style={{ background: "var(--card-bg)", borderColor: "var(--input-border)" }}>
+        <Upload size={20} style={{ color: "var(--text-muted)" }} />
+        <span className="text-sm" style={{ color: "var(--text-primary)" }}>Seleccionar archivo CSV</span>
+        <input type="file" accept=".csv,.txt" onChange={handleFile} className="hidden" />
+      </label>
+
+      {csvText && (
+        <textarea
+          value={csvText}
+          onChange={(e) => { setCsvText(e.target.value); setParsed(parseCSV(e.target.value)); setResult(null); }}
+          rows={6}
+          placeholder="O pega aquí el contenido CSV..."
+          className="rounded-lg px-3 py-2 text-xs font-mono outline-none"
+          style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}
+        />
+      )}
+
+      {parsed.length > 0 && (
+        <div className="text-xs" style={{ color: "var(--text-primary)" }}>
+          <strong>{parsed.length}</strong> registros detectados
+        </div>
+      )}
+
+      {result && (
+        <div className="rounded-lg p-3 text-xs flex flex-col gap-2 max-h-48 overflow-y-auto"
+          style={{ background: "var(--card-bg)", border: "1px solid var(--input-border)" }}>
+          <div style={{ color: "var(--accent-green)" }}>{result.created} usuarios creados</div>
+          {result.errors.length > 0 && (
+            <>
+              <div style={{ color: "var(--accent-rose)" }}>{result.errors.length} errores:</div>
+              {result.errors.map((err, i) => (
+                <div key={i} style={{ color: "var(--accent-rose)" }}>
+                  Fila {err.row}{err.email ? ` (${err.email})` : ""}: {err.error}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-2 justify-end">
+        <button onClick={handleSubmit} disabled={saving || parsed.length === 0}
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          style={{ background: "var(--accent-cyan)" }}>
+          {saving ? "Creando usuarios..." : "Crear usuarios"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () => void }) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedAccounts, setSelectedAccounts] = useState<Record<string, string>>({});
+  const [selectedTeams, setSelectedTeams] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    Promise.all([
+      supabase.from("accounts").select("id, name, code").order("name"),
+      supabase.from("teams").select("id, name, code, account_id").order("name"),
+    ]).then(([accRes, teamRes]) => {
+      if (accRes.data) setAccounts(accRes.data);
+      if (teamRes.data) setTeams(teamRes.data);
+    });
+  }, [supabase]);
+
+  const toggleAccount = (id: string) => {
+    setSelectedAccounts((prev) => {
+      const next = { ...prev };
+      if (id in next) delete next[id];
+      else next[id] = "";
+      return next;
+    });
+  };
+
+  const toggleTeam = (id: string) => {
+    setSelectedTeams((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -207,36 +429,21 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
     const form = e.target as HTMLFormElement;
     const data = Object.fromEntries(new FormData(form));
 
-    const email = (data.email as string || "").trim();
-    const password = data.password as string || "";
-    const full_name = (data.full_name as string || "").trim();
-
-    if (!full_name) {
-      setError("El nombre es obligatorio");
-      setSaving(false);
-      return;
-    }
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Ingresa un correo válido");
-      setSaving(false);
-      return;
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres`);
-      setSaving(false);
-      return;
-    }
-
-    const { error: signUpErr } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name },
-      },
+    const res = await adminCreateUser({
+      email: data.email as string,
+      password: data.password as string,
+      full_name: data.full_name as string,
+      role: (data.role as string) as "COLABORADOR" | "DIRECTOR" | "SYSADMIN" | "SUPERADMIN",
+      position: data.position as string,
+      position_description: data.position_description as string,
+      manager_id: (data.manager_id as string) || null,
+      capacity: parseInt(data.capacity as string) || 100,
+      accounts: Object.entries(selectedAccounts).map(([account_id, manager_id]) => ({ account_id, manager_id: manager_id || null })),
+      teams: Object.entries(selectedTeams).filter(([, v]) => v).map(([team_id]) => team_id),
     });
 
-    if (signUpErr) {
-      setError(signUpErr.message);
+    if (!res.ok) {
+      setError(res.error);
       setSaving(false);
       return;
     }
@@ -246,31 +453,131 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
       {error && (
         <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
           {error}
         </div>
       )}
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Nombre completo</label>
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Nombre completo *</label>
         <input name="full_name" required
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
       </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Email *</label>
+          <input name="email" type="email" required
+            className="rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Contraseña *</label>
+          <input name="password" type="password" required minLength={MIN_PASSWORD_LENGTH}
+            className="rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Rol</label>
+          <select name="role" defaultValue="COLABORADOR"
+            className="rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+            <option value="COLABORADOR">COLABORADOR</option>
+            <option value="DIRECTOR">DIRECTOR</option>
+            <option value="SYSADMIN">SYSADMIN</option>
+            <option value="SUPERADMIN">SUPERADMIN</option>
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Capacidad (%)</label>
+          <input name="capacity" type="number" min={0} max={100} defaultValue={100}
+            className="rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+        </div>
+      </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Email</label>
-        <input name="email" type="email" required
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Posición</label>
+        <input name="position"
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
       </div>
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Contraseña</label>
-        <input name="password" type="password" required minLength={MIN_PASSWORD_LENGTH}
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Descripción de posición</label>
+        <input name="position_description"
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
       </div>
-      <div className="flex gap-2 justify-end">
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Manager global (default)</label>
+        <select name="manager_id" defaultValue=""
+          className="rounded-lg px-3 py-2 text-sm outline-none"
+          style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+          <option value="">Sin manager</option>
+          {profiles.map((p) => (
+            <option key={p.id} value={p.id}>{p.full_name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="rounded-xl p-3" style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
+        <h4 className="text-xs font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Cuentas asignadas (cada cuenta puede tener su propio manager/director)</h4>
+        <div className="flex flex-col gap-1.5">
+          {accounts.length === 0 && <p className="text-xs" style={{ color: "var(--text-muted)" }}>No hay cuentas creadas. Créalas en Catálogos.</p>}
+          {accounts.map((a) => {
+            const checked = a.id in selectedAccounts;
+            return (
+              <div key={a.id} className="flex items-center gap-2">
+                <button type="button" onClick={() => toggleAccount(a.id)}
+                  className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all flex-1"
+                  style={{ background: checked ? "rgba(14,165,233,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
+                  <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
+                    style={{ borderColor: checked ? "var(--accent-cyan)" : "var(--text-muted)" }}>
+                    {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
+                  </span>
+                  <span style={{ color: "var(--text-primary)" }}>{a.name}</span>
+                </button>
+                {checked && (
+                  <select value={selectedAccounts[a.id]}
+                    onChange={(e) => setSelectedAccounts((prev) => ({ ...prev, [a.id]: e.target.value }))}
+                    className="px-2 py-1 rounded text-xs outline-none"
+                    style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+                    <option value="">Sin manager</option>
+                    {profiles.map((p) => <option key={p.id} value={p.id}>{p.full_name}</option>)}
+                  </select>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-xl p-3" style={{ background: "var(--card-bg)", border: "1px solid var(--border)" }}>
+        <h4 className="text-xs font-semibold mb-2" style={{ color: "var(--text-primary)" }}>Equipos asignados</h4>
+        <div className="flex flex-col gap-1.5">
+          {teams.length === 0 && <p className="text-xs" style={{ color: "var(--text-muted)" }}>No hay equipos creados. Créalos en Catálogos.</p>}
+          {teams.map((t) => {
+            const checked = !!selectedTeams[t.id];
+            const acc = accounts.find((a) => a.id === t.account_id);
+            return (
+              <button key={t.id} type="button" onClick={() => toggleTeam(t.id)}
+                className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all"
+                style={{ background: checked ? "rgba(14,165,233,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
+                <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
+                  style={{ borderColor: checked ? "var(--accent-cyan)" : "var(--text-muted)" }}>
+                  {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
+                </span>
+                <span style={{ color: "var(--text-primary)" }}>{t.name}</span>
+                {acc && <span style={{ color: "var(--text-muted)" }}>({acc.name})</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex gap-2 justify-end sticky bottom-0 py-2" style={{ background: "var(--card-bg)" }}>
         <button type="submit" disabled={saving}
           className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
@@ -282,7 +589,6 @@ function CreateUserForm({ onDone }: { onDone: () => void }) {
 }
 
 function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; profiles: Profile[]; onDone: () => void }) {
-  const supabase = createClient();
   const [saving, setSaving] = useState(false);
 
   if (!profile) return null;
@@ -310,13 +616,19 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
       return;
     }
 
-    await supabase.from("profiles").update({
-      role,
-      position: data.position,
-      position_description: data.position_description,
-      manager_id: data.manager_id || null,
+    const res = await adminUpdateUser(profile.id, {
+      role: role as "COLABORADOR" | "DIRECTOR" | "SYSADMIN" | "SUPERADMIN",
+      position: data.position as string,
+      position_description: data.position_description as string,
+      manager_id: (data.manager_id as string) || null,
       capacity,
-    }).eq("id", profile.id);
+    });
+
+    if (!res.ok) {
+      setError(res.error);
+      setSaving(false);
+      return;
+    }
 
     setSaving(false);
     onDone();
@@ -448,6 +760,13 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
     refresh();
   };
 
+  const setAccountManager = async (pa: ProfileAccount, managerId: string) => {
+    setSaving(true);
+    await supabase.from("profile_accounts").update({ manager_id: managerId || null }).eq("id", pa.id);
+    setSaving(false);
+    refresh();
+  };
+
   const availableAccounts = accounts.filter((a) => !profileAccounts.some((pa) => pa.account_id === a.id));
   const availableTeams = teams.filter((t) => !profileTeams.some((pt) => pt.team_id === t.id));
 
@@ -476,13 +795,25 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
               {profileAccounts.map((pa) => {
                 const acc = accounts.find((a) => a.id === pa.account_id);
                 return (
-                  <div key={pa.id} className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
+                  <div key={pa.id} className="flex flex-col gap-1 px-3 py-2 rounded-lg text-sm"
                     style={{ background: "var(--accordion-bg)" }}>
-                    <span style={{ color: "var(--text-primary)" }}>{acc?.name || pa.account_id}</span>
-                    <button onClick={() => removeAccount(pa.id)} disabled={saving}
-                      className="p-1 rounded hover:opacity-70" style={{ color: "var(--accent-rose)" }}>
-                      <X size={14} />
-                    </button>
+                    <div className="flex items-center justify-between">
+                      <span style={{ color: "var(--text-primary)" }}>{acc?.name || pa.account_id}</span>
+                      <button onClick={() => removeAccount(pa.id)} disabled={saving}
+                        className="p-1 rounded hover:opacity-70" style={{ color: "var(--accent-rose)" }}>
+                        <X size={14} />
+                      </button>
+                    </div>
+                    <select value={pa.manager_id || ""}
+                      onChange={(e) => setAccountManager(pa, e.target.value)}
+                      disabled={saving}
+                      className="w-full px-2 py-1 rounded text-xs outline-none"
+                      style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+                      <option value="">Sin manager</option>
+                      {profiles.filter((p) => p.id !== pa.profile_id).map((p) => (
+                        <option key={p.id} value={p.id}>{p.full_name}</option>
+                      ))}
+                    </select>
                   </div>
                 );
               })}

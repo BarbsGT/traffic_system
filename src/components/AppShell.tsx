@@ -8,15 +8,30 @@ import { SidebarNav } from "@/components/layout/SidebarNav";
 
 const publicRoutes = ["/login", "/auth/callback"];
 
+const adminOnlyRoutes = ["/dashboard"];
+
+const adminRoles = ["SUPERADMIN", "SYSADMIN"];
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [role, setRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user ?? null);
+    supabase.auth.getUser().then(async ({ data }) => {
+      const currentUser = data.user ?? null;
+      setUser(currentUser);
+
+      if (currentUser) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", currentUser.id)
+          .single();
+        if (profile) setRole(profile.role);
+      }
       setLoading(false);
     });
 
@@ -47,6 +62,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (!user) {
     if (typeof window !== "undefined") {
       window.location.href = "/login";
+    }
+    return null;
+  }
+
+  if (adminOnlyRoutes.some((r) => pathname.startsWith(r)) && !adminRoles.includes(role)) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/projects";
     }
     return null;
   }

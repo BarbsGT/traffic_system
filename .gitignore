@@ -20,3 +20,4 @@ yarn-error.log*
 test-results/
 playwright-report/
 .opencode/
+.env*

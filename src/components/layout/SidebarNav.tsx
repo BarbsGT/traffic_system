@@ -18,7 +18,7 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
-  { label: "Panel General", href: "/dashboard", icon: <LayoutDashboard size={18} /> },
+  { label: "Panel General", href: "/dashboard", icon: <LayoutDashboard size={18} />, roles: ["SUPERADMIN", "SYSADMIN"] },
   { label: "Dashboard Ejecutivo", href: "/projects/account-dashboard", icon: <Briefcase size={18} /> },
   { label: "Alertas y Recomendaciones", href: "/alerts", icon: <AlertTriangle size={18} /> },
   { label: "Perfil", href: "/profile", icon: <User size={18} /> },
