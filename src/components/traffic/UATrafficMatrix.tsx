@@ -423,11 +423,12 @@ export function UATrafficMatrix({ accountId }: Props) {
       let parsed: string | number = value;
       if (col === "budget") parsed = parseFloat(value) || 0;
       if (col === "working_days") parsed = parseInt(value) || 0;
+      const dbCol = col === "project_name" ? "name" : col;
       const updated = { ...r, [col]: parsed };
       if ((col === "brief_date" || col === "end_date") && updated.brief_date && updated.end_date) {
         updated.working_days = computeWorkingDays(updated.brief_date, updated.end_date);
       }
-      supabase.from("projects").update({ [col]: parsed }).eq("id", rowId).then(({ error }) => {
+      supabase.from("projects").update({ [dbCol]: parsed }).eq("id", rowId).then(({ error }) => {
         if (error) console.error("Error guardando:", JSON.stringify(error));
       });
       return updated;
@@ -586,12 +587,39 @@ export function UATrafficMatrix({ accountId }: Props) {
   }
 
   function renderCell(row: UARow, colKey: string) {
-    if (colKey === "project_name") return renderProjectHero(row);
-    if (colKey === "end_date") return renderDeadline(row);
     if (colKey === "actions") return renderActions(row);
 
     const col = colKey as EditableCol;
     const isEditing = editing?.row === row.id && editing?.col === col;
+
+    if (colKey === "project_name") {
+      if (isEditing) {
+        return (
+          <input ref={inputRef as React.Ref<HTMLInputElement>} type="text" defaultValue={row.project_name}
+            onBlur={(e) => { if (e.target.value !== row.project_name) commitEdit(row.id, "project_name", e.target.value); else cancelEdit(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") commitEdit(row.id, "project_name", (e.target as HTMLInputElement).value); if (e.key === "Escape") cancelEdit(); }}
+            autoFocus
+            className="w-full px-1 py-0.5 rounded text-[11px] outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--accent-cyan)", color: "var(--text-primary)" }} />
+        );
+      }
+      return renderProjectHero(row);
+    }
+
+    if (colKey === "end_date") {
+      if (isEditing) {
+        return (
+          <input ref={inputRef as React.Ref<HTMLInputElement>} type="date" defaultValue={toDateInput(row.end_date)}
+            onBlur={(e) => commitEdit(row.id, "end_date", e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") commitEdit(row.id, "end_date", (e.target as HTMLInputElement).value); if (e.key === "Escape") cancelEdit(); }}
+            autoFocus
+            className="w-full px-1 py-0.5 rounded text-[11px] outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--accent-cyan)", color: "var(--text-primary)" }} />
+        );
+      }
+      return renderDeadline(row);
+    }
+
     const val = row[col];
     const strVal = String(val ?? "");
 
@@ -814,7 +842,7 @@ export function UATrafficMatrix({ accountId }: Props) {
                         }}
                         onClick={(e) => {
                           if (col.key === "actions") return;
-                          if (!editing && col.key !== "project_name") { e.stopPropagation(); startEdit(row.id, col.key as EditableCol); }
+                          if (!editing) { e.stopPropagation(); startEdit(row.id, col.key as EditableCol); }
                         }}>
                         {renderCell(row, col.key)}
                       </td>
@@ -1191,15 +1219,26 @@ export function UATrafficMatrix({ accountId }: Props) {
             </div>
 
             <div className="p-5 space-y-5">
+              {/* Nombre del proyecto */}
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Nombre del proyecto</span>
+                <input type="text" value={drawerProject.project_name}
+                  onChange={(e) => setDrawerProject({ ...drawerProject, project_name: e.target.value })}
+                  onBlur={(e) => commitEdit(drawerProject.id, "project_name", e.target.value)}
+                  className="w-full mt-1.5 px-3 py-2 rounded-lg text-[12px] outline-none"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+              </div>
+
               {/* Status */}
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Estado Creativo</span>
-                <div className="mt-1">
-                  <span className="px-3 py-1 rounded-full text-[12px] font-semibold"
-                    style={{ background: STATUS_STYLE[drawerProject.creative_status]?.bg, color: STATUS_STYLE[drawerProject.creative_status]?.text }}>
-                    {drawerProject.creative_status || "—"}
-                  </span>
-                </div>
+                <select value={drawerProject.creative_status || ""}
+                  onChange={(e) => setDrawerProject({ ...drawerProject, creative_status: e.target.value })}
+                  onBlur={(e) => commitEdit(drawerProject.id, "creative_status", e.target.value)}
+                  className="w-full mt-1.5 px-3 py-2 rounded-lg text-[12px] outline-none"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+                  {CREATIVE_STATUSES.map((s) => (<option key={s} value={s}>{s}</option>))}
+                </select>
               </div>
 
               {/* Fechas */}
@@ -1207,17 +1246,24 @@ export function UATrafficMatrix({ accountId }: Props) {
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Cronograma</span>
                 <div className="mt-1.5 grid grid-cols-2 gap-2">
                   {[
-                    { label: "Brief", value: drawerProject.brief_date },
-                    { label: "Deadline", value: drawerProject.end_date },
-                    { label: "Días habiles", value: String(drawerProject.working_days || "—") },
-                    { label: "Lanzamiento", value: drawerProject.launch_date },
-                    { label: "Presentación", value: drawerProject.presentation_date },
+                    { label: "Brief", col: "brief_date" as const },
+                    { label: "Deadline", col: "end_date" as const },
+                    { label: "Lanzamiento", col: "launch_date" as const },
+                    { label: "Presentación", col: "presentation_date" as const },
                   ].map((f) => (
                     <div key={f.label} className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                       <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>{f.label}</span>
-                      <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{f.value ? formatDate(f.value) : "—"}</p>
+                      <input type="date" value={toDateInput(String(drawerProject[f.col] || ""))}
+                        onChange={(e) => setDrawerProject({ ...drawerProject, [f.col]: e.target.value })}
+                        onBlur={(e) => commitEdit(drawerProject.id, f.col, e.target.value)}
+                        className="w-full mt-1 bg-transparent text-[12px] font-medium outline-none"
+                        style={{ color: "var(--text-primary)" }} />
                     </div>
                   ))}
+                  <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+                    <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Días habiles</span>
+                    <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{String(drawerProject.working_days || "—")}</p>
+                  </div>
                 </div>
               </div>
 
@@ -1225,11 +1271,19 @@ export function UATrafficMatrix({ accountId }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Cliente</span>
-                  <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{drawerProject.client_owner || "—"}</p>
+                  <input type="text" value={drawerProject.client_owner || ""}
+                    onChange={(e) => setDrawerProject({ ...drawerProject, client_owner: e.target.value })}
+                    onBlur={(e) => commitEdit(drawerProject.id, "client_owner", e.target.value)}
+                    className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                    style={{ color: "var(--text-primary)" }} />
                 </div>
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable</span>
-                  <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{drawerProject.resp_bt || "—"}</p>
+                  <input type="text" value={drawerProject.resp_bt || ""}
+                    onChange={(e) => setDrawerProject({ ...drawerProject, resp_bt: e.target.value })}
+                    onBlur={(e) => commitEdit(drawerProject.id, "resp_bt", e.target.value)}
+                    className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                    style={{ color: "var(--text-primary)" }} />
                 </div>
               </div>
 
@@ -1237,48 +1291,74 @@ export function UATrafficMatrix({ accountId }: Props) {
               <div className="grid grid-cols-2 gap-3">
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Status BT Live</span>
-                  <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{drawerProject.status_btlive || "—"}</p>
+                  <input type="text" value={drawerProject.status_btlive || ""}
+                    onChange={(e) => setDrawerProject({ ...drawerProject, status_btlive: e.target.value })}
+                    onBlur={(e) => commitEdit(drawerProject.id, "status_btlive", e.target.value)}
+                    className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                    style={{ color: "var(--text-primary)" }} />
                 </div>
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Status Migrante</span>
-                  <p className="text-[12px] font-medium" style={{ color: "var(--text-primary)" }}>{drawerProject.status_migrante || "—"}</p>
+                  <input type="text" value={drawerProject.status_migrante || ""}
+                    onChange={(e) => setDrawerProject({ ...drawerProject, status_migrante: e.target.value })}
+                    onBlur={(e) => commitEdit(drawerProject.id, "status_migrante", e.target.value)}
+                    className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                    style={{ color: "var(--text-primary)" }} />
                 </div>
               </div>
 
               {/* Presupuesto */}
               <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                 <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Presupuesto</span>
-                <p className="text-[14px] font-bold font-mono" style={{ color: "var(--accent-green)" }}>
-                  ${Number(drawerProject.budget || 0).toLocaleString("es")}
-                </p>
+                <input type="number" value={Number(drawerProject.budget || 0)}
+                  onChange={(e) => setDrawerProject({ ...drawerProject, budget: parseFloat(e.target.value) || 0 })}
+                  onBlur={(e) => commitEdit(drawerProject.id, "budget", e.target.value)}
+                  className="w-full mt-0.5 bg-transparent text-[14px] font-bold font-mono outline-none"
+                  style={{ color: "var(--accent-green)" }} />
+              </div>
+
+              {/* Tier y Área */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+                  <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Tier</span>
+                  <select value={drawerProject.tier || ""}
+                    onChange={(e) => setDrawerProject({ ...drawerProject, tier: e.target.value })}
+                    onBlur={(e) => commitEdit(drawerProject.id, "tier", e.target.value)}
+                    className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                    style={{ color: "var(--text-primary)" }}>
+                    {TIERS.map((t) => (<option key={t} value={t}>{t}</option>))}
+                  </select>
+                </div>
+                <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+                  <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Área</span>
+                  <input type="text" value={drawerProject.area || ""}
+                    onChange={(e) => setDrawerProject({ ...drawerProject, area: e.target.value })}
+                    onBlur={(e) => commitEdit(drawerProject.id, "area", e.target.value)}
+                    className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                    style={{ color: "var(--text-primary)" }} />
+                </div>
               </div>
 
               {/* Activos */}
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Activos</span>
-                <div className="mt-1.5 flex gap-2">
-                  {drawerProject.brief_link ? (
-                    <a href={drawerProject.brief_link} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-all hover:opacity-80"
-                      style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", color: "var(--accent-cyan)" }}>
-                      <FileText size={14} /> Abrir Brief
-                    </a>
-                  ) : (
-                    <span className="px-3 py-2 rounded-lg text-[11px]" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", color: "var(--text-muted)" }}>
-                      Sin brief
-                    </span>
-                  )}
-                  {drawerProject.decks_link ? (
-                    <a href={drawerProject.decks_link} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-medium transition-all hover:opacity-80"
-                      style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", color: "var(--accent-purple)" }}>
-                      <ExternalLink size={14} /> Abrir Decks
-                    </a>
-                  ) : (
-                    <span className="px-3 py-2 rounded-lg text-[11px]" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)", color: "var(--text-muted)" }}>
-                      Sin decks
-                    </span>
-                  )}
+                <div className="mt-1.5 space-y-2">
+                  <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+                    <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Brief link</span>
+                    <input type="url" value={drawerProject.brief_link || ""} placeholder="https://..."
+                      onChange={(e) => setDrawerProject({ ...drawerProject, brief_link: e.target.value })}
+                      onBlur={(e) => commitEdit(drawerProject.id, "brief_link", e.target.value)}
+                      className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                      style={{ color: "var(--accent-cyan)" }} />
+                  </div>
+                  <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+                    <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Decks link</span>
+                    <input type="url" value={drawerProject.decks_link || ""} placeholder="https://..."
+                      onChange={(e) => setDrawerProject({ ...drawerProject, decks_link: e.target.value })}
+                      onBlur={(e) => commitEdit(drawerProject.id, "decks_link", e.target.value)}
+                      className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
+                      style={{ color: "var(--accent-purple)" }} />
+                  </div>
                 </div>
               </div>
 
