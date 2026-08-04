@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { isTaskRedAlert } from "@/utils/taskAlerts";
+import { isTaskRedAlert, isProjectRedStatus } from "@/utils/taskAlerts";
 import {
   Search, Plus, ChevronDown, ChevronRight, ExternalLink, FileText,
   MessageSquare, X, Eye, EyeOff, Lock, LockOpen,
@@ -85,16 +85,6 @@ const PRIORITY_STYLE: Record<string, { bg: string; text: string }> = {
   URGENT: { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" },
 };
 
-const STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  Approved: { bg: "rgba(16,185,129,0.15)", text: "rgb(16,185,129)" },
-  "On Hold": { bg: "rgba(245,158,11,0.15)", text: "rgb(245,158,11)" },
-  "Pending Client": { bg: "rgba(244,63,94,0.15)", text: "rgb(244,63,94)" },
-  "In Progress": { bg: "rgba(14,165,233,0.15)", text: "rgb(14,165,233)" },
-  Send: { bg: "rgba(139,92,246,0.15)", text: "rgb(139,92,246)" },
-  Ajustes: { bg: "rgba(244,63,94,0.15)", text: "rgb(244,63,94)" },
-  "To do": { bg: "rgba(100,116,139,0.15)", text: "rgb(148,163,184)" },
-};
-
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   Gold: { bg: "rgba(245,158,11,0.15)", text: "rgb(217,119,6)" },
   Silver: { bg: "rgba(148,163,184,0.2)", text: "rgb(100,116,139)" },
@@ -153,7 +143,7 @@ function deadlineInfo(row: UARow): { label: string; overdue: boolean } {
     if (diff === 0) return { label: "A tiempo", overdue: false };
     return { label: `${Math.abs(diff)}d antes`, overdue: false };
   }
-  if (row.creative_status === "Approved" || row.creative_status === "Send") {
+  if (row.creative_status === "Approved" || row.creative_status === "Send" || !isProjectRedStatus(row.creative_status)) {
     return { label: "A tiempo", overdue: false };
   }
   const days = daysRemaining(row.end_date);
@@ -637,7 +627,6 @@ export function UATrafficMatrix({ accountId }: Props) {
     const strVal = String(val ?? "");
 
     if (col === "creative_status") {
-      const style = STATUS_STYLE[strVal];
       if (isEditing) {
         return (
           <select ref={inputRef as React.Ref<HTMLSelectElement>} defaultValue={strVal}
@@ -657,9 +646,13 @@ export function UATrafficMatrix({ accountId }: Props) {
           </select>
         );
       }
+      const isRed = isProjectRedStatus(strVal);
       return (
         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
-          style={{ background: style?.bg, color: style?.text }}>
+          style={{
+            background: isRed ? "rgba(244,63,94,0.15)" : "var(--card-bg)",
+            color: isRed ? "rgb(244,63,94)" : "var(--text-muted)",
+          }}>
           {strVal || "—"}
         </span>
       );

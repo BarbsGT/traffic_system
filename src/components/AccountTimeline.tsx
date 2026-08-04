@@ -31,13 +31,10 @@ interface Props {
 }
 
 const PROJECT_STATUS_COLORS: Record<string, string> = {
-  Approved: "var(--accent-green)",
-  Send: "var(--accent-purple)",
-  "On Hold": "var(--accent-amber)",
-  "Pending Client": "var(--accent-rose)",
-  "In Progress": "var(--accent-cyan)",
   Ajustes: "var(--accent-rose)",
-  "To do": "var(--text-muted)",
+  "In Progress": "var(--accent-rose)",
+  "To do": "var(--accent-rose)",
+  Review: "var(--accent-rose)",
 };
 
 const TASK_STATUS_COLORS: Record<string, string> = {

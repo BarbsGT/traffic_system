@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { isProjectOverdue } from "@/utils/taskAlerts";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
   Legend, CartesianGrid,
@@ -24,6 +25,7 @@ interface UARow {
   creative_status: string;
   status_btlive: string;
   status_migrante: string;
+  delivered_at?: string | null;
 }
 
 interface SupabaseProjectRow {
@@ -35,13 +37,10 @@ interface SupabaseProjectRow {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  Approved: "var(--accent-green)",
-  "In Progress": "var(--accent-cyan)",
-  "Pending Client": "var(--accent-rose)",
-  "On Hold": "var(--accent-amber)",
-  Send: "var(--accent-purple)",
   Ajustes: "var(--accent-rose)",
-  "To do": "var(--text-muted)",
+  "In Progress": "var(--accent-rose)",
+  "To do": "var(--accent-rose)",
+  "Review": "var(--accent-rose)",
 };
 
 const TIER_ORDER = ["Gold", "Silver", "Bronze"];
@@ -81,6 +80,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
         creative_status: String(r.creative_status || ""),
         status_btlive: String(r.status_btlive || ""),
         status_migrante: String(r.status_migrante || ""),
+        delivered_at: r.delivered_at ? String(r.delivered_at) : null,
       });
       setData((accountResult.data || []).map(mapRow));
       setAllAccountsData((allResult.data || []).map(mapRow));
@@ -105,9 +105,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
     : 0;
   const completedCount = data.filter((r) => r.creative_status === "Approved" || r.creative_status === "Send").length;
   const healthPct = data.length ? Math.round((completedCount / data.length) * 100) : 0;
-  const overdueCount = data.filter(
-    (r) => r.end_date && new Date(r.end_date) < new Date() && r.creative_status !== "Approved" && r.creative_status !== "Send"
-  ).length;
+  const overdueCount = data.filter((r) => isProjectOverdue(r)).length;
   const ajustesCount = data.filter((r) => r.creative_status === "Ajustes").length;
 
   // Area x Tier stacked bar
@@ -147,9 +145,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
 
   // Overdue projects list
   const overdueProjects = data
-    .filter(
-      (r) => r.end_date && new Date(r.end_date) < new Date() && r.creative_status !== "Approved" && r.creative_status !== "Send"
-    )
+    .filter((r) => isProjectOverdue(r))
     .sort((a, b) => new Date(a.end_date).getTime() - new Date(b.end_date).getTime())
     .slice(0, 5);
 

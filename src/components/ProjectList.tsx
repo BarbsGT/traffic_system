@@ -17,6 +17,7 @@ interface Project {
   start_date: string | null;
   end_date: string | null;
   delivered_at: string | null;
+  creative_status: string | null;
 }
 
 interface Task {
