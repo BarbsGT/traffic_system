@@ -157,9 +157,10 @@ function getUniqueClientOwners(data: UARow[]): string[] {
 
 interface Props {
   accountId: string;
+  disableSearch?: boolean;
 }
 
-export function UATrafficMatrix({ accountId }: Props) {
+export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   const [rows, setRows] = useState<UARow[]>([]);
   const [tasks, setTasks] = useState<Record<string, UATask[]>>({});
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -732,12 +733,14 @@ export function UATrafficMatrix({ accountId }: Props) {
     <div className="space-y-3 animate-fadeIn">
       {/* Toolbar */}
       <div className="flex items-center gap-2 flex-wrap">
-        <div className="relative flex-1 max-w-[180px]">
-          <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
-          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..."
-            className="w-full pl-7 pr-2 py-1.5 rounded-lg text-[11px] outline-none transition-all"
-            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
-        </div>
+        {!disableSearch && (
+          <div className="relative flex-1 max-w-[180px]">
+            <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..."
+              className="w-full pl-7 pr-2 py-1.5 rounded-lg text-[11px] outline-none transition-all"
+              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+          </div>
+        )}
 
         <select value={filterArea} onChange={(e) => setFilterArea(e.target.value)}
           className="px-2 py-1.5 rounded-lg text-[11px] outline-none"

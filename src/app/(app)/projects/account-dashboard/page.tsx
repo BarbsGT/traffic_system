@@ -113,7 +113,7 @@ export default function AccountDashboardPage() {
               accountName={currentAccount?.name || ""}
             />
           )}
-          {tab === "matrix" && <UATrafficMatrix accountId={selectedAccountId} />}
+          {tab === "matrix" && <UATrafficMatrix accountId={selectedAccountId} disableSearch />}
           {tab === "timeline" && <DailyGanttModule filters={{ accountId: selectedAccountId }} />}
         </>
       )}
