@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/tasks/StatusBadge";
+import { isTaskRedAlert } from "@/utils/taskAlerts";
 import { Plus, MoreHorizontal } from "lucide-react";
 
 interface Project {
@@ -14,6 +15,8 @@ interface Project {
   description: string;
   status: string;
   priority: string;
+  end_date?: string | null;
+  delivered_at?: string | null;
 }
 
 interface Task {
@@ -96,7 +99,7 @@ export default function ProjectDetailPage() {
                       <MoreHorizontal size={14} style={{ color: "var(--text-muted)" }} />
                     </div>
                     <div className="mt-2">
-                      <StatusBadge status={task.status} />
+                      <StatusBadge status={task.status} tone={isTaskRedAlert(task.status, project) ? "red" : "gray"} />
                     </div>
                   </GlassCard>
                 ))}

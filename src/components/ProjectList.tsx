@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBadge } from "@/components/tasks/StatusBadge";
-import { FolderKanban, Circle } from "lucide-react";
+import { isProjectOverdue } from "@/utils/taskAlerts";
+import { FolderKanban, AlertTriangle } from "lucide-react";
 
 interface Project {
   id: string;
@@ -15,6 +16,7 @@ interface Project {
   color: string;
   start_date: string | null;
   end_date: string | null;
+  delivered_at: string | null;
 }
 
 interface Task {
@@ -58,7 +60,15 @@ export function ProjectList() {
                   <FolderKanban size={18} style={{ color: p.color || "var(--accent-cyan)" }} />
                   <h3 className="font-semibold" style={{ color: "var(--text-primary)" }}>{p.name}</h3>
                 </div>
-                <StatusBadge status={p.status} />
+                <div className="flex items-center gap-2">
+                  {isProjectOverdue(p) && (
+                    <span className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
+                      style={{ background: "rgba(244,63,94,0.15)", color: "var(--accent-rose)" }}>
+                      <AlertTriangle size={11} className="mr-1" /> VENCIDO
+                    </span>
+                  )}
+                  <StatusBadge status={p.status} />
+                </div>
               </div>
               <p className="text-sm mb-4 line-clamp-2" style={{ color: "var(--text-secondary)" }}>
                 {p.description || "Sin descripción"}

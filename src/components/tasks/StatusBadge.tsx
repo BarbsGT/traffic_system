@@ -1,6 +1,7 @@
 interface StatusBadgeProps {
   status: string;
   className?: string;
+  tone?: "auto" | "red" | "gray";
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -11,8 +12,16 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
   BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(244,63,94,0.15)" },
 };
 
-export function StatusBadge({ status, className = "" }: StatusBadgeProps) {
-  const config = statusConfig[status] || { label: status, color: "var(--text-muted)", bg: "var(--card-bg)" };
+const toneConfig = {
+  red: { color: "var(--accent-rose)", bg: "rgba(244,63,94,0.15)" },
+  gray: { color: "var(--text-muted)", bg: "var(--card-bg)" },
+};
+
+export function StatusBadge({ status, className = "", tone = "auto" }: StatusBadgeProps) {
+  const base = statusConfig[status] || { label: status, color: "var(--text-muted)", bg: "var(--card-bg)" };
+  const config = tone === "red" ? { ...base, color: toneConfig.red.color, bg: toneConfig.red.bg }
+    : tone === "gray" ? { ...base, color: toneConfig.gray.color, bg: toneConfig.gray.bg }
+    : base;
 
   return (
     <span

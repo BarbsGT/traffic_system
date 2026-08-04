@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { isTaskRedAlert } from "@/utils/taskAlerts";
 import {
   Search, Plus, ChevronDown, ChevronRight, ExternalLink, FileText,
   MessageSquare, X, Eye, EyeOff, Lock, LockOpen,
@@ -105,14 +106,6 @@ const AREA_COLORS: Record<string, string> = {
   "Social media": "rgb(14,165,233)",
   "Paid media": "rgb(16,185,129)",
   "Marketing Ops": "rgb(245,158,11)",
-};
-
-const TASK_STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: "rgba(245,158,11,0.12)", text: "var(--accent-amber)" },
-  IN_PROGRESS: { bg: "rgba(14,165,233,0.12)", text: "var(--accent-cyan)" },
-  REVIEW: { bg: "rgba(139,92,246,0.12)", text: "var(--accent-purple)" },
-  COMPLETED: { bg: "rgba(16,185,129,0.12)", text: "var(--accent-green)" },
-  BLOCKED: { bg: "rgba(244,63,94,0.12)", text: "var(--accent-rose)" },
 };
 
 function formatDate(d: string) {
@@ -236,11 +229,13 @@ export function UATrafficMatrix({ accountId }: Props) {
 
   const blockedCounts = useMemo(() => {
     const counts: Record<string, number> = {};
+    const projectById = new Map(rows.map((r) => [r.id, r]));
     Object.entries(tasks).forEach(([projectId, list]) => {
-      counts[projectId] = list.filter((t) => t.status === "BLOCKED").length;
+      const project = projectById.get(projectId);
+      counts[projectId] = list.filter((t) => isTaskRedAlert(t.status, project)).length;
     });
     return counts;
-  }, [tasks]);
+  }, [tasks, rows]);
 
   useEffect(() => {
     if (!accountId) return;
@@ -521,8 +516,8 @@ export function UATrafficMatrix({ accountId }: Props) {
               onClick={(e) => { e.stopPropagation(); if (!expandedRows.has(row.id)) toggleExpand(row.id); }}
               className="px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none inline-flex items-center gap-0.5 hover:opacity-80 transition-all"
               style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}
-              title="Ver tareas bloqueadas">
-              <Lock size={9} /> {blocked} BLOQUEADA{blocked > 1 ? "S" : ""}
+              title="Tareas en alerta (vencidas o bloqueadas)">
+              <Lock size={9} /> {blocked} ALERTA{blocked > 1 ? "S" : ""}
             </button>
           )}
           {row.tier && (
@@ -916,7 +911,10 @@ export function UATrafficMatrix({ accountId }: Props) {
                             <div className="space-y-1 mb-2">
                               {projectTasks.map((task) => {
                                 const assignee = profiles.find((p) => p.id === task.assignee_id);
-                                const statusStyle = TASK_STATUS_STYLE[task.status] || { bg: "var(--divider)", text: "var(--text-muted)" };
+                                const isRedAlert = isTaskRedAlert(task.status, row);
+                                const statusStyle = isRedAlert
+                                  ? { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" }
+                                  : { bg: "var(--card-bg)", text: "var(--text-muted)" };
                                 const priorityStyle = PRIORITY_STYLE[task.priority] || { bg: "var(--divider)", text: "var(--text-muted)" };
                                 return (
                                   <div key={task.id}
@@ -936,10 +934,10 @@ export function UATrafficMatrix({ accountId }: Props) {
                                         style={{ background: statusStyle.bg, color: statusStyle.text }}>
                                         {TASK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
                                       </select>
-                                      {task.status === "BLOCKED" && (
+                                      {isRedAlert && (
                                         <span className="px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap"
                                           style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}>
-                                          <Lock size={9} className="inline mr-0.5 -mt-0.5" /> BLOQUEADA
+                                          <Lock size={9} className="inline mr-0.5 -mt-0.5" /> {task.status === "BLOCKED" ? "BLOQUEADA" : "ALERTA"}
                                         </span>
                                       )}
                                       <button

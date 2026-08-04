@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBadge } from "@/components/tasks/StatusBadge";
+import { isTaskRedAlert } from "@/utils/taskAlerts";
 
 interface Task {
   id: string;
@@ -19,6 +20,8 @@ interface Project {
   id: string;
   name: string;
   agency_name?: string;
+  end_date?: string | null;
+  delivered_at?: string | null;
 }
 
 interface Agency { id: string; name: string }
@@ -48,7 +51,7 @@ export function TaskList() {
   useEffect(() => {
     Promise.all([
       supabase.from("tasks").select("*"),
-      supabase.from("projects").select("id, name"),
+      supabase.from("projects").select("id, name, end_date, delivered_at"),
       supabase.from("profiles").select("id, full_name"),
       supabase.from("agencies").select("*"),
       supabase.from("accounts").select("*"),
@@ -139,7 +142,10 @@ export function TaskList() {
                       </span>
                     )}
                   </div>
-                  <StatusBadge status={t.status} />
+                  <StatusBadge
+                    status={t.status}
+                    tone={isTaskRedAlert(t.status, project) ? "red" : "gray"}
+                  />
                 </GlassCard>
               ))}
             </div>

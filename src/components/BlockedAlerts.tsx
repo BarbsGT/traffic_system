@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { isTaskRedAlert } from "@/utils/taskAlerts";
 import { AlertTriangle, CheckCheck, CircleDot, RotateCcw, X } from "lucide-react";
 
 type AlertStatus = "PENDING" | "GESTIONADA" | "DESBLOQUEADA";
@@ -22,6 +23,8 @@ interface BlockedTask {
   full_name?: string;
   project_name?: string;
   managed_by_name?: string;
+  project_end_date?: string | null;
+  project_delivered_at?: string | null;
 }
 
 type Tab = "activas" | "gestionadas" | "desbloqueadas";
@@ -40,13 +43,17 @@ export function BlockedAlerts() {
     supabase
       .from("tasks")
       .select(
-        "*, profiles!tasks_assignee_id_fkey(full_name), projects!tasks_project_id_fkey(name), manager:alert_status_by(full_name)"
+        "*, profiles!tasks_assignee_id_fkey(full_name), projects!tasks_project_id_fkey(name, end_date, delivered_at), manager:alert_status_by(full_name)"
       )
-      .or("status.eq.BLOCKED,alert_status.in.(GESTIONADA,DESBLOQUEADA)")
+      .or("status.in.(BLOCKED,PENDING,IN_PROGRESS,REVIEW),alert_status.in.(GESTIONADA,DESBLOQUEADA)")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (data) {
-          setTasks(data.map((t) => ({
+          const rawTasks = data.filter((t) => {
+            const project = t.projects as unknown as { end_date?: string | null; delivered_at?: string | null } | null;
+            return t.status === "BLOCKED" || t.alert_status !== "PENDING" || isTaskRedAlert(t.status as string, project);
+          });
+          setTasks(rawTasks.map((t) => ({
             id: t.id,
             title: t.title,
             project_id: t.project_id,
@@ -58,6 +65,8 @@ export function BlockedAlerts() {
             alert_status_by: t.alert_status_by,
             full_name: (t.profiles as unknown as { full_name: string } | null)?.full_name || "Sin asignar",
             project_name: (t.projects as unknown as { name: string } | null)?.name || "Proyecto desconocido",
+            project_end_date: (t.projects as unknown as { end_date?: string | null } | null)?.end_date,
+            project_delivered_at: (t.projects as unknown as { delivered_at?: string | null } | null)?.delivered_at,
             managed_by_name: (t.manager as unknown as { full_name: string } | null)?.full_name,
           })));
         }
@@ -109,7 +118,7 @@ export function BlockedAlerts() {
         Alertas y Recomendaciones
       </h1>
       <p className="text-sm mb-6" style={{ color: "var(--text-secondary)" }}>
-        Tareas bloqueadas que requieren atención. Márcalas como gestionadas o desbloquéalas para dejar trazabilidad con fecha.
+        Alertas rojas: proyectos con deadline vencido y tareas en progreso, ajustes o pendientes, además de tareas bloqueadas. Márcalas como gestionadas o desbloquéalas para dejar trazabilidad con fecha.
       </p>
 
       <div className="flex gap-2 mb-6 flex-wrap">
@@ -143,10 +152,12 @@ export function BlockedAlerts() {
           {visible.map((t) => {
             const isManaged = t.alert_status === "GESTIONADA";
             const isUnblocked = t.alert_status === "DESBLOQUEADA";
+            const isRed = isTaskRedAlert(t.status, { end_date: t.project_end_date, delivered_at: t.project_delivered_at });
+            const alertColor = isUnblocked ? "var(--accent-green)" : isRed ? "var(--accent-rose)" : "var(--text-muted)";
             return (
               <GlassCard key={t.id} className="p-4" >
                 <div className="flex items-start gap-3">
-                  <AlertTriangle size={20} style={{ color: isUnblocked ? "var(--accent-green)" : isManaged ? "var(--accent-amber)" : "var(--accent-rose)", marginTop: 2 }} />
+                  <AlertTriangle size={20} style={{ color: alertColor, marginTop: 2 }} />
                   <div className="flex-1">
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <h3 className="font-semibold text-sm" style={{ color: "var(--text-primary)" }}>{t.title}</h3>
@@ -163,8 +174,8 @@ export function BlockedAlerts() {
                           </span>
                         ) : (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(244,63,94,0.15)", color: "var(--accent-rose)" }}>
-                            {t.status === "BLOCKED" ? "BLOQUEADA" : "SIN GESTIONAR"}
+                            style={{ background: isRed ? "rgba(244,63,94,0.15)" : "var(--card-bg)", color: isRed ? "var(--accent-rose)" : "var(--text-muted)" }}>
+                            {t.status === "BLOCKED" ? "BLOQUEADA" : "VENCIDA"}
                           </span>
                         )}
                         {isManaged && t.status === "BLOCKED" && (
