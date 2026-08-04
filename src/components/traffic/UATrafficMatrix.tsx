@@ -413,9 +413,10 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     setCommentInputs((prev) => ({ ...prev, [taskId]: "" }));
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data, error } = await supabase.from("comments").insert({ task_id: taskId, author_id: user.id, content }).select().single();
+    const newComment: UATaskComment = { id: crypto.randomUUID(), task_id: taskId, author_id: user.id, content, created_at: new Date().toISOString() };
+    const { error } = await supabase.from("comments").insert({ id: newComment.id, task_id: taskId, author_id: user.id, content });
     if (error) { console.error("Error creando comentario:", JSON.stringify(error)); return; }
-    setTaskComments((prev) => ({ ...prev, [taskId]: [...(prev[taskId] || []), data as UATaskComment] }));
+    setTaskComments((prev) => ({ ...prev, [taskId]: [...(prev[taskId] || []), newComment] }));
   };
 
   function startEdit(row: string, col: EditableCol) { setEditing({ row, col }); }
@@ -462,15 +463,16 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
 
   async function handleCreateProject() {
     if (!createForm.project_name.trim()) return;
-    const payload: Record<string, unknown> = { account_id: accountId, creative_status: "To do", type: "ua_traffic" };
+    const newId = crypto.randomUUID();
+    const payload: Record<string, unknown> = { id: newId, account_id: accountId, creative_status: "To do", type: "ua_traffic" };
     for (const [key, val] of Object.entries(createForm)) {
       if (key === "budget") payload[key] = parseFloat(val) || 0;
       else if (key === "project_name") payload.name = val || null;
       else payload[key] = val || null;
     }
-    const { data, error } = await supabase.from("projects").insert(payload).select().single();
+    const { error } = await supabase.from("projects").insert(payload);
     if (error) { console.error("Error creando proyecto:", JSON.stringify(error)); return; }
-    const mapped = { ...data, project_name: (data as any).name } as UARow;
+    const mapped = { ...(payload as unknown as UARow), id: newId, project_name: createForm.project_name, account_id: accountId, budget: parseFloat(createForm.budget) || 0, creative_status: "To do" };
     setRows((prev) => [mapped, ...prev]);
     setShowCreateModal(false);
     setCreateForm({ project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "", resp_bt: "", end_date: "", launch_date: "", presentation_date: "", creative_status: "To do", status_btlive: "", status_migrante: "", brief_link: "", decks_link: "", team_notes: "" });
