@@ -85,6 +85,14 @@ const PRIORITY_STYLE: Record<string, { bg: string; text: string }> = {
   URGENT: { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" },
 };
 
+const TASK_STATUS_STYLE: Record<string, { bg: string; text: string }> = {
+  PENDING: { bg: "rgba(245,158,11,0.22)", text: "var(--accent-amber)" },
+  IN_PROGRESS: { bg: "rgba(14,165,233,0.22)", text: "var(--accent-cyan)" },
+  REVIEW: { bg: "rgba(139,92,246,0.22)", text: "var(--accent-purple)" },
+  COMPLETED: { bg: "rgba(16,185,129,0.22)", text: "var(--accent-green)" },
+  BLOCKED: { bg: "rgba(244,63,94,0.22)", text: "var(--accent-rose)" },
+};
+
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   Gold: { bg: "rgba(245,158,11,0.15)", text: "rgb(217,119,6)" },
   Silver: { bg: "rgba(148,163,184,0.2)", text: "rgb(100,116,139)" },
@@ -911,8 +919,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                 const assignee = profiles.find((p) => p.id === task.assignee_id);
                                 const isRedAlert = isTaskRedAlert(task.status, row);
                                 const statusStyle = isRedAlert
-                                  ? { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" }
-                                  : { bg: "var(--card-bg)", text: "var(--text-muted)" };
+                                  ? { bg: "rgba(244,63,94,0.32)", text: "var(--accent-rose)" }
+                                  : (TASK_STATUS_STYLE[task.status] || { bg: "var(--card-bg)", text: "var(--text-muted)" });
                                 const priorityStyle = PRIORITY_STYLE[task.priority] || { bg: "var(--divider)", text: "var(--text-muted)" };
                                 return (
                                   <div key={task.id}
@@ -928,8 +936,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                             updateTaskStatus(task.id, next);
                                           }
                                         }}
-                                        className="px-1.5 py-0.5 rounded text-[10px] font-medium outline-none cursor-pointer border-0"
-                                        style={{ background: statusStyle.bg, color: statusStyle.text }}>
+                                        className="px-1.5 py-0.5 rounded text-[10px] font-bold outline-none cursor-pointer"
+                                        style={{ background: statusStyle.bg, color: statusStyle.text, border: "1px solid " + statusStyle.text }}>
                                         {TASK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
                                       </select>
                                       {isRedAlert && (
