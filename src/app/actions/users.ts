@@ -24,7 +24,7 @@ export interface CreateUserInput {
   teams: string[];
 }
 
-async function assertAdmin(): Promise<{ ok: true } | { ok: false; error: string }> {
+async function assertAdmin(): Promise<{ ok: true; role: string } | { ok: false; error: string }> {
   const serverClient = await createServerClient();
   const { data: me } = await serverClient.auth.getUser();
   if (!me.user) return { ok: false, error: "No autenticado" };
@@ -38,7 +38,7 @@ async function assertAdmin(): Promise<{ ok: true } | { ok: false; error: string 
   if (!profile || (profile.role !== "SUPERADMIN" && profile.role !== "SYSADMIN")) {
     return { ok: false, error: "Solo SUPERADMIN/SYSADMIN pueden realizar esta operación" };
   }
-  return { ok: true };
+  return { ok: true, role: profile.role };
 }
 
 function validateCreateUserInput(input: CreateUserInput): { ok: true; email: string; password: string; full_name: string; capacity: number } | { ok: false; error: string } {
@@ -55,9 +55,17 @@ function validateCreateUserInput(input: CreateUserInput): { ok: true; email: str
   return { ok: true, email, password, full_name, capacity };
 }
 
-async function createUserInternal(input: CreateUserInput): Promise<{ ok: true } | { ok: false; error: string }> {
+function canAssignSuperRole(actorRole: string, targetRole: Role): boolean {
+  // Solo SUPERADMIN puede otorgar/ascender al rol SUPERADMIN.
+  return targetRole !== "SUPERADMIN" || actorRole === "SUPERADMIN";
+}
+
+async function createUserInternal(input: CreateUserInput, actorRole: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const valid = validateCreateUserInput(input);
   if (!valid.ok) return valid;
+  if (!canAssignSuperRole(actorRole, input.role)) {
+    return { ok: false, error: "Solo SUPERADMIN puede crear usuarios con rol SUPERADMIN" };
+  }
 
   const admin = createAdminClient();
 
@@ -113,7 +121,7 @@ export async function adminCreateUser(input: CreateUserInput): Promise<{ ok: tru
   try {
     const check = await assertAdmin();
     if (!check.ok) return check;
-    return await createUserInternal(input);
+    return await createUserInternal(input, check.role);
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado" };
   }
@@ -135,7 +143,7 @@ export async function adminBulkCreateUsers(inputs: CreateUserInput[]): Promise<B
     let created = 0;
 
     for (let i = 0; i < inputs.length; i++) {
-      const res = await createUserInternal(inputs[i]);
+      const res = await createUserInternal(inputs[i], check.role);
       if (res.ok) {
         created++;
       } else {
@@ -163,6 +171,9 @@ export async function adminUpdateUser(
     const check = await assertAdmin();
     if (!check.ok) return check;
     if (!VALID_ROLES.includes(input.role)) return { ok: false, error: "Rol no válido" };
+    if (!canAssignSuperRole(check.role, input.role)) {
+      return { ok: false, error: "Solo SUPERADMIN puede asignar el rol SUPERADMIN" };
+    }
 
     const capacity = Math.max(0, Math.min(100, Number(input.capacity) || 100));
 
@@ -188,6 +199,13 @@ export async function adminToggleActive(id: string, isActive: boolean): Promise<
     if (!check.ok) return check;
 
     const admin = createAdminClient();
+    const { data: target } = await admin.from("profiles").select("role").eq("id", id).single();
+
+    if (!target) return { ok: false, error: "Usuario no encontrado" };
+    if (target.role === "SUPERADMIN" && check.role !== "SUPERADMIN") {
+      return { ok: false, error: "Solo SUPERADMIN puede cambiar el estado de un SUPERADMIN" };
+    }
+
     const { error } = await admin.from("profiles").update({ is_active: isActive }).eq("id", id);
 
     if (error) return { ok: false, error: error.message };
