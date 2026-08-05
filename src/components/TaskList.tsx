@@ -41,6 +41,8 @@ export function TaskList() {
   const [selectedAccount, setSelectedAccount] = useState("");
   const [selectedTeam, setSelectedTeam] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
 
   const supabase = createClient();
 
@@ -81,6 +83,18 @@ export function TaskList() {
     return acc;
   }, {});
 
+  const flatTasks = Object.values(taskProjectMap).flat();
+  const totalPages = Math.max(1, Math.ceil(flatTasks.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const pageWindow = flatTasks.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE);
+
+  // Reagrupar solo las tareas de la página vigente, preservando orden de proyectos.
+  const pagedMap = pageWindow.reduce<Record<string, Task[]>>((acc, t) => {
+    if (!acc[t.project_id]) acc[t.project_id] = [];
+    acc[t.project_id].push(t);
+    return acc;
+  }, {});
+
   return (
     <div className="animate-fadeIn">
       <h1 className="text-2xl font-bold mb-6" style={{ color: "var(--text-primary)" }}>Tareas</h1>
@@ -88,38 +102,38 @@ export function TaskList() {
       {/* Filters */}
       <GlassCard className="p-4 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-          <select value={selectedAgency} onChange={(e) => { setSelectedAgency(e.target.value); setSelectedAccount(""); setSelectedTeam(""); }}
+          <select value={selectedAgency} onChange={(e) => { setSelectedAgency(e.target.value); setSelectedAccount(""); setSelectedTeam(""); setPage(0); }}
             className="rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="">Agencia</option>
             {agencies.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-          <select value={selectedAccount} onChange={(e) => { setSelectedAccount(e.target.value); setSelectedTeam(""); }}
+          <select value={selectedAccount} onChange={(e) => { setSelectedAccount(e.target.value); setSelectedTeam(""); setPage(0); }}
             className="rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="">Cuenta</option>
             {filteredAccounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-          <select value={selectedTeam} onChange={(e) => setSelectedTeam(e.target.value)}
+          <select value={selectedTeam} onChange={(e) => { setSelectedTeam(e.target.value); setPage(0); }}
             className="rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="">Equipo</option>
             {filteredTeams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
-          <select value={selectedProject} onChange={(e) => setSelectedProject(e.target.value)}
+          <select value={selectedProject} onChange={(e) => { setSelectedProject(e.target.value); setPage(0); }}
             className="rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="">Proyecto</option>
             {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+          <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
             className="rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="">Estado</option>
             {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..."
+          <input value={search} onChange={(e) => { setSearch(e.target.value); setPage(0); }} placeholder="Buscar..."
             className="rounded-lg px-3 py-2 text-sm" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
         </div>
       </GlassCard>
 
       {/* Grouped by project */}
-      {Object.entries(taskProjectMap).map(([pid, projectTasks]) => {
+      {Object.entries(pagedMap).map(([pid, projectTasks]) => {
         const project = projects.find((p) => p.id === pid);
         return (
           <div key={pid} className="mb-6">
@@ -149,10 +163,30 @@ export function TaskList() {
         );
       })}
 
-      {Object.keys(taskProjectMap).length === 0 && (
+      {flatTasks.length === 0 && (
         <GlassCard className="p-8 text-center">
           <p style={{ color: "var(--text-muted)" }}>No se encontraron tareas</p>
         </GlassCard>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6 rounded-xl px-4 py-3" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
+          <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+            {flatTasks.length} tareas · Página {currentPage + 1} de {totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+              Anterior
+            </button>
+            <button onClick={() => setPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+              Siguiente
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

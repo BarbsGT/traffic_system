@@ -30,6 +30,8 @@ export default function CatalogosPage() {
   const [showBulkModal, setShowBulkModal] = useState(false);
   const [editing, setEditing] = useState<unknown>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ table: string; id: string; name: string } | null>(null);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 20;
 
   const supabase = createClient();
 
@@ -48,6 +50,7 @@ export default function CatalogosPage() {
     if (t.data) setTeams(t.data);
     if (d.data) setDirectors(d.data);
     if (p.data) setProfiles(p.data);
+    setPage(0);
   }, [supabase]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -83,6 +86,17 @@ export default function CatalogosPage() {
     { key: "areas", label: "Áreas" },
     { key: "directors", label: "Directores de Cuenta" },
   ];
+
+  const currentData = tab === "areas" ? areas : tab === "agencies" ? agencies : tab === "accounts" ? accounts : tab === "teams" ? teams : directors;
+  const totalPages = Math.max(1, Math.ceil(currentData.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const pageStart = currentPage * PAGE_SIZE;
+  const pageEnd = pageStart + PAGE_SIZE;
+  const visibleAreas = areas.slice(pageStart, pageEnd);
+  const visibleAgencies = agencies.slice(pageStart, pageEnd);
+  const visibleAccounts = accounts.slice(pageStart, pageEnd);
+  const visibleTeams = teams.slice(pageStart, pageEnd);
+  const visibleDirectors = directors.slice(pageStart, pageEnd);
 
   return (
     <div className="animate-fadeIn">
@@ -137,21 +151,21 @@ export default function CatalogosPage() {
             </tr>
           </thead>
           <tbody>
-            {tab === "areas" && areas.map((item) => (
+            {tab === "areas" && visibleAreas.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "areas", id: item.id, name: item.name })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{item.code}</td>
                 <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
               </Row>
             ))}
-            {tab === "agencies" && agencies.map((item) => (
+            {tab === "agencies" && visibleAgencies.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "agencies", id: item.id, name: item.name })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{item.code}</td>
                 <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
               </Row>
             ))}
-            {tab === "accounts" && accounts.map((item) => (
+            {tab === "accounts" && visibleAccounts.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "accounts", id: item.id, name: item.name })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>
@@ -161,7 +175,7 @@ export default function CatalogosPage() {
                 <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
               </Row>
             ))}
-            {tab === "teams" && teams.map((item) => (
+            {tab === "teams" && visibleTeams.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "teams", id: item.id, name: item.name })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>
@@ -174,7 +188,7 @@ export default function CatalogosPage() {
                 <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
               </Row>
             ))}
-            {tab === "directors" && directors.map((item) => (
+            {tab === "directors" && visibleDirectors.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "directors", id: item.id, name: item.profile_id })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>
                   {profiles.find((p) => p.id === item.profile_id)?.full_name || "-"}
@@ -186,9 +200,8 @@ export default function CatalogosPage() {
               </Row>
             ))}
             {(() => {
-              const data = tab === "areas" ? areas : tab === "agencies" ? agencies : tab === "accounts" ? accounts : tab === "teams" ? teams : directors;
               const colSpan = tab === "areas" ? 4 : tab === "agencies" ? 4 : tab === "accounts" ? 5 : tab === "teams" ? 6 : 4;
-              return data.length === 0 ? (
+              return currentData.length === 0 ? (
                 <tr>
                   <td colSpan={colSpan} className="p-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
                     Sin registros
@@ -198,6 +211,25 @@ export default function CatalogosPage() {
             })()}
           </tbody>
         </table>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: "var(--divider)" }}>
+            <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {currentData.length} registros · Página {currentPage + 1} de {totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+                Anterior
+              </button>
+              <button onClick={() => setPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+                style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </GlassCard>
 
       {/* Create/Edit Modal */}

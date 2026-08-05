@@ -27,13 +27,20 @@ export default function UsersPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 25;
 
   const fetchData = useCallback(async () => {
     const data = await loadProfiles();
     if (data) setProfiles(data);
+    setPage(0);
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  const totalPages = Math.max(1, Math.ceil(profiles.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages - 1);
+  const visibleProfiles = profiles.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE);
 
   const openEdit = (profile: Profile) => {
     setEditing(profile);
@@ -111,7 +118,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {profiles.map((p) => {
+              {visibleProfiles.map((p) => {
                 const rs = ROLE_STYLES[p.role] || ROLE_STYLES.COLABORADOR;
                 return (
                   <tr key={p.id} style={{ borderTop: "1px solid var(--divider)", opacity: p.is_active ? 1 : 0.4 }}>
@@ -141,7 +148,7 @@ export default function UsersPage() {
                   </tr>
                 );
               })}
-              {profiles.length === 0 && (
+              {visibleProfiles.length === 0 && (
                 <tr>
                   <td colSpan={8} className="p-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
                     Sin usuarios
@@ -150,6 +157,25 @@ export default function UsersPage() {
               )}
             </tbody>
           </table>
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t" style={{ borderColor: "var(--divider)" }}>
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {profiles.length} usuarios · Página {currentPage + 1} de {totalPages}
+              </span>
+              <div className="flex items-center gap-2">
+                <button onClick={() => setPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+                  Anterior
+                </button>
+                <button onClick={() => setPage(Math.min(totalPages - 1, currentPage + 1))} disabled={currentPage >= totalPages - 1}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
         </GlassCard>
       )}
 
