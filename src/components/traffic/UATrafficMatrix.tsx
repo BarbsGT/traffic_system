@@ -410,6 +410,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, description } : t)); return u; });
   };
 
+  const updateTaskTitle = async (taskId: string, title: string) => {
+    const { error } = await supabase.from("tasks").update({ title }).eq("id", taskId);
+    if (error) { console.error("Error actualizando nombre:", JSON.stringify(error)); return; }
+    setTasks((prev) => { const u = { ...prev }; for (const k of Object.keys(u)) u[k] = u[k].map((t) => (t.id === taskId ? { ...t, title } : t)); return u; });
+  };
+
   const loadComments = useCallback(async (taskId: string) => {
     const { data } = await supabase.from("comments").select("*").eq("task_id", taskId).order("created_at");
     if (data) setTaskComments((prev) => ({ ...prev, [taskId]: data as UATaskComment[] }));
@@ -953,7 +959,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                         style={{ color: task.status === "BLOCKED" ? "var(--accent-rose)" : "var(--text-muted)" }}>
                                         {task.status === "BLOCKED" ? <LockOpen size={13} /> : <Lock size={13} />}
                                       </button>
-                                      <span className="flex-1 min-w-0 font-medium truncate" style={{ color: "var(--text-primary)" }}>{task.title}</span>
+                                      <input type="text" defaultValue={task.title}
+                                        placeholder="Nombre de tarea"
+                                        onBlur={(e) => { if (e.target.value.trim() !== (task.title || "")) updateTaskTitle(task.id, e.target.value.trim()); }}
+                                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                                        className="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-semibold outline-none"
+                                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
                                       <select value={task.priority}
                                         onChange={(e) => updateTaskPriority(task.id, e.target.value)}
                                         className="px-1.5 py-0.5 rounded text-[10px] font-semibold outline-none cursor-pointer border-0"
@@ -984,7 +995,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                       onBlur={(e) => { if (e.target.value !== (task.description || "")) updateTaskDescription(task.id, e.target.value); }}
                                       onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
                                       className="w-full px-1.5 py-0.5 rounded text-[10px] outline-none"
-                                      style={{ background: "var(--input-bg)", border: "1px solid transparent", color: "var(--text-secondary)" }} />
+                                      style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }} />
 
                                     <div className="flex flex-col gap-1 mt-0.5">
                                       {(taskComments[task.id] || []).length > 0 && (
