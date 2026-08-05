@@ -251,29 +251,49 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   useEffect(() => {
     if (!accountId) return;
     (async () => {
-      const [projectsResult, meRes] = await Promise.all([
-        supabase.from("projects").select("*").eq("type", "ua_traffic").eq("account_id", accountId).order("created_at", { ascending: false }),
-        supabase.auth.getUser(),
-      ]);
-      const raw = (projectsResult.data as any[]) || [];
-      setRows(raw.map((r) => ({ ...r, project_name: r.name })) as UARow[]);
+      const meResPromise = supabase.auth.getUser();
+      let raw: any[] = [];
+      let tasksByProject: Record<string, UATask[]> = {};
 
-      const projectIds = raw.map((r) => r.id);
-      if (projectIds.length > 0) {
-        const groupAll: UATask[] = [];
-        for (const batch of chunk(projectIds, 100)) {
-          const { data: batchTasks } = await supabase
-            .from("tasks")
-            .select("*")
-            .in("project_id", batch);
-          if (batchTasks) groupAll.push(...(batchTasks as UATask[]));
-        }
-        const grouped: Record<string, UATask[]> = {};
-        groupAll.forEach((t) => {
-          (grouped[t.project_id] = grouped[t.project_id] || []).push(t);
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc("get_ua_matrix", { p_account_id: accountId });
+      if (!rpcError && rpcData) {
+        raw = (rpcData.projects as any[]) || [];
+        tasksByProject = {};
+        ((rpcData.tasks as UATask[]) || []).forEach((t) => {
+          (tasksByProject[t.project_id] = tasksByProject[t.project_id] || []).push(t);
         });
-        setTasks(grouped);
       }
+
+      const meRes = await meResPromise;
+
+      if (!rpcData || rpcError) {
+        const { data: projectsResult } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("type", "ua_traffic")
+          .eq("account_id", accountId)
+          .order("created_at", { ascending: false });
+        raw = (projectsResult as any[]) || [];
+
+        const projectIds = raw.map((r) => r.id);
+        if (projectIds.length > 0) {
+          const groupAll: UATask[] = [];
+          for (const batch of chunk(projectIds, 100)) {
+            const { data: batchTasks } = await supabase
+              .from("tasks")
+              .select("*")
+              .in("project_id", batch);
+            if (batchTasks) groupAll.push(...(batchTasks as UATask[]));
+          }
+          groupAll.forEach((t) => {
+            (tasksByProject[t.project_id] = tasksByProject[t.project_id] || []).push(t);
+          });
+        }
+      }
+
+      setRows(raw.map((r) => ({ ...r, project_name: r.name })) as UARow[]);
+      setTasks(tasksByProject);
 
       const myRole = meRes.data?.user?.id
         ? (await supabase.from("profiles").select("role").eq("id", meRes.data.user.id).single()).data?.role
