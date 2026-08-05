@@ -36,8 +36,19 @@ export function BlockedAlerts() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [unblockTarget, setUnblockTarget] = useState<BlockedTask | null>(null);
   const [unblockStatus, setUnblockStatus] = useState("IN_PROGRESS");
+  const [myRole, setMyRole] = useState<string>("");
 
   const supabase = createClient();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+      setMyRole(profile?.role || "");
+    });
+  }, [supabase]);
+
+  const canManage = myRole === "SUPERADMIN" || myRole === "SYSADMIN" || myRole === "DIRECTOR" || myRole === "GERENTE";
 
   const loadAlerts = useCallback(() => {
     supabase
@@ -199,7 +210,7 @@ export function BlockedAlerts() {
                     </div>
                   </div>
                   <div className="flex flex-col gap-1.5 shrink-0">
-                    {!isUnblocked && (
+                    {canManage && !isUnblocked && (
                       <button
                         onClick={() => (isManaged ? openUnblock(t) : changeStatus(t, "GESTIONADA"))}
                         disabled={busyId === t.id}
@@ -210,7 +221,7 @@ export function BlockedAlerts() {
                         {isManaged ? "Desbloquear" : "Gestionada"}
                       </button>
                     )}
-                    {isUnblocked && (
+                    {canManage && isUnblocked && (
                       <button
                         onClick={() => resetStatus(t)}
                         disabled={busyId === t.id}

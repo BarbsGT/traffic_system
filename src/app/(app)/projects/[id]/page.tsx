@@ -41,6 +41,7 @@ export default function ProjectDetailPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showNewTask, setShowNewTask] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
     if (!params.id) return;
@@ -52,6 +53,13 @@ export default function ProjectDetailPage() {
 
     supabase.from("tasks").select("*").eq("project_id", params.id).then(({ data }) => {
       if (data) setTasks(data);
+    });
+
+    supabase.auth.getUser().then(async ({ data: user }) => {
+      if (!user.user) return;
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.user.id).maybeSingle();
+      const role = profile?.role || "";
+      setCanEdit(role === "SUPERADMIN" || role === "SYSADMIN" || role === "DIRECTOR" || role === "GERENTE");
     });
   }, [params.id]);
 
@@ -70,13 +78,15 @@ export default function ProjectDetailPage() {
           <h1 className="text-2xl font-bold" style={{ color: "var(--text-primary)" }}>{project.name}</h1>
           <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{project.description}</p>
         </div>
-        <button
-          onClick={() => setShowNewTask(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-          style={{ background: "var(--accent-cyan)", color: "#fff" }}
-        >
-          <Plus size={16} /> Nueva Tarea
-        </button>
+        {canEdit && (
+          <button
+            onClick={() => setShowNewTask(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+            style={{ background: "var(--accent-cyan)", color: "#fff" }}
+          >
+            <Plus size={16} /> Nueva Tarea
+          </button>
+        )}
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">

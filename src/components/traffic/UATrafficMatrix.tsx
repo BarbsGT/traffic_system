@@ -168,6 +168,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   const [drawerProject, setDrawerProject] = useState<UARow | null>(null);
   const [notesPopover, setNotesPopover] = useState<string | null>(null);
   const [notesEditValue, setNotesEditValue] = useState("");
+  const [myRole, setMyRole] = useState<string>("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({
     project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "",
@@ -197,6 +198,9 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     debounceTimers.current[key] = setTimeout(() => { delete debounceTimers.current[key]; fn(); }, ms);
   }, []);
   const supabase = createClient();
+
+  const canEdit = myRole === "SUPERADMIN" || myRole === "SYSADMIN" || myRole === "DIRECTOR" || myRole === "GERENTE";
+  const canComment = true;
 
   const ALL_COLUMNS: ColumnDef[] = [
     { key: "project_name", label: "PROYECTO", width: "220px", defaultVisible: true },
@@ -242,6 +246,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
       const myRole = meRes.data?.user?.id
         ? (await supabase.from("profiles").select("role").eq("id", meRes.data.user.id).single()).data?.role
         : null;
+      setMyRole(myRole || "");
 
       if ((myRole === "DIRECTOR" || myRole === "GERENTE") && meRes.data?.user?.id) {
         const [{ data: myAccounts }, { data: managedAccounts }] = await Promise.all([
@@ -599,14 +604,16 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
             <ExternalLink size={13} />
           </a>
         )}
-        <button onClick={(e) => { e.stopPropagation(); openNotes(row); }}
-          className="p-1 rounded hover:opacity-70 transition-all relative"
-          style={{ color: row.team_notes ? "var(--accent-amber)" : "var(--text-muted)" }} title="Notas">
-          <MessageSquare size={13} />
-          {row.team_notes && (
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style={{ background: "var(--accent-amber)" }} />
-          )}
-        </button>
+        {canEdit && (
+          <button onClick={(e) => { e.stopPropagation(); openNotes(row); }}
+            className="p-1 rounded hover:opacity-70 transition-all relative"
+            style={{ color: row.team_notes ? "var(--accent-amber)" : "var(--text-muted)" }} title="Notas">
+            <MessageSquare size={13} />
+            {row.team_notes && (
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style={{ background: "var(--accent-amber)" }} />
+            )}
+          </button>
+        )}
         <button onClick={(e) => { e.stopPropagation(); openDrawer(row); }}
           className="p-1 rounded hover:opacity-70 transition-all"
           style={{ color: "var(--accent-cyan)" }} title="Ver detalle">
@@ -811,11 +818,13 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
           )}
         </div>
 
-        <button onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all ml-auto"
-          style={{ background: "var(--accent-cyan)" }}>
-          <Plus size={13} /> +Proyecto
-        </button>
+        {canEdit && (
+          <button onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all ml-auto"
+            style={{ background: "var(--accent-cyan)" }}>
+            <Plus size={13} /> +Proyecto
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -877,7 +886,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                         }}
                         onClick={(e) => {
                           if (col.key === "actions") return;
-                          if (!editing) { e.stopPropagation(); startEdit(row.id, col.key as EditableCol); }
+                          if (!editing && canEdit) { e.stopPropagation(); startEdit(row.id, col.key as EditableCol); }
                         }}>
                         {renderCell(row, col.key)}
                       </td>
@@ -942,70 +951,94 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                   <div key={task.id}
                                     className="flex flex-col gap-1 px-2 py-1.5 rounded text-[11px]"
                                     style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                      <select value={task.status}
-                                        onChange={(e) => {
-                                          const next = e.target.value;
-                                          if (next === "COMPLETED" && task.status !== "COMPLETED") {
-                                            requestDeliveryDate("task", task.id, task.project_id, next, task.title);
-                                          } else {
-                                            updateTaskStatus(task.id, next);
-                                          }
-                                        }}
-                                        className="px-1.5 py-0.5 rounded text-[10px] font-bold outline-none cursor-pointer"
-                                        style={{ background: statusStyle.bg, color: statusStyle.text, border: "1px solid " + statusStyle.text }}>
-                                        {TASK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
-                                      </select>
-                                      {isRedAlert && (
-                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap"
-                                          style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}>
-                                          <Lock size={9} className="inline mr-0.5 -mt-0.5" /> {task.status === "BLOCKED" ? "BLOQUEADA" : "ALERTA"}
-                                        </span>
-                                      )}
-                                      <button
-                                        onClick={() => toggleTaskBlock(task.id, task.project_id, task.status === "BLOCKED")}
-                                        title={task.status === "BLOCKED" ? "Desbloquear tarea" : "Marcar como bloqueada"}
-                                        className="p-1 rounded hover:opacity-70 transition-all"
-                                        style={{ color: task.status === "BLOCKED" ? "var(--accent-rose)" : "var(--text-muted)" }}>
-                                        {task.status === "BLOCKED" ? <LockOpen size={13} /> : <Lock size={13} />}
-                                      </button>
-                                      <input type="text" defaultValue={task.title}
-                                        placeholder="Nombre de tarea"
-                                        onBlur={(e) => { if (e.target.value.trim() !== (task.title || "")) updateTaskTitle(task.id, e.target.value.trim()); }}
-                                        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                        className="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-semibold outline-none"
-                                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
-                                      <select value={task.priority}
-                                        onChange={(e) => updateTaskPriority(task.id, e.target.value)}
-                                        className="px-1.5 py-0.5 rounded text-[10px] font-semibold outline-none cursor-pointer border-0"
-                                        style={{ background: priorityStyle.bg, color: priorityStyle.text }}>
-                                        {TASK_PRIORITIES.map((p) => (<option key={p} value={p}>{p}</option>))}
-                                      </select>
-                                      <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Inicio</span>
-                                      <input type="date" value={toDateInput(task.start_date)}
-                                        onChange={(e) => debouncedUpdate(`start_${task.id}`, () => updateTaskStartDate(task.id, e.target.value))}
-                                        className="px-1 py-0.5 rounded text-[10px] outline-none"
-                                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
-                                      <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Entrega</span>
-                                      <input type="date" value={toDateInput(task.due_date)}
-                                        onChange={(e) => debouncedUpdate(`due_${task.id}`, () => updateTaskDueDate(task.id, e.target.value))}
-                                        className="px-1 py-0.5 rounded text-[10px] outline-none"
-                                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
-                                      <select value={task.assignee_id || ""}
-                                        onChange={(e) => assignTask(task.id, e.target.value)}
-                                        className="px-1.5 py-0.5 rounded text-[10px] outline-none cursor-pointer"
-                                        style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 100 }}>
-                                        <option value="">Asignar</option>
-                                        {profiles.map((p) => (<option key={p.id} value={p.id}>{p.full_name}</option>))}
-                                      </select>
-                                    </div>
-
-                                    <input type="text" defaultValue={task.description}
-                                      placeholder="Descripción..."
-                                      onBlur={(e) => { if (e.target.value !== (task.description || "")) updateTaskDescription(task.id, e.target.value); }}
-                                      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                                      className="w-full px-1.5 py-0.5 rounded text-[10px] outline-none"
-                                      style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }} />
+                                    {canEdit ? (
+                                      <>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <select value={task.status}
+                                            onChange={(e) => {
+                                              const next = e.target.value;
+                                              if (next === "COMPLETED" && task.status !== "COMPLETED") {
+                                                requestDeliveryDate("task", task.id, task.project_id, next, task.title);
+                                              } else {
+                                                updateTaskStatus(task.id, next);
+                                              }
+                                            }}
+                                            className="px-1.5 py-0.5 rounded text-[10px] font-bold outline-none cursor-pointer"
+                                            style={{ background: statusStyle.bg, color: statusStyle.text, border: "1px solid " + statusStyle.text }}>
+                                            {TASK_STATUSES.map((s) => (<option key={s} value={s}>{s.replace("_", " ")}</option>))}
+                                          </select>
+                                          <input type="text" defaultValue={task.title}
+                                            placeholder="Nombre de tarea"
+                                            onBlur={(e) => { if (e.target.value.trim() !== (task.title || "")) updateTaskTitle(task.id, e.target.value.trim()); }}
+                                            onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                                            className="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-semibold outline-none"
+                                            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+                                          <select value={task.priority}
+                                            onChange={(e) => updateTaskPriority(task.id, e.target.value)}
+                                            className="px-1.5 py-0.5 rounded text-[10px] font-semibold outline-none cursor-pointer border-0"
+                                            style={{ background: priorityStyle.bg, color: priorityStyle.text }}>
+                                            {TASK_PRIORITIES.map((p) => (<option key={p} value={p}>{p}</option>))}
+                                          </select>
+                                          <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Inicio</span>
+                                          <input type="date" value={toDateInput(task.start_date)}
+                                            onChange={(e) => debouncedUpdate(`start_${task.id}`, () => updateTaskStartDate(task.id, e.target.value))}
+                                            className="px-1 py-0.5 rounded text-[10px] outline-none"
+                                            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
+                                          <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Entrega</span>
+                                          <input type="date" value={toDateInput(task.due_date)}
+                                            onChange={(e) => debouncedUpdate(`due_${task.id}`, () => updateTaskDueDate(task.id, e.target.value))}
+                                            className="px-1 py-0.5 rounded text-[10px] outline-none"
+                                            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
+                                          <select value={task.assignee_id || ""}
+                                            onChange={(e) => assignTask(task.id, e.target.value)}
+                                            className="px-1.5 py-0.5 rounded text-[10px] outline-none cursor-pointer"
+                                            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 100 }}>
+                                            <option value="">Asignar</option>
+                                            {profiles.map((p) => (<option key={p.id} value={p.id}>{p.full_name}</option>))}
+                                          </select>
+                                        </div>
+                                        <input type="text" defaultValue={task.description}
+                                          placeholder="Descripción..."
+                                          onBlur={(e) => { if (e.target.value !== (task.description || "")) updateTaskDescription(task.id, e.target.value); }}
+                                          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                                          className="w-full px-1.5 py-0.5 rounded text-[10px] outline-none"
+                                          style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }} />
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap"
+                                            style={{ background: statusStyle.bg, color: statusStyle.text, border: "1px solid " + statusStyle.text }}>
+                                            {task.status.replace("_", " ")}
+                                          </span>
+                                          {isRedAlert && (
+                                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap"
+                                              style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}>
+                                              <Lock size={9} className="inline mr-0.5 -mt-0.5" /> {task.status === "BLOCKED" ? "BLOQUEADA" : "ALERTA"}
+                                            </span>
+                                          )}
+                                          <span className="flex-1 min-w-0 text-[11px] font-semibold truncate" style={{ color: "var(--text-primary)" }}>
+                                            {task.title}
+                                          </span>
+                                          <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                                            style={{ background: priorityStyle.bg, color: priorityStyle.text }}>
+                                            {task.priority}
+                                          </span>
+                                          <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>
+                                            Inicio {task.start_date ? formatDate(task.start_date) : "—"}
+                                          </span>
+                                          <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>
+                                            Entrega {task.due_date ? formatDate(task.due_date) : "—"}
+                                          </span>
+                                          {assignee && (
+                                            <span className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{assignee.full_name}</span>
+                                          )}
+                                        </div>
+                                        {task.description && (
+                                          <div className="text-[10px]" style={{ color: "var(--text-secondary)" }}>{task.description}</div>
+                                        )}
+                                      </>
+                                    )}
 
                                     <div className="flex flex-col gap-1 mt-0.5">
                                       {(taskComments[task.id] || []).length > 0 && (
@@ -1047,6 +1080,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                             </div>
                           )}
 
+                          {canEdit && (
                           <div className="flex flex-col gap-1.5 p-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px dashed var(--card-border)" }}>
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <input type="text" value={nf.title}
@@ -1086,6 +1120,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                               className="w-full px-2 py-1 rounded text-[10px] outline-none resize-none"
                               style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }} />
                           </div>
+                        )}
+
                         </div>
                       </td>
                     </tr>
@@ -1266,6 +1302,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Nombre del proyecto</span>
                 <input type="text" value={drawerProject.project_name}
+                  readOnly={!canEdit}
+                  placeholder="—"
                   onChange={(e) => setDrawerProject({ ...drawerProject, project_name: e.target.value })}
                   onBlur={(e) => commitEdit(drawerProject.id, "project_name", e.target.value)}
                   className="w-full mt-1.5 px-3 py-2 rounded-lg text-[12px] outline-none"
@@ -1276,6 +1314,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Estado Creativo</span>
                 <select value={drawerProject.creative_status || ""}
+                  disabled={!canEdit}
                   onChange={(e) => setDrawerProject({ ...drawerProject, creative_status: e.target.value })}
                   onBlur={(e) => commitEdit(drawerProject.id, "creative_status", e.target.value)}
                   className="w-full mt-1.5 px-3 py-2 rounded-lg text-[12px] outline-none"
@@ -1297,6 +1336,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                     <div key={f.label} className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                       <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>{f.label}</span>
                       <input type="date" value={toDateInput(String(drawerProject[f.col] || ""))}
+                        readOnly={!canEdit}
                         onChange={(e) => setDrawerProject({ ...drawerProject, [f.col]: e.target.value })}
                         onBlur={(e) => commitEdit(drawerProject.id, f.col, e.target.value)}
                         className="w-full mt-1 bg-transparent text-[12px] font-medium outline-none"
@@ -1315,6 +1355,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Cliente</span>
                   <input type="text" value={drawerProject.client_owner || ""}
+                    readOnly={!canEdit}
+                    placeholder="—"
                     onChange={(e) => setDrawerProject({ ...drawerProject, client_owner: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "client_owner", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1323,6 +1365,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable</span>
                   <input type="text" value={drawerProject.resp_bt || ""}
+                    readOnly={!canEdit}
+                    placeholder="—"
                     onChange={(e) => setDrawerProject({ ...drawerProject, resp_bt: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "resp_bt", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1335,6 +1379,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Status BT Live</span>
                   <input type="text" value={drawerProject.status_btlive || ""}
+                    readOnly={!canEdit}
+                    placeholder="—"
                     onChange={(e) => setDrawerProject({ ...drawerProject, status_btlive: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "status_btlive", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1343,6 +1389,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Status Migrante</span>
                   <input type="text" value={drawerProject.status_migrante || ""}
+                    readOnly={!canEdit}
+                    placeholder="—"
                     onChange={(e) => setDrawerProject({ ...drawerProject, status_migrante: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "status_migrante", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1354,6 +1402,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
               <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                 <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Presupuesto</span>
                 <input type="number" value={Number(drawerProject.budget || 0)}
+                  readOnly={!canEdit}
                   onChange={(e) => setDrawerProject({ ...drawerProject, budget: parseFloat(e.target.value) || 0 })}
                   onBlur={(e) => commitEdit(drawerProject.id, "budget", e.target.value)}
                   className="w-full mt-0.5 bg-transparent text-[14px] font-bold font-mono outline-none"
@@ -1365,6 +1414,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Tier</span>
                   <select value={drawerProject.tier || ""}
+                    disabled={!canEdit}
                     onChange={(e) => setDrawerProject({ ...drawerProject, tier: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "tier", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1375,6 +1425,8 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Área</span>
                   <input type="text" value={drawerProject.area || ""}
+                    readOnly={!canEdit}
+                    placeholder="—"
                     onChange={(e) => setDrawerProject({ ...drawerProject, area: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "area", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1389,6 +1441,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                   <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                     <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Brief link</span>
                     <input type="url" value={drawerProject.brief_link || ""} placeholder="https://..."
+                      readOnly={!canEdit}
                       onChange={(e) => setDrawerProject({ ...drawerProject, brief_link: e.target.value })}
                       onBlur={(e) => commitEdit(drawerProject.id, "brief_link", e.target.value)}
                       className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1397,6 +1450,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                   <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                     <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Decks link</span>
                     <input type="url" value={drawerProject.decks_link || ""} placeholder="https://..."
+                      readOnly={!canEdit}
                       onChange={(e) => setDrawerProject({ ...drawerProject, decks_link: e.target.value })}
                       onBlur={(e) => commitEdit(drawerProject.id, "decks_link", e.target.value)}
                       className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
@@ -1409,6 +1463,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Bitácora / Notas</span>
                 <textarea value={drawerProject.team_notes || ""}
+                  readOnly={!canEdit}
                   onChange={(e) => {
                     const val = e.target.value;
                     setDrawerProject({ ...drawerProject, team_notes: val });
