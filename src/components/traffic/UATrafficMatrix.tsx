@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { isTaskRedAlert, isProjectRedStatus } from "@/utils/taskAlerts";
+import { chunk, loadUAMatrix, type UATask, type Profile } from "@/lib/uamatrix";
 import {
   Search, Plus, ChevronDown, ChevronRight, ExternalLink, FileText,
   MessageSquare, X, Eye, EyeOff, Lock, LockOpen,
@@ -29,25 +30,6 @@ interface UARow {
   decks_link: string;
   team_notes: string;
   delivered_at: string;
-}
-
-interface UATask {
-  id: string;
-  project_id: string;
-  title: string;
-  description: string;
-  assignee_id: string | null;
-  status: string;
-  priority: string;
-  start_date: string;
-  due_date: string;
-  delivered_at: string | null;
-}
-
-interface Profile {
-  id: string;
-  full_name: string;
-  avatar_url: string;
 }
 
 interface UATaskComment {
@@ -131,12 +113,6 @@ function computeWorkingDays(start: string, end: string) {
 function getInitials(name: string) {
   if (!name) return "?";
   return name.split(" ").map((s) => s[0]).join("").toUpperCase().slice(0, 2);
-}
-
-function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
 }
 
 function daysRemaining(dateStr: string) {
@@ -252,45 +228,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     if (!accountId) return;
     (async () => {
       const meResPromise = supabase.auth.getUser();
-      let raw: any[] = [];
-      let tasksByProject: Record<string, UATask[]> = {};
+      let raw: Record<string, unknown>[] = [];
 
-      const { data: rpcData, error: rpcError } = await supabase
-        .rpc("get_ua_matrix", { p_account_id: accountId });
-      if (!rpcError && rpcData) {
-        raw = (rpcData.projects as any[]) || [];
-        tasksByProject = {};
-        ((rpcData.tasks as UATask[]) || []).forEach((t) => {
-          (tasksByProject[t.project_id] = tasksByProject[t.project_id] || []).push(t);
-        });
-      }
+      const { raw: loadedRaw, tasksByProject } = await loadUAMatrix(accountId);
+      raw = loadedRaw;
 
       const meRes = await meResPromise;
-
-      if (!rpcData || rpcError) {
-        const { data: projectsResult } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("type", "ua_traffic")
-          .eq("account_id", accountId)
-          .order("created_at", { ascending: false });
-        raw = (projectsResult as any[]) || [];
-
-        const projectIds = raw.map((r) => r.id);
-        if (projectIds.length > 0) {
-          const groupAll: UATask[] = [];
-          for (const batch of chunk(projectIds, 100)) {
-            const { data: batchTasks } = await supabase
-              .from("tasks")
-              .select("*")
-              .in("project_id", batch);
-            if (batchTasks) groupAll.push(...(batchTasks as UATask[]));
-          }
-          groupAll.forEach((t) => {
-            (tasksByProject[t.project_id] = tasksByProject[t.project_id] || []).push(t);
-          });
-        }
-      }
 
       setRows(raw.map((r) => ({ ...r, project_name: r.name })) as UARow[]);
       setTasks(tasksByProject);

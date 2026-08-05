@@ -20,6 +20,12 @@ async function homePathFor(userId: string): Promise<string> {
   return "/projects";
 }
 
+function safeNext(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return null;
+  if (raw.startsWith("/login")) return null;
+  return raw;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -42,7 +48,9 @@ export default function LoginPage() {
     const supabase = createClient();
     supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
-        router.push(await homePathFor(data.user.id));
+        const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+        if (next) router.push(next);
+        else router.push(await homePathFor(data.user.id));
       } else setChecking(false);
     });
   }, [router]);
@@ -75,7 +83,9 @@ export default function LoginPage() {
       return;
     }
     const { data: userData } = await supabase.auth.getUser();
-    router.push(await homePathFor(userData.user?.id || ""));
+    const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+    if (next) router.push(next);
+    else router.push(await homePathFor(userData.user?.id || ""));
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {

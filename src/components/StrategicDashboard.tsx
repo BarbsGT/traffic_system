@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ExecutiveDashboard } from "@/components/ExecutiveDashboard";
 import { TrafficMatrix } from "@/components/TrafficMatrix";
-import { GanttTimeline } from "@/components/GanttTimeline";
+import { DailyGanttModule } from "@/components/gantt/DailyGanttModule";
 
 type Tab = "ejecutivo" | "matriz" | "gantt";
 
@@ -38,7 +38,7 @@ export function StrategicDashboard() {
 
       {tab === "ejecutivo" && <ExecutiveDashboard />}
       {tab === "matriz" && <TrafficMatrix />}
-      {tab === "gantt" && <GanttTimeline />}
+      {tab === "gantt" && <DailyGanttModule filters={{}} />}
     </div>
   );
 }
