@@ -29,7 +29,16 @@ const MILESTONE_STYLE: Record<MilestoneType, { bar: string; dot: string; label: 
   GO_LIVE: { bar: "bg-emerald-500", dot: "bg-emerald-500", label: "Lanzamiento / Go-Live" },
 };
 
-const STICKY_W = 472;
+const TASK_STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
+  PENDING: { label: "Pendiente", color: "var(--accent-amber)", bg: "rgba(245,158,11,0.15)" },
+  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(14,165,233,0.15)" },
+  REVIEW: { label: "Revisión", color: "var(--accent-purple)", bg: "rgba(139,92,246,0.15)" },
+  COMPLETED: { label: "Completado", color: "var(--accent-green)", bg: "rgba(16,185,129,0.15)" },
+  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(244,63,94,0.15)" },
+};
+
+const STICKY_W = 572;
+const STATUS_W = 100;
 const HEADER_H = 33;
 
 const MIN_DAYS_VISIBLE = 60;
@@ -100,6 +109,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
   const [viewportW, setViewportW] = useState<number>(1200);
   const [responsibleFilter, setResponsibleFilter] = useState<string>("all");
   const [milestoneFilter, setMilestoneFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -124,18 +134,25 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [items]);
 
+  const statusOptions = useMemo(() => {
+    const set = new Set<string>();
+    items.forEach((it) => { if (it.status) set.add(it.status); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return items.filter((it) => {
       if (responsibleFilter !== "all" && it.responsibleName !== responsibleFilter) return false;
       if (milestoneFilter !== "all" && it.milestoneType !== milestoneFilter) return false;
+      if (statusFilter !== "all" && it.status !== statusFilter) return false;
       if (q) {
         const hay = `${it.activityTitle} ${it.projectName} ${it.responsibleName}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
     });
-  }, [items, responsibleFilter, milestoneFilter, searchQuery]);
+  }, [items, responsibleFilter, milestoneFilter, statusFilter, searchQuery]);
 
   const availableYears = useMemo(() => {
     const set = new Set<number>([new Date().getFullYear()]);
@@ -383,6 +400,19 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
             ))}
           </select>
 
+          {/* Status filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-medium outline-none cursor-pointer"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}
+          >
+            <option value="all">Todos los estados</option>
+            {statusOptions.map((s) => (
+              <option key={s} value={s}>{(TASK_STATUS_STYLE[s]?.label) || s.replace("_", " ")}</option>
+            ))}
+          </select>
+
           {/* Search */}
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-muted)" }} />
@@ -442,6 +472,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                   <div className="w-[64px] flex items-center justify-center py-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Fin</div>
                   <div className="w-[124px] flex items-center justify-center py-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Responsable</div>
                   <div className="w-[220px] flex items-center justify-center py-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Actividad</div>
+                  <div className="w-[100px] flex items-center justify-center py-1 text-[9px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Estado</div>
                 </div>
                 {days.map((d, i) => {
                   const isWeekend = d.getDay() === 0 || d.getDay() === 6;
@@ -497,6 +528,13 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                               {group.items.length} {group.items.length === 1 ? "actividad" : "actividades"}
                             </span>
                           </div>
+                          <div className="flex items-center w-[100px] px-1.5 shrink-0" style={{ borderBottom: "1px solid var(--divider)", borderTop: "1px solid var(--divider)" }}>
+                            {group.projectStatus && (
+                              <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full truncate" style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-secondary)" }}>
+                                {group.projectStatus}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="relative flex-1 shrink-0" style={{ width: gridWidth, background: "rgba(148,163,184,0.03)", borderBottom: "1px solid var(--divider)" }}>
                           {days.map((d, i) => {
@@ -547,6 +585,16 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                               </div>
                               <div className="flex items-center w-[220px] px-1.5">
                                 <span className="text-[10px] font-semibold truncate" style={{ color: "var(--text-primary)" }}>{it.activityTitle}</span>
+                              </div>
+                              <div className="flex items-center w-[100px] px-1.5">
+                                {it.status ? (
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full truncate"
+                                    style={{ background: TASK_STATUS_STYLE[it.status]?.bg || "var(--input-bg)", border: "1px solid var(--input-border)", color: TASK_STATUS_STYLE[it.status]?.color || "var(--text-secondary)" }}>
+                                    {TASK_STATUS_STYLE[it.status]?.label || it.status.replace("_", " ")}
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] text-center w-full" style={{ color: "var(--text-muted)" }}>—</span>
+                                )}
                               </div>
                             </div>
 

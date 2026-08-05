@@ -66,7 +66,7 @@ test.describe('2. User Creation', () => {
 
     const emailInput = page.locator('input[name="email"]');
     await expect(emailInput).toBeVisible();
-    await emailInput.fill(`test${TS}@test.com`);
+    await emailInput.fill(`test${TS}@lobueno.co`);
 
     const pwInput = page.locator('input[name="password"]');
     await expect(pwInput).toBeVisible();
@@ -268,6 +268,31 @@ test.describe('13. Account Dashboard', () => {
     await login(page, SUPERADMIN);
     await page.goto('/projects/account-dashboard');
     await page.waitForTimeout(2000);
+  });
+
+  test('timeline shows status column and filter per task', async ({ page }) => {
+    await login(page, SUPERADMIN);
+    await page.goto('/projects/account-dashboard');
+    const timelineTab = page.getByRole('button', { name: 'Timeline' });
+    await expect(timelineTab).toBeVisible({ timeout: 20000 });
+    await timelineTab.click();
+    await page.waitForTimeout(1200);
+
+    const statusFilter = page
+      .getByRole('combobox')
+      .filter({ has: page.getByRole('option', { name: /todos los estados/i }) })
+      .first();
+    await expect(statusFilter).toBeVisible({ timeout: 20000 });
+    await expect(statusFilter).toContainText(/pendiente|to do/i);
+
+    const sawBadge = await page
+      .locator(
+        "span:text-is('Pendiente'), span:text-is('En Progreso'), span:text-is('Revisión'), span:text-is('Completado'), span:text-is('Bloqueado')"
+      )
+      .first()
+      .isVisible()
+      .catch(() => false);
+    expect(sawBadge).toBe(true);
   });
 });
 
