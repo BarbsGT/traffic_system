@@ -7,13 +7,14 @@ import { Modal } from "@/components/ui/Modal";
 import { Plus, Edit2, Trash2, X, Upload, FileDown } from "lucide-react";
 import { parseCSV, downloadCSV, csvToBool, type CsvRow } from "@/utils/csv";
 
-type Tab = "agencies" | "accounts" | "teams" | "directors" | "areas";
+type Tab = "agencies" | "accounts" | "teams" | "directors" | "areas" | "assignments";
 
 interface Area { id: string; name: string; code: string; is_active: boolean }
 interface Agency { id: string; name: string; code: string; is_active: boolean }
 interface Account { id: string; name: string; agency_id: string; code: string; is_active: boolean }
-interface Team { id: string; name: string; account_id: string; code: string; is_active: boolean; director_id: string | null }
+interface Team { id: string; name: string; code: string; is_active: boolean; director_id: string | null }
 interface Director { id: string; profile_id: string; account_id: string | null; is_active: boolean; name?: string }
+interface TeamAssignment { team_id: string; team_name: string; account_ids: string[] }
 
 type CatalogItem = Area | Agency | Account | Team | Director;
 type CatalogFormData = Record<string, unknown>;
@@ -26,8 +27,10 @@ export default function CatalogosPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [directors, setDirectors] = useState<Director[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
+  const [assignments, setAssignments] = useState<TeamAssignment[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [editing, setEditing] = useState<unknown>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ table: string; id: string; name: string } | null>(null);
   const [page, setPage] = useState(0);
@@ -50,6 +53,24 @@ export default function CatalogosPage() {
     if (t.data) setTeams(t.data);
     if (d.data) setDirectors(d.data);
     if (p.data) setProfiles(p.data);
+
+    const { data: ta } = await supabase
+      .from("team_accounts")
+      .select("team_id, account_id");
+    const grouped: Record<string, string[]> = {};
+    if (ta) {
+      ta.forEach((r) => {
+        grouped[r.team_id] = grouped[r.team_id] || [];
+        grouped[r.team_id].push(r.account_id);
+      });
+    }
+    setAssignments(
+      (t.data || []).map((team) => ({
+        team_id: team.id,
+        team_name: team.name,
+        account_ids: grouped[team.id] || [],
+      }))
+    );
     setPage(0);
   }, [supabase]);
 
@@ -63,12 +84,20 @@ export default function CatalogosPage() {
 
   const openEdit = (item: unknown) => {
     setEditing(item);
-    setShowModal(true);
+    if (tab === "assignments") {
+      setShowAssignmentModal(true);
+    } else {
+      setShowModal(true);
+    }
   };
 
   const openCreate = () => {
     setEditing(null);
-    setShowModal(true);
+    if (tab === "assignments") {
+      setShowAssignmentModal(true);
+    } else {
+      setShowModal(true);
+    }
   };
 
   const getTableName = (t: Tab) => {
@@ -83,11 +112,12 @@ export default function CatalogosPage() {
     { key: "agencies", label: "Agencias" },
     { key: "accounts", label: "Cuentas" },
     { key: "teams", label: "Equipos" },
+    { key: "assignments", label: "Asignación Equipos" },
     { key: "areas", label: "Áreas" },
     { key: "directors", label: "Directores de Cuenta" },
   ];
 
-  const currentData = tab === "areas" ? areas : tab === "agencies" ? agencies : tab === "accounts" ? accounts : tab === "teams" ? teams : directors;
+  const currentData = tab === "areas" ? areas : tab === "agencies" ? agencies : tab === "accounts" ? accounts : tab === "teams" ? teams : tab === "assignments" ? [] : directors;
   const totalPages = Math.max(1, Math.ceil(currentData.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
   const pageStart = currentPage * PAGE_SIZE;
@@ -143,8 +173,9 @@ export default function CatalogosPage() {
               {tab === "areas" && <Headers cols={["Nombre", "Código", "Activo"]} />}
               {tab === "agencies" && <Headers cols={["Nombre", "Código", "Activo"]} />}
               {tab === "accounts" && <Headers cols={["Nombre", "Agencia", "Código", "Activo"]} />}
-              {tab === "teams" && <Headers cols={["Nombre", "Cuenta", "Código", "Director", "Activo"]} />}
+              {tab === "teams" && <Headers cols={["Nombre", "Código", "Director", "Activo"]} />}
               {tab === "directors" && <Headers cols={["Perfil", "Cuenta / Marca", "Activo"]} />}
+              {tab === "assignments" && <Headers cols={["Equipo", "Cuentas Asignadas", "Acción"]} />}
               <th className="p-3 text-right text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)", width: 80 }}>
                 Acción
               </th>
@@ -178,9 +209,6 @@ export default function CatalogosPage() {
             {tab === "teams" && visibleTeams.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "teams", id: item.id, name: item.name })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
-                <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>
-                  {accounts.find((a) => a.id === item.account_id)?.name || "-"}
-                </td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{item.code}</td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>
                   {profiles.find((p) => p.id === item.director_id)?.full_name || "-"}
@@ -199,8 +227,25 @@ export default function CatalogosPage() {
                 <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
               </Row>
             ))}
+            {tab === "assignments" && assignments.map((asgn) => (
+              <Row key={asgn.team_id} item={asgn} onEdit={() => setEditing(asgn)} onDelete={() => {}}>
+                <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{asgn.team_name}</td>
+                <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  {asgn.account_ids.length === 0
+                    ? "Sin cuentas"
+                    : accounts.filter((a) => asgn.account_ids.includes(a.id)).map((a) => a.name).join(", ")}
+                </td>
+                <td className="p-3 text-sm">
+                  <button onClick={() => setEditing(asgn)}
+                    className="px-3 py-1 rounded text-xs font-medium text-white"
+                    style={{ background: "var(--accent-cyan)" }}>
+                    Editar
+                  </button>
+                </td>
+              </Row>
+            ))}
             {(() => {
-              const colSpan = tab === "areas" ? 4 : tab === "agencies" ? 4 : tab === "accounts" ? 5 : tab === "teams" ? 6 : 4;
+              const colSpan = tab === "areas" ? 4 : tab === "agencies" ? 4 : tab === "accounts" ? 5 : tab === "teams" ? 5 : tab === "assignments" ? 3 : 4;
               return currentData.length === 0 ? (
                 <tr>
                   <td colSpan={colSpan} className="p-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
@@ -264,6 +309,16 @@ export default function CatalogosPage() {
         </div>
       </Modal>
 
+      {/* Assignment Modal */}
+      <Modal isOpen={showAssignmentModal} onClose={() => setShowAssignmentModal(false)} title={editing ? `Editar Asignación: ${(editing as TeamAssignment).team_name}` : "Nueva Asignación Equipo → Cuentas"}>
+        <AssignmentForm
+          editing={editing as TeamAssignment | null}
+          teams={teams}
+          accounts={accounts}
+          onDone={() => { setShowAssignmentModal(false); setEditing(null); fetchData(); }}
+        />
+      </Modal>
+
       {/* Bulk Upload Modal */}
       <Modal isOpen={showBulkModal} onClose={() => setShowBulkModal(false)} title={`Carga masiva ${tabs.find((t) => t.key === tab)?.label || ""} (CSV)`}>
         <BulkCatalogForm tab={tab} agencies={agencies} accounts={accounts} profiles={profiles} />
@@ -284,7 +339,7 @@ const TEMPLATES: Record<string, { headers: string[]; example: string[] }> = {
   areas: { headers: ["name", "code", "active"], example: ["Área Creativa", "CREA", "1"] },
   agencies: { headers: ["name", "code", "active"], example: ["Agencia Central", "AGC", "1"] },
   accounts: { headers: ["name", "agency", "code", "active"], example: ["Cuenta Coca-Cola", "Agencia Central", "CCL", "1"] },
-  teams: { headers: ["name", "account", "code", "director", "active"], example: ["Equipo Digital", "Cuenta Coca-Cola", "EQD", "Maria Directora", "1"] },
+  teams: { headers: ["name", "code", "director", "active"], example: ["Equipo Digital", "EQD", "Maria Directora", "1"] },
   directors: { headers: ["profile", "account", "active"], example: ["Maria Directora", "Cuenta Coca-Cola", "1"] },
 };
 
@@ -499,8 +554,8 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
       if (editId) await supabase.from("accounts").update({ name: data.name, agency_id: data.agency_id, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("accounts").insert({ name: data.name, agency_id: data.agency_id, code: data.code });
     } else if (tab === "teams") {
-      if (editId) await supabase.from("teams").update({ name: data.name, account_id: data.account_id, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editId);
-      else await supabase.from("teams").insert({ name: data.name, account_id: data.account_id, code: data.code, director_id: data.director_id || null });
+      if (editId) await supabase.from("teams").update({ name: data.name, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editId);
+      else await supabase.from("teams").insert({ name: data.name, code: data.code, director_id: data.director_id || null });
     } else if (tab === "directors") {
       if (editId) await supabase.from("directors").update({ profile_id: data.profile_id, account_id: data.account_id || null, is_active: data.is_active === "on" }).eq("id", editId);
       else await supabase.from("directors").insert({ profile_id: data.profile_id, account_id: data.account_id || null });
@@ -534,15 +589,6 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
 
       {tab === "teams" && (
         <>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Cuenta</label>
-            <select name="account_id" defaultValue={String(editData?.account_id || "")} required
-              className="rounded-lg px-3 py-2 text-sm outline-none"
-              style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
-              <option value="">Seleccionar...</option>
-              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Director</label>
             <select name="director_id" defaultValue={String(editData?.director_id || "")}
@@ -596,6 +642,91 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
 
       <div className="flex gap-2 justify-end">
         <button type="submit" disabled={saving}
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          style={{ background: "var(--accent-cyan)" }}>
+          {saving ? "Guardando..." : "Guardar"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function AssignmentForm({ editing, teams, accounts, onDone }: {
+  editing: TeamAssignment | null;
+  teams: Team[];
+  accounts: Account[];
+  onDone: () => void;
+}) {
+  const supabase = createClient();
+  const [saving, setSaving] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string>("");
+  const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (editing) {
+      setSelectedTeamId(editing.team_id);
+      setSelectedAccountIds(editing.account_ids || []);
+    } else {
+      setSelectedTeamId("");
+      setSelectedAccountIds([]);
+    }
+  }, [editing]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTeamId) return;
+    setSaving(true);
+
+    const existing = await supabase.from("team_accounts").select("account_id").eq("team_id", selectedTeamId);
+    const existingAccountIds = (existing.data || []).map((r) => r.account_id);
+
+    const toRemove = existingAccountIds.filter((id) => !selectedAccountIds.includes(id));
+    const toAdd = selectedAccountIds.filter((id) => !existingAccountIds.includes(id));
+
+    if (toRemove.length > 0) {
+      await supabase.from("team_accounts").delete().eq("team_id", selectedTeamId).in("account_id", toRemove);
+    }
+
+    if (toAdd.length > 0) {
+      const rows = toAdd.map((account_id) => ({ team_id: selectedTeamId, account_id }));
+      await supabase.from("team_accounts").insert(rows);
+    }
+
+    setSaving(false);
+    onDone();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Equipo</label>
+        <select value={selectedTeamId} onChange={(e) => setSelectedTeamId(e.target.value)}
+          className="rounded-lg px-3 py-2 text-sm outline-none"
+          style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+          <option value="">Seleccionar equipo...</option>
+          {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Cuentas asignadas</label>
+        <div className="flex flex-wrap gap-2" style={{ maxHeight: 200, overflow: "auto" }}>
+          {accounts.map((a) => (
+            <label key={a.id} className="flex items-center gap-2 px-3 py-2 rounded border cursor-pointer"
+              style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
+              <input type="checkbox" value={a.id} checked={selectedAccountIds.includes(a.id)}
+                onChange={(e) => setSelectedAccountIds((prev) =>
+                  e.target.checked ? [...prev, a.id] : prev.filter((id) => id !== a.id)
+                )}
+                className="rounded" />
+              <span className="text-sm">{a.name}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex gap-2 justify-end">
+        <button type="submit" disabled={saving || !selectedTeamId}
           className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Guardando..." : "Guardar"}

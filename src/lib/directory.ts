@@ -15,7 +15,6 @@ export interface Account {
 export interface Team {
   id: string;
   name: string;
-  account_id: string;
   code?: string;
 }
 
@@ -51,7 +50,7 @@ export async function loadAccounts(): Promise<Account[]> {
 
 /** Carga los equipos (order por nombre). */
 export async function loadTeams(): Promise<Team[]> {
-  const { data } = await createClient().from("teams").select("id, name, account_id").order("name");
+  const { data } = await createClient().from("teams").select("id, name, code").order("name");
   return (data as Team[]) || [];
 }
 

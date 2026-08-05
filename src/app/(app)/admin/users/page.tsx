@@ -578,7 +578,6 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
           {teams.length === 0 && <p className="text-xs" style={{ color: "var(--text-muted)" }}>No hay equipos creados. Créalos en Catálogos.</p>}
           {teams.map((t) => {
             const checked = !!selectedTeams[t.id];
-            const acc = accounts.find((a) => a.id === t.account_id);
             return (
               <button key={t.id} type="button" onClick={() => toggleTeam(t.id)}
                 className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all"
@@ -588,7 +587,6 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
                   {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
                 </span>
                 <span style={{ color: "var(--text-primary)" }}>{t.name}</span>
-                {acc && <span style={{ color: "var(--text-muted)" }}>({acc.name})</span>}
               </button>
             );
           })}
@@ -863,11 +861,10 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
             <div className="flex flex-col gap-2">
               {profileTeams.map((pt) => {
                 const tm = teams.find((t) => t.id === pt.team_id);
-                const acc = tm ? accounts.find((a) => a.id === tm.account_id) : null;
                 return (
                   <div key={pt.id} className="flex items-center justify-between px-3 py-2 rounded-lg text-sm"
                     style={{ background: "var(--accordion-bg)" }}>
-                    <span style={{ color: "var(--text-primary)" }}>{tm?.name || pt.team_id} {acc && <span style={{ color: "var(--text-muted)" }}>({acc.name})</span>}</span>
+                    <span style={{ color: "var(--text-primary)" }}>{tm?.name || pt.team_id}</span>
                     <button onClick={() => removeTeam(pt.id)} disabled={saving}
                       className="p-1 rounded hover:opacity-70" style={{ color: "var(--accent-rose)" }}>
                       <X size={14} />
@@ -886,7 +883,7 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
                 <option value="">-- Agregar equipo --</option>
                 {availableTeams.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} ({accounts.find((a) => a.id === t.account_id)?.name || ""})
+                    {t.name}
                   </option>
                 ))}
               </select>
