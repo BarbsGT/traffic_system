@@ -20,9 +20,17 @@ interface Member {
   avatar_url: string;
 }
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 export function ChatPanel({ projectId }: { projectId: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const membersRef = useRef<Map<string, Member>>(new Map());
+  membersRef.current = new Map(members.map((m) => [m.id, m]));
   const [input, setInput] = useState("");
   const [taskFilter, setTaskFilter] = useState("");
   const messagesEnd = useRef<HTMLDivElement>(null);
@@ -59,13 +67,15 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       const assigneeIds = [...new Set(taskData?.map((t) => t.assignee_id as string).filter(Boolean))];
       const memberMap = new Map<string, Member>();
       if (assigneeIds.length > 0) {
-        const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url")
-          .in("id", assigneeIds);
-        profiles?.forEach((p) => {
-          memberMap.set(p.id, { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url || "" });
-        });
+        for (const batch of chunk(assigneeIds, 100)) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, avatar_url")
+            .in("id", batch);
+          profiles?.forEach((p) => {
+            memberMap.set(p.id, { id: p.id, full_name: p.full_name, avatar_url: p.avatar_url || "" });
+          });
+        }
       }
       setMembers(Array.from(memberMap.values()));
     };
@@ -76,15 +86,22 @@ export function ChatPanel({ projectId }: { projectId: string }) {
       .channel(`chat-${projectId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "project_messages", filter: `project_id=eq.${projectId}` },
         async (payload) => {
-          const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", payload.new.author_id).single();
+          const known = membersRef.current.get(payload.new.author_id);
+          let full_name: string | undefined = known?.full_name;
+          let avatar_url = known?.avatar_url || "";
+          if (!known) {
+            const { data: profile } = await supabase.from("profiles").select("full_name, avatar_url").eq("id", payload.new.author_id).single();
+            full_name = profile?.full_name;
+            avatar_url = profile?.avatar_url || "";
+          }
           setMessages((prev) => [...prev, {
             id: payload.new.id,
             content: payload.new.content,
             profile_id: payload.new.author_id,
             task_id: payload.new.task_id,
             created_at: payload.new.created_at,
-            full_name: profile?.full_name,
-            avatar_url: profile?.avatar_url,
+            full_name,
+            avatar_url,
           }]);
         }
       )

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import {
   BarChart3, AlertTriangle, Clock, Users, TrendingUp,
@@ -70,6 +70,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function ExecutiveDashboard() {
   const supabase = createClient();
+  const fetchSeq = useRef(0);
 
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -91,6 +92,7 @@ export function ExecutiveDashboard() {
   const [alertTasks, setAlertTasks] = useState<AlertTask[]>([]);
 
   const fetchData = useCallback(async () => {
+    const seq = ++fetchSeq.current;
     const { data: allTasks } = await supabase.from("tasks").select(`
       id, title, status, due_date, estimated_hours, created_at, updated_at, completed_at,
       assignee_id,
@@ -113,6 +115,10 @@ export function ExecutiveDashboard() {
     const { data: allProjects } = await supabase.from("projects").select("id, name, status") as { data: Project[] | null };
 
     if (!allTasks || !allProjects) return;
+
+    // Evita que una respuesta de un fetch anterior (race por cambio rápido de filtros)
+    // sobrescriba los KPIs de la petición más reciente.
+    if (seq !== fetchSeq.current) return;
 
     let filteredProjectIds: string[] = [];
     if (selectedProject) {

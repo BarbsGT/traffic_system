@@ -133,6 +133,12 @@ function getInitials(name: string) {
   return name.split(" ").map((s) => s[0]).join("").toUpperCase().slice(0, 2);
 }
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
 function daysRemaining(dateStr: string) {
   if (!dateStr) return null;
   const now = new Date();
@@ -207,6 +213,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   const notesRef = useRef<HTMLTextAreaElement>(null);
   const newRowRef = useRef<HTMLTableRowElement>(null);
   const columnMenuRef = useRef<HTMLDivElement>(null);
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const debouncedUpdate = useCallback((key: string, fn: () => void, ms = 500) => {
+    const prev = debounceTimers.current[key];
+    if (prev) clearTimeout(prev);
+    debounceTimers.current[key] = setTimeout(() => { delete debounceTimers.current[key]; fn(); }, ms);
+  }, []);
   const supabase = createClient();
 
   const ALL_COLUMNS: ColumnDef[] = [
@@ -248,17 +260,19 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
 
       const projectIds = raw.map((r) => r.id);
       if (projectIds.length > 0) {
-        const { data: allTasks } = await supabase
-          .from("tasks")
-          .select("*")
-          .in("project_id", projectIds);
-        if (allTasks) {
-          const grouped: Record<string, UATask[]> = {};
-          (allTasks as UATask[]).forEach((t) => {
-            (grouped[t.project_id] = grouped[t.project_id] || []).push(t);
-          });
-          setTasks(grouped);
+        const groupAll: UATask[] = [];
+        for (const batch of chunk(projectIds, 100)) {
+          const { data: batchTasks } = await supabase
+            .from("tasks")
+            .select("*")
+            .in("project_id", batch);
+          if (batchTasks) groupAll.push(...(batchTasks as UATask[]));
         }
+        const grouped: Record<string, UATask[]> = {};
+        groupAll.forEach((t) => {
+          (grouped[t.project_id] = grouped[t.project_id] || []).push(t);
+        });
+        setTasks(grouped);
       }
 
       const myRole = meRes.data?.user?.id
@@ -275,18 +289,26 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
           ...(managedAccounts?.map((a) => a.account_id) || []),
         ])];
         if (accountIds.length > 0) {
-          const { data: collaboratorIds } = await supabase
-            .from("profile_accounts")
-            .select("profile_id")
-            .in("account_id", accountIds);
-          const cids = [...new Set(collaboratorIds?.map((c) => c.profile_id) || [])];
+          const collabAll: string[] = [];
+          for (const batch of chunk(accountIds, 100)) {
+            const { data: collaboratorIds } = await supabase
+              .from("profile_accounts")
+              .select("profile_id")
+              .in("account_id", batch);
+            if (collaboratorIds) collabAll.push(...collaboratorIds.map((c) => c.profile_id));
+          }
+          const cids = [...new Set(collabAll)];
           if (cids.length > 0) {
-            const { data } = await supabase
-              .from("profiles")
-              .select("id, full_name, avatar_url")
-              .in("id", cids)
-              .order("full_name");
-            if (data) setProfiles(data as Profile[]);
+            const profileAll: Profile[] = [];
+            for (const batch of chunk(cids, 100)) {
+              const { data } = await supabase
+                .from("profiles")
+                .select("id, full_name, avatar_url")
+                .in("id", batch)
+                .order("full_name");
+              if (data) profileAll.push(...(data as Profile[]));
+            }
+            setProfiles(profileAll);
           } else {
             setProfiles([]);
           }
@@ -328,16 +350,40 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     });
   }, [rows, search, filterArea, filterTier, filterStatus]);
 
-  const loadTasks = useCallback(async (projectId: string) => {
-    const { data } = await supabase.from("tasks").select("*").eq("project_id", projectId).order("created_at");
-    if (data) setTasks((prev) => ({ ...prev, [projectId]: data as UATask[] }));
+  const loadTasks = useCallback(async (projectIds: string[]) => {
+    const missing = projectIds.filter((id) => !tasksRef.current[id]);
+    if (missing.length === 0) return;
+    const groupAll: UATask[] = [];
+    for (const batch of chunk(missing, 100)) {
+      const { data } = await supabase
+        .from("tasks")
+        .select("*")
+        .in("project_id", batch)
+        .order("created_at");
+      if (data) groupAll.push(...(data as UATask[]));
+    }
+    if (groupAll.length > 0) {
+      setTasks((prev) => {
+        const next = { ...prev };
+        for (const t of groupAll) {
+          (next[t.project_id] = next[t.project_id] || []).push(t);
+        }
+        return next;
+      });
+    }
   }, []);
+
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
 
   const toggleExpand = (projectId: string) => {
     setExpandedRows((prev) => {
       const next = new Set(prev);
       if (next.has(projectId)) next.delete(projectId);
-      else { next.add(projectId); if (!tasks[projectId]) loadTasks(projectId); }
+      else {
+        next.add(projectId);
+        if (!tasksRef.current[projectId]) loadTasks([projectId]);
+      }
       return next;
     });
   };
@@ -973,12 +1019,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                       </select>
                                       <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Inicio</span>
                                       <input type="date" value={toDateInput(task.start_date)}
-                                        onChange={(e) => updateTaskStartDate(task.id, e.target.value)}
+                                        onChange={(e) => debouncedUpdate(`start_${task.id}`, () => updateTaskStartDate(task.id, e.target.value))}
                                         className="px-1 py-0.5 rounded text-[10px] outline-none"
                                         style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
                                       <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Entrega</span>
                                       <input type="date" value={toDateInput(task.due_date)}
-                                        onChange={(e) => updateTaskDueDate(task.id, e.target.value)}
+                                        onChange={(e) => debouncedUpdate(`due_${task.id}`, () => updateTaskDueDate(task.id, e.target.value))}
                                         className="px-1 py-0.5 rounded text-[10px] outline-none"
                                         style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
                                       <select value={task.assignee_id || ""}
