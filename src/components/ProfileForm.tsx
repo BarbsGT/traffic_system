@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { User, Save } from "lucide-react";
+import { roleLabel } from "@/lib/utils";
 
 interface Profile {
   id: string;
@@ -132,7 +133,7 @@ export function ProfileForm() {
                   profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "var(--accent-amber)" :
                   "var(--accent-green)",
               }}>
-                {profile.role}
+                {roleLabel(profile.role)}
               </span>
             </div>
           </div>

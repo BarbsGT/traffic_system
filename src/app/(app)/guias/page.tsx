@@ -3,6 +3,7 @@
 import { GlassCard } from "@/components/ui/GlassCard";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { useState } from "react";
+import { roleLabel } from "@/lib/utils";
 
 const sections = [
   { id: "intro", title: "Introducción" },
@@ -134,6 +135,12 @@ function RolesContent() {
       desc: "Administra equipos y proyectos. Crea, edita proyectos y tareas. Asigna colaboradores a cuentas y equipos. Gestiona el día a día operativo.",
     },
     {
+      role: "GERENTE",
+      color: "var(--accent-cyan)",
+      bg: "rgba(14,165,233,0.15)",
+      desc: "Apoya al director dentro de sus cuentas asignadas. Crea y edita proyectos y tareas de sus cuentas y da seguimiento al equipo. No gestiona catálogos globales.",
+    },
+    {
       role: "COLABORADOR",
       color: "var(--accent-green)",
       bg: "rgba(16,185,129,0.15)",
@@ -149,7 +156,7 @@ function RolesContent() {
           <div key={r.role} className="p-4 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
             <div className="flex items-center gap-3 mb-2">
               <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: r.bg, color: r.color }}>
-                {r.role}
+                {roleLabel(r.role)}
               </span>
             </div>
             <p className="text-sm mb-3" style={{ color: "var(--text-secondary)" }}>{r.desc}</p>

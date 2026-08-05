@@ -8,6 +8,7 @@ import { Edit2, Trash2, Plus, X, Check, Upload, FileDown } from "lucide-react";
 import { adminCreateUser, adminUpdateUser, adminToggleActive, adminBulkCreateUsers, type CreateUserInput } from "@/app/actions/users";
 import { parseCSV, downloadCSV, type CsvRow } from "@/utils/csv";
 import { loadProfiles, loadAccounts, loadTeams, type UserProfile } from "@/lib/directory";
+import { roleLabel } from "@/lib/utils";
 
 type Tab = "usuarios" | "colaboradores" | "asignaciones";
 
@@ -126,7 +127,7 @@ export default function UsersPage() {
                     <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{p.email}</td>
                     <td className="p-3">
                       <span className="text-xs font-bold px-2 py-1 rounded" style={{ background: rs.bg, color: rs.text }}>
-                        {p.role}
+                        {roleLabel(p.role)}
                       </span>
                     </td>
                     <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{p.position || "-"}</td>
@@ -501,11 +502,11 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
           <select name="role" defaultValue="COLABORADOR"
             className="rounded-lg px-3 py-2 text-sm outline-none"
             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
-            <option value="COLABORADOR">COLABORADOR</option>
-            <option value="DIRECTOR">DIRECTOR</option>
-            <option value="GERENTE">GERENTE</option>
-            <option value="SYSADMIN">SYSADMIN</option>
-            <option value="SUPERADMIN">SUPERADMIN</option>
+            <option value="COLABORADOR">Colaborador</option>
+            <option value="DIRECTOR">Director</option>
+            <option value="GERENTE">Gerente</option>
+            <option value="SYSADMIN">Sys Admin</option>
+            <option value="SUPERADMIN">Super Admin</option>
           </select>
         </div>
         <div className="flex flex-col gap-1">
@@ -675,11 +676,11 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
         <select name="role" defaultValue={profile.role}
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
-          <option value="COLABORADOR">COLABORADOR</option>
-          <option value="DIRECTOR">DIRECTOR</option>
-          <option value="GERENTE">GERENTE</option>
-          <option value="SYSADMIN">SYSADMIN</option>
-          <option value="SUPERADMIN">SUPERADMIN</option>
+          <option value="COLABORADOR">Colaborador</option>
+          <option value="DIRECTOR">Director</option>
+          <option value="GERENTE">Gerente</option>
+          <option value="SYSADMIN">Sys Admin</option>
+          <option value="SUPERADMIN">Super Admin</option>
         </select>
       </div>
       <div className="flex flex-col gap-1">
@@ -917,7 +918,7 @@ function TreeNode({ profile, allProfiles, depth }: { profile: Profile; allProfil
           background: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "rgba(245,158,11,0.15)" : "rgba(16,185,129,0.15)",
           color: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "var(--accent-amber)" : "var(--accent-green)",
         }}>
-          {profile.role}
+          {roleLabel(profile.role)}
         </span>
       </div>
       {children.map((child) => (
