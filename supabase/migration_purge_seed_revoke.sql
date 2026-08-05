@@ -62,6 +62,14 @@ CREATE TEMP TABLE IF NOT EXISTS _purge AS VALUES
   ('valeria.social@lobueno.co');
 
 -- Desenlazar referencias de perfiles a eliminar (para no bloquear el DELETE por FK)
+UPDATE public.profiles
+   SET manager_id = NULL
+ WHERE manager_id IN (SELECT id FROM profiles WHERE email IN (SELECT column1 FROM _purge));
+
+UPDATE public.projects
+   SET owner_id = NULL
+ WHERE owner_id IN (SELECT id FROM profiles WHERE email IN (SELECT column1 FROM _purge));
+
 UPDATE public.tasks
    SET assignee_id = NULL
  WHERE assignee_id IN (SELECT id FROM profiles WHERE email IN (SELECT column1 FROM _purge));
@@ -69,6 +77,10 @@ UPDATE public.tasks
 UPDATE public.tasks
    SET created_by = NULL
  WHERE created_by IN (SELECT id FROM profiles WHERE email IN (SELECT column1 FROM _purge));
+
+UPDATE public.teams
+   SET director_id = NULL
+ WHERE director_id IN (SELECT id FROM profiles WHERE email IN (SELECT column1 FROM _purge));
 
 -- comments.project_messages guardan author_id NOT NULL: se eliminan por completo.
 DELETE FROM public.comments
