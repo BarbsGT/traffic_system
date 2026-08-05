@@ -125,11 +125,11 @@ export function ProfileForm() {
               <span className="text-xs px-2 py-0.5 rounded-full mt-1 inline-block" style={{
                 background: profile.role === "SUPERADMIN" ? "rgba(244,63,94,0.15)" :
                   profile.role === "SYSADMIN" ? "rgba(139,92,246,0.15)" :
-                  profile.role === "DIRECTOR" ? "rgba(245,158,11,0.15)" :
+                  profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "rgba(245,158,11,0.15)" :
                   "rgba(16,185,129,0.15)",
                 color: profile.role === "SUPERADMIN" ? "var(--accent-rose)" :
                   profile.role === "SYSADMIN" ? "var(--accent-purple)" :
-                  profile.role === "DIRECTOR" ? "var(--accent-amber)" :
+                  profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "var(--accent-amber)" :
                   "var(--accent-green)",
               }}>
                 {profile.role}

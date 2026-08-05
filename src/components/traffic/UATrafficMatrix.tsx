@@ -257,7 +257,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
         ? (await supabase.from("profiles").select("role").eq("id", meRes.data.user.id).single()).data?.role
         : null;
 
-      if (myRole === "DIRECTOR" && meRes.data?.user?.id) {
+      if ((myRole === "DIRECTOR" || myRole === "GERENTE") && meRes.data?.user?.id) {
         const [{ data: myAccounts }, { data: managedAccounts }] = await Promise.all([
           supabase.from("profile_accounts").select("account_id").eq("profile_id", meRes.data.user.id),
           supabase.from("profile_accounts").select("account_id").eq("manager_id", meRes.data.user.id),

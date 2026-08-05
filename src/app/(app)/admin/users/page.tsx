@@ -67,6 +67,7 @@ export default function UsersPage() {
     SUPERADMIN: { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" },
     SYSADMIN: { bg: "rgba(139,92,246,0.15)", text: "var(--accent-purple)" },
     DIRECTOR: { bg: "rgba(245,158,11,0.15)", text: "var(--accent-amber)" },
+    GERENTE: { bg: "rgba(14,165,233,0.15)", text: "var(--accent-cyan)" },
     COLABORADOR: { bg: "rgba(16,185,129,0.15)", text: "var(--accent-green)" },
   };
 
@@ -208,7 +209,7 @@ export default function UsersPage() {
   );
 }
 
-const VALID_ROLES = ["COLABORADOR", "DIRECTOR", "SYSADMIN", "SUPERADMIN"] as const;
+const VALID_ROLES = ["COLABORADOR", "DIRECTOR", "GERENTE", "SYSADMIN", "SUPERADMIN"] as const;
 const MIN_PASSWORD_LENGTH = 8;
 
 const BULK_TEMPLATE = [
@@ -433,7 +434,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
       email: data.email as string,
       password: data.password as string,
       full_name: data.full_name as string,
-      role: (data.role as string) as "COLABORADOR" | "DIRECTOR" | "SYSADMIN" | "SUPERADMIN",
+      role: (data.role as string) as "COLABORADOR" | "DIRECTOR" | "GERENTE" | "SYSADMIN" | "SUPERADMIN",
       position: data.position as string,
       position_description: data.position_description as string,
       manager_id: (data.manager_id as string) || null,
@@ -487,6 +488,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="COLABORADOR">COLABORADOR</option>
             <option value="DIRECTOR">DIRECTOR</option>
+            <option value="GERENTE">GERENTE</option>
             <option value="SYSADMIN">SYSADMIN</option>
             <option value="SUPERADMIN">SUPERADMIN</option>
           </select>
@@ -617,7 +619,7 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
     }
 
     const res = await adminUpdateUser(profile.id, {
-      role: role as "COLABORADOR" | "DIRECTOR" | "SYSADMIN" | "SUPERADMIN",
+      role: role as "COLABORADOR" | "DIRECTOR" | "GERENTE" | "SYSADMIN" | "SUPERADMIN",
       position: data.position as string,
       position_description: data.position_description as string,
       manager_id: (data.manager_id as string) || null,
@@ -660,6 +662,7 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
           <option value="COLABORADOR">COLABORADOR</option>
           <option value="DIRECTOR">DIRECTOR</option>
+          <option value="GERENTE">GERENTE</option>
           <option value="SYSADMIN">SYSADMIN</option>
           <option value="SUPERADMIN">SUPERADMIN</option>
         </select>
@@ -896,8 +899,8 @@ function TreeNode({ profile, allProfiles, depth }: { profile: Profile; allProfil
         <span style={{ color: "var(--text-primary)" }}>{profile.full_name}</span>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>{profile.position}</span>
         <span className="text-xs px-1.5 py-0.5 rounded" style={{
-          background: profile.role === "DIRECTOR" ? "rgba(245,158,11,0.15)" : "rgba(16,185,129,0.15)",
-          color: profile.role === "DIRECTOR" ? "var(--accent-amber)" : "var(--accent-green)",
+          background: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "rgba(245,158,11,0.15)" : "rgba(16,185,129,0.15)",
+          color: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "var(--accent-amber)" : "var(--accent-green)",
         }}>
           {profile.role}
         </span>
