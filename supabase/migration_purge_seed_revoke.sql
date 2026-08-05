@@ -48,7 +48,7 @@ ALTER TABLE public.excel_columns ENABLE ROW LEVEL SECURITY;
 -- =============================================
 
 -- Lista de emails de prueba (seed_test_users.sql)
-CREATE TEMP TABLE _purge_emails AS VALUES
+CREATE TEMP TABLE IF NOT EXISTS _purge AS VALUES
   ('ana.admin@lobueno.co'),
   ('luis.sys@lobueno.co'),
   ('maria.directora@agenciacentral.com'),
