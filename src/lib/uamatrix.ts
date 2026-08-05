@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/client";
+import { chunk } from "@/lib/utils";
 
 export interface UATask {
   id: string;
@@ -17,12 +18,6 @@ export interface Profile {
   id: string;
   full_name: string;
   avatar_url: string;
-}
-
-export function chunk<T>(arr: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
 }
 
 export interface UAMatrixData {

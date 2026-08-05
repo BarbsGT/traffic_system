@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/client";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { StatusBadge } from "@/components/tasks/StatusBadge";
 import { isTaskRedAlert } from "@/utils/taskAlerts";
+import { loadAgencies, loadAccounts, loadTeams, loadProfiles, type Agency, type Account, type Team, type ProfileRef } from "@/lib/directory";
 
 interface Task {
   id: string;
@@ -24,17 +25,12 @@ interface Project {
   delivered_at?: string | null;
 }
 
-interface Agency { id: string; name: string }
-interface Account { id: string; name: string; agency_id: string }
-interface Team { id: string; name: string; account_id: string }
-interface Profile { id: string; full_name: string }
-
 const statuses = ["PENDING", "IN_PROGRESS", "REVIEW", "COMPLETED", "BLOCKED"];
 
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRef[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -52,17 +48,17 @@ export function TaskList() {
     Promise.all([
       supabase.from("tasks").select("*"),
       supabase.from("projects").select("id, name, end_date, delivered_at"),
-      supabase.from("profiles").select("id, full_name"),
-      supabase.from("agencies").select("*"),
-      supabase.from("accounts").select("*"),
-      supabase.from("teams").select("*"),
+      loadProfiles(),
+      loadAgencies(),
+      loadAccounts(),
+      loadTeams(),
     ]).then(([t, p, pr, a, ac, te]) => {
       if (t.data) setTasks(t.data);
       if (p.data) setProjects(p.data);
-      if (pr.data) setProfiles(pr.data);
-      if (a.data) setAgencies(a.data);
-      if (ac.data) setAccounts(ac.data);
-      if (te.data) setTeams(te.data);
+      setProfiles(pr.map((x) => ({ id: x.id, full_name: x.full_name })));
+      setAgencies(a);
+      setAccounts(ac);
+      setTeams(te);
     });
   }, [supabase]);
 

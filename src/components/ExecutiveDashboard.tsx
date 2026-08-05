@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { loadDashboardData, type DashboardTask, type DashboardProfile, type DashboardProject } from "@/lib/dashboard";
 import {
   BarChart3, AlertTriangle, Clock, Users, TrendingUp,
   ChevronDown, AlertCircle, UserCheck, Activity,
@@ -11,26 +12,6 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 interface Agency { id: string; name: string }
 interface Account { id: string; name: string; agency_id: string }
 interface Project { id: string; name: string; account_id: string; status?: string }
-
-interface TaskRow {
-  id: string;
-  title: string;
-  status: string;
-  due_date: string | null;
-  estimated_hours: number | null;
-  created_at: string;
-  updated_at: string;
-  completed_at: string | null;
-  assignee_id: string | null;
-  project_id: string;
-  projects: { id: string; name: string; account_id: string };
-}
-
-interface ProfileRow {
-  id: string;
-  full_name: string | null;
-  capacity: number | null;
-}
 
 interface CollaboratorLoad {
   id: string;
@@ -93,28 +74,9 @@ export function ExecutiveDashboard() {
 
   const fetchData = useCallback(async () => {
     const seq = ++fetchSeq.current;
-    const { data: allTasks } = await supabase.from("tasks").select(`
-      id, title, status, due_date, estimated_hours, created_at, updated_at, completed_at,
-      assignee_id,
-      project_id, projects!inner(id, name, account_id)
-    `).then((res) => {
-      if (res.error?.code === "PGRST204" && res.error.message?.includes("completed_at")) {
-        return supabase.from("tasks").select(`
-          id, title, status, due_date, estimated_hours, created_at, updated_at,
-          assignee_id,
-          project_id, projects!inner(id, name, account_id)
-        `);
-      }
-      return res;
-    }) as unknown as { data: TaskRow[] | null };
+    const { tasks: allTasks, profiles: allProfiles, projects: allProjects } = await loadDashboardData();
 
-    const { data: allProfiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, capacity") as { data: ProfileRow[] | null };
-
-    const { data: allProjects } = await supabase.from("projects").select("id, name, status") as { data: Project[] | null };
-
-    if (!allTasks || !allProjects) return;
+    if (!allTasks || !allProjects || !allProfiles) return;
 
     // Evita que una respuesta de un fetch anterior (race por cambio rápido de filtros)
     // sobrescriba los KPIs de la petición más reciente.
@@ -131,7 +93,7 @@ export function ExecutiveDashboard() {
     } else if (selectedAgency) {
       const agencyAccountIds = accounts.filter((a) => a.agency_id === selectedAgency).map((a) => a.id);
       filteredProjectIds = allTasks
-        .filter((t) => agencyAccountIds.includes(t.projects?.account_id))
+        .filter((t) => t.projects?.account_id && agencyAccountIds.includes(t.projects.account_id))
         .map((t) => t.project_id);
       filteredProjectIds = [...new Set(filteredProjectIds)];
     }

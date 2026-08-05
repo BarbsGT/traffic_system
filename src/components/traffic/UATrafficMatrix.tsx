@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { isTaskRedAlert, isProjectRedStatus } from "@/utils/taskAlerts";
-import { chunk, loadUAMatrix, type UATask, type Profile } from "@/lib/uamatrix";
+import { chunk } from "@/lib/utils";
+import { loadUAMatrix, type UATask, type Profile } from "@/lib/uamatrix";
 import {
   Search, Plus, ChevronDown, ChevronRight, ExternalLink, FileText,
   MessageSquare, X, Eye, EyeOff, Lock, LockOpen,

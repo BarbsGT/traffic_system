@@ -7,20 +7,11 @@ import { Modal } from "@/components/ui/Modal";
 import { Edit2, Trash2, Plus, X, Check, Upload, FileDown } from "lucide-react";
 import { adminCreateUser, adminUpdateUser, adminToggleActive, adminBulkCreateUsers, type CreateUserInput } from "@/app/actions/users";
 import { parseCSV, downloadCSV, type CsvRow } from "@/utils/csv";
+import { loadProfiles, loadAccounts, loadTeams, type UserProfile } from "@/lib/directory";
 
 type Tab = "usuarios" | "colaboradores" | "asignaciones";
 
-interface Profile {
-  id: string;
-  full_name: string;
-  email: string;
-  role: string;
-  position: string;
-  position_description: string;
-  manager_id: string | null;
-  capacity: number;
-  is_active: boolean;
-}
+type Profile = UserProfile;
 
 interface Account { id: string; name: string; code: string }
 interface Team { id: string; name: string; code: string; account_id: string }
@@ -37,12 +28,10 @@ export default function UsersPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showBulkModal, setShowBulkModal] = useState(false);
 
-  const supabase = createClient();
-
   const fetchData = useCallback(async () => {
-    const { data } = await supabase.from("profiles").select("*").order("full_name");
+    const data = await loadProfiles();
     if (data) setProfiles(data);
-  }, [supabase]);
+  }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
