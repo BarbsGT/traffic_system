@@ -235,7 +235,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   const ALL_COLUMNS: ColumnDef[] = [
     { key: "project_name", label: "PROYECTO", width: "220px", defaultVisible: true },
     { key: "budget", label: "BUDGET", width: "90px", defaultVisible: true },
-    { key: "brief_date", label: "BRIEF", width: "75px", defaultVisible: true },
+    { key: "brief_date", label: "BRIEF / START", width: "100px", defaultVisible: true },
     { key: "end_date", label: "DEADLINE", width: "110px", defaultVisible: true },
     { key: "creative_status", label: "STATUS", width: "100px", defaultVisible: true },
     { key: "launch_date", label: "LANZAM.", width: "75px", defaultVisible: true },
