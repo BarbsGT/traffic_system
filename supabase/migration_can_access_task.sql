@@ -33,8 +33,9 @@ BEGIN
     SELECT 1 FROM directors WHERE account_id = aid AND profile_id = auth.uid() AND is_active = true
   ) OR EXISTS (
     -- Es miembro de un equipo vinculado a la cuenta
-    SELECT 1 FROM profile_teams pt JOIN teams t ON t.id = pt.team_id
-    WHERE pt.profile_id = auth.uid() AND t.account_id = aid
+    SELECT 1 FROM profile_teams pt
+    JOIN team_accounts ta ON ta.team_id = pt.team_id
+    WHERE pt.profile_id = auth.uid() AND ta.account_id = aid
   ) OR EXISTS (
     -- Tiene una tarea asignada en un proyecto de la cuenta
     SELECT 1 FROM tasks tk JOIN projects p ON p.id = tk.project_id

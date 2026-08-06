@@ -19,8 +19,9 @@ BEGIN
   ) OR EXISTS (
     SELECT 1 FROM directors WHERE account_id = aid AND profile_id = auth.uid() AND is_active = true
   ) OR EXISTS (
-    SELECT 1 FROM profile_teams pt JOIN teams t ON t.id = pt.team_id
-    WHERE pt.profile_id = auth.uid() AND t.account_id = aid
+    SELECT 1 FROM profile_teams pt
+    JOIN team_accounts ta ON ta.team_id = pt.team_id
+    WHERE pt.profile_id = auth.uid() AND ta.account_id = aid
   );
 END;
 $$;
