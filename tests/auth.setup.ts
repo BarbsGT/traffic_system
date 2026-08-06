@@ -2,8 +2,23 @@ import { test as setup } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 
-const DIRECTOR = { email: 'maria.pico@buentipo.com', password: 'D01_Bt_2026' };
-const SUPERADMIN = { email: 'jose.rodriguez@lobueno.co', password: 'Test1234!' };
+function loadEnvLocal(): Record<string, string> {
+  const fs = require('fs');
+  const path = require('path');
+  const file = path.join(__dirname, '..', '.env.local');
+  if (!fs.existsSync(file)) return {};
+  const out: Record<string, string> = {};
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (m) out[m[1]] = m[2].trim().replace(/^"(.*)"$/, '$1');
+  }
+  return out;
+}
+
+const env = { ...process.env, ...loadEnvLocal() };
+
+const DIRECTOR = { email: env.AUDIT_DIRECTOR_EMAIL || 'maria.pico@buentipo.com', password: env.AUDIT_DIRECTOR_PASSWORD || '' };
+const SUPERADMIN = { email: env.AUDIT_SUPERADMIN_EMAIL || 'jose.rodriguez@lobueno.co', password: env.AUDIT_SUPERADMIN_PASSWORD || '' };
 
 const authDir = path.join(__dirname, '.auth');
 fs.mkdirSync(authDir, { recursive: true });

@@ -1,8 +1,23 @@
 import { test, expect, type Page } from '@playwright/test';
 
-const SUPERADMIN = { email: 'jose.rodriguez@lobueno.co', password: 'Test1234!' };
-const DIRECTOR = { email: 'director@lobueno.co', password: 'Test1234!' };
-const COLABORADOR = { email: 'maria.garcia@lobueno.co', password: 'Test1234!' };
+function loadEnvLocal(): Record<string, string> {
+  const fs = require('fs');
+  const path = require('path');
+  const file = path.join(__dirname, '..', '.env.local');
+  if (!fs.existsSync(file)) return {};
+  const out: Record<string, string> = {};
+  for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
+    const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
+    if (m) out[m[1]] = m[2].trim().replace(/^"(.*)"$/, '$1');
+  }
+  return out;
+}
+
+const env = { ...process.env, ...loadEnvLocal() };
+
+const SUPERADMIN = { email: env.AUDIT_SUPERADMIN_EMAIL || 'jose.rodriguez@lobueno.co', password: env.AUDIT_SUPERADMIN_PASSWORD || '' };
+const DIRECTOR = { email: env.QA_DIRECTOR_EMAIL || 'director@lobueno.co', password: env.QA_DIRECTOR_PASSWORD || '' };
+const COLABORADOR = { email: env.QA_COLABORADOR_EMAIL || 'maria.garcia@lobueno.co', password: env.QA_COLABORADOR_PASSWORD || '' };
 const TS = Date.now();
 
 async function login(page: Page, user: { email: string; password: string }) {
@@ -70,7 +85,7 @@ test.describe('2. User Creation', () => {
 
     const pwInput = page.locator('input[name="password"]');
     await expect(pwInput).toBeVisible();
-    await pwInput.fill('Test1234!');
+    await pwInput.fill(env.QA_TEST_PASSWORD || 'Test1234!');
 
     await page.click('button:text("Crear Usuario")');
 
