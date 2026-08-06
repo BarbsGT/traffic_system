@@ -41,7 +41,7 @@ test.describe('Auditoría flujo SUPERADMIN (josé)', () => {
     await expect(page.getByRole('heading', { name: 'Catálogos' })).toBeVisible({ timeout: 20000 });
     await expect(page.getByText('Agencias')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Cuentas', exact: true })).toBeVisible();
-    await expect(page.getByText('Equipos')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Equipos', exact: true })).toBeVisible();
     expectNoAuditIssues(issues, 'admin catálogos');
   });
 
