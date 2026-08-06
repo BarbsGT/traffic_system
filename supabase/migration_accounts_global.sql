@@ -34,6 +34,9 @@ ON CONFLICT (account_id, agency_id) DO NOTHING;
 -- 3) Quitar política dependiente en agencies antes de borrar la columna
 DROP POLICY IF EXISTS "catalogos_select" ON agencies;
 
+-- Recrear política de SELECT para agencies (lectura pública para autenticados)
+CREATE POLICY "catalogos_select" ON agencies FOR SELECT USING (true);
+
 -- 4) Quitar agencia obligatoria de accounts
 ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_agency_id_fkey;
 DROP INDEX IF EXISTS idx_accounts_agency;
