@@ -27,5 +27,11 @@ export default defineConfig({
       dependencies: ['setup'],
       use: { storageState: 'tests/.auth/superadmin.json' },
     },
+    {
+      name: 'audit-responsive',
+      testMatch: /audit-responsive\.spec\.ts/,
+      dependencies: ['setup'],
+      use: { storageState: 'tests/.auth/superadmin.json' },
+    },
   ],
 });

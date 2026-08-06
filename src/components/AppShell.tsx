@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { Menu } from "lucide-react";
 import { SidebarNav } from "@/components/layout/SidebarNav";
 
 const publicRoutes = ["/login", "/auth/callback"];
@@ -18,6 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<string>("");
   const [authLoading, setAuthLoading] = useState(true);
   const [roleResolved, setRoleResolved] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const profileAttempt = useRef(0);
 
   const fetchRole = useCallback(async (userId: string): Promise<void> => {
@@ -104,8 +106,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <SidebarNav user={user} />
+      <SidebarNav user={user} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} />
       <main className="flex-1 overflow-y-auto p-6">
+        <button
+          className="mb-4 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm md:hidden"
+          style={{ color: "var(--text-secondary)", background: "var(--sidebar-hover, rgba(255,255,255,0.06))" }}
+          onClick={() => setMobileOpen(true)}
+        >
+          <Menu size={18} />
+          Menú
+        </button>
         {children}
       </main>
     </div>

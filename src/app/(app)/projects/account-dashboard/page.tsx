@@ -39,7 +39,7 @@ export default function AccountDashboardPage() {
   return (
     <div className="animate-fadeIn space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap min-w-0">
           <div className="relative">
             <select
               value={selectedAccountId}

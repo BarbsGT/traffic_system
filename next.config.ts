@@ -26,7 +26,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' https://lh3.googleusercontent.com https://avatars.githubusercontent.com data:",
-              "connect-src 'self' https://*.supabase.co https://accounts.google.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://accounts.google.com",
               "font-src 'self'",
               "frame-src 'none'",
               "form-action 'self'",
