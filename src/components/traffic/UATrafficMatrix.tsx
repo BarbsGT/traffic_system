@@ -89,20 +89,47 @@ const AREA_COLORS: Record<string, string> = {
   "Marketing Ops": "rgb(245,158,11)",
 };
 
-function formatDate(d: string) {
-  if (!d) return "";
-  return new Date(d).toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+function parseYMD(d: string | null | undefined): { y: number; m: number; day: number } | null {
+  if (!d) return null;
+  const parts = String(d).split("T")[0].split("-");
+  if (parts.length !== 3) return null;
+  const [y, m, day] = parts.map(Number);
+  if (!y || !m || !day) return null;
+  return { y, m, day };
 }
 
-function toDateInput(d: string) {
-  return d ? d.substring(0, 10) : "";
+function formatDate(d: string | null | undefined) {
+  const p = parseYMD(d);
+  if (!p) return "";
+  return `${String(p.day).padStart(2, "0")}/${String(p.m).padStart(2, "0")}/${p.y}`;
+}
+
+function toDateInput(d: string | null | undefined) {
+  const p = parseYMD(d);
+  if (!p) return "";
+  return `${p.y}-${String(p.m).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
+}
+
+function toLocalDate(d: string | null | undefined): Date | null {
+  const p = parseYMD(d);
+  if (!p) return null;
+  return new Date(p.y, p.m - 1, p.day);
+}
+
+function todayStr() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function computeWorkingDays(start: string, end: string) {
   if (!start || !end) return 0;
   let count = 0;
-  const cur = new Date(start);
-  const e = new Date(end);
+  const cur = toLocalDate(start);
+  const e = toLocalDate(end);
+  if (!cur || !e) return 0;
   while (cur <= e) {
     const day = cur.getDay();
     if (day !== 0 && day !== 6) count++;
@@ -119,17 +146,20 @@ function getInitials(name: string) {
 function daysRemaining(dateStr: string) {
   if (!dateStr) return null;
   const now = new Date();
-  const target = new Date(dateStr);
-  const diff = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  now.setHours(0, 0, 0, 0);
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = toLocalDate(dateStr);
+  if (!target) return null;
+  const diff = Math.ceil((target.getTime() - todayStart.getTime()) / (1000 * 60 * 60 * 24));
   return diff;
 }
 
 function deadlineInfo(row: UARow): { label: string; overdue: boolean } {
   if (!row.end_date) return { label: "—", overdue: false };
   if (row.delivered_at) {
-    const delivered = new Date(row.delivered_at);
-    const end = new Date(row.end_date);
-    const diff = Math.ceil((delivered.getTime() - end.getTime()) / (1000 * 60 * 60 * 24));
+    const delivered = toLocalDate(row.delivered_at);
+    const end = toLocalDate(row.end_date);
+    const diff = delivered && end ? Math.ceil((delivered.getTime() - end.getTime()) / (1000 * 60 * 60 * 24)) : 0;
     if (diff > 0) return { label: `${diff}d ret`, overdue: true };
     if (diff === 0) return { label: "A tiempo", overdue: false };
     return { label: `${Math.abs(diff)}d antes`, overdue: false };
@@ -379,7 +409,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     const payload: { status: string; completed_at: string | null; delivered_at: string | null } = { status, completed_at: null, delivered_at: null };
     if (status === "COMPLETED") {
       payload.completed_at = new Date().toISOString();
-      payload.delivered_at = deliveredAt || new Date().toISOString().slice(0, 10);
+      payload.delivered_at = deliveredAt || todayStr();
     }
     const { error } = await supabase.from("tasks").update(payload).eq("id", taskId);
     if (error && (error.code === "PGRST204" || error.message?.includes("completed_at") || error.message?.includes("delivered_at"))) {
@@ -472,14 +502,14 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   function cancelEdit() { setEditing(null); }
 
   const requestDeliveryDate = (kind: "project" | "task", id: string, projectId: string, nextStatus: string, taskTitle?: string) => {
-    setDeliveryDate(new Date().toISOString().slice(0, 10));
+    setDeliveryDate(todayStr());
     setDeliveryModal({ kind, id, projectId, nextStatus, taskTitle });
   };
 
   const confirmDelivery = async () => {
     if (!deliveryModal) return;
     const { kind, id, nextStatus } = deliveryModal;
-    const delivered = deliveryDate || new Date().toISOString().slice(0, 10);
+    const delivered = deliveryDate || todayStr();
     if (kind === "project") {
       const { error } = await supabase.from("projects").update({ creative_status: nextStatus, delivered_at: delivered }).eq("id", id);
       if (error) { console.error("Error guardando entrega:", JSON.stringify(error)); return; }
