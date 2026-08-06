@@ -1010,13 +1010,13 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                             {TASK_PRIORITIES.map((p) => (<option key={p} value={p}>{p}</option>))}
                                           </select>
                                           <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Inicio</span>
-                                          <input type="date" value={toDateInput(task.start_date)}
-                                            onChange={(e) => debouncedUpdate(`start_${task.id}`, () => updateTaskStartDate(task.id, e.target.value))}
+                                          <input type="date" defaultValue={toDateInput(task.start_date)}
+                                            onChange={(e) => { const v = e.target.value; debouncedUpdate(`start_${task.id}`, () => updateTaskStartDate(task.id, v)); }}
                                             className="px-1 py-0.5 rounded text-[10px] outline-none"
                                             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
                                           <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Entrega</span>
-                                          <input type="date" value={toDateInput(task.due_date)}
-                                            onChange={(e) => debouncedUpdate(`due_${task.id}`, () => updateTaskDueDate(task.id, e.target.value))}
+                                          <input type="date" defaultValue={toDateInput(task.due_date)}
+                                            onChange={(e) => { const v = e.target.value; debouncedUpdate(`due_${task.id}`, () => updateTaskDueDate(task.id, v)); }}
                                             className="px-1 py-0.5 rounded text-[10px] outline-none"
                                             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)", maxWidth: 95 }} />
                                           <select value={task.assignee_id || ""}
