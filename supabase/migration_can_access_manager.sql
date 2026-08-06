@@ -19,6 +19,9 @@ BEGIN
   ) OR EXISTS (
     SELECT 1 FROM profile_teams pt JOIN teams t ON t.id = pt.team_id
     WHERE pt.profile_id = auth.uid() AND t.account_id = aid
+  ) OR EXISTS (
+    SELECT 1 FROM tasks tk JOIN projects p ON p.id = tk.project_id
+    WHERE p.account_id = aid AND tk.assignee_id = auth.uid()
   );
 END;
 $$;
