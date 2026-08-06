@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { formatDateShort } from "@/lib/dates";
 import { CalendarDays, ChevronDown, ChevronRight } from "lucide-react";
 
 interface ProjectRow {
@@ -112,7 +113,7 @@ export function AccountTimeline({ accountId, accountName }: Props) {
 
   const visibleProjects = projects.filter((p) => projStart(p) || projEnd(p));
 
-  const fmt = (d: string | null) => (d ? new Date(d).toLocaleDateString("es", { day: "2-digit", month: "2-digit" }) : "—");
+  const fmt = (d: string | null) => (d ? formatDateShort(d) : "—");
 
   const monthMarkers = useMemo(() => {
     const seen = new Set<string>();

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { isProjectOverdue } from "@/utils/taskAlerts";
+import { formatDateDDMMYYYY } from "@/lib/dates";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
   Legend, CartesianGrid,
@@ -440,7 +441,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
                     <span style={{ color: "var(--text-muted)" }}>Resp: {p.resp_bt || "—"} · {p.area}</span>
                   </div>
                   <span className="font-mono ml-2 shrink-0" style={{ color: "var(--accent-rose)" }}>
-                    Venció: {p.end_date ? new Date(p.end_date).toLocaleDateString("es") : "—"}
+                    Venció: {p.end_date ? formatDateDDMMYYYY(p.end_date) : "—"}
                   </span>
                 </div>
               ))}
