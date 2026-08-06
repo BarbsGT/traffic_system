@@ -10,7 +10,7 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 
 interface Agency { id: string; name: string }
-interface Account { id: string; name: string; agency_id: string }
+interface Account { id: string; name: string }
 interface Project { id: string; name: string; account_id: string; status?: string }
 
 interface CollaboratorLoad {
@@ -55,6 +55,7 @@ export function ExecutiveDashboard() {
 
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [accountAgencies, setAccountAgencies] = useState<Record<string, string[]>>({});
   const [projects, setProjects] = useState<Project[]>([]);
 
   const [selectedAgency, setSelectedAgency] = useState<string>("");
@@ -91,7 +92,7 @@ export function ExecutiveDashboard() {
         .map((t) => t.project_id);
       filteredProjectIds = [...new Set(filteredProjectIds)];
     } else if (selectedAgency) {
-      const agencyAccountIds = accounts.filter((a) => a.agency_id === selectedAgency).map((a) => a.id);
+      const agencyAccountIds = accounts.filter((a) => accountAgencies[a.id]?.includes(selectedAgency)).map((a) => a.id);
       filteredProjectIds = allTasks
         .filter((t) => t.projects?.account_id && agencyAccountIds.includes(t.projects.account_id))
         .map((t) => t.project_id);
@@ -193,14 +194,24 @@ export function ExecutiveDashboard() {
       projectName: projectMap.get(t.project_id) || "",
     }));
     setAlertTasks(alerts);
-  }, [selectedAgency, selectedAccount, selectedProject, supabase, accounts]);
+    }, [selectedAgency, selectedAccount, selectedProject, supabase, accounts, accountAgencies]);
 
   useEffect(() => {
     supabase.from("agencies").select("id, name").then(({ data }) => {
       if (data) setAgencies(data);
     });
-    supabase.from("accounts").select("id, name, agency_id").then(({ data }) => {
+    supabase.from("accounts").select("id, name").then(({ data }) => {
       if (data) setAccounts(data);
+    });
+    supabase.from("account_agencies").select("account_id, agency_id").then(({ data }) => {
+      const grouped: Record<string, string[]> = {};
+      if (data) {
+        data.forEach((r) => {
+          grouped[r.account_id] = grouped[r.account_id] || [];
+          grouped[r.account_id].push(r.agency_id);
+        });
+      }
+      setAccountAgencies(grouped);
     });
     supabase.from("projects").select("id, name, account_id").then(({ data }) => {
       if (data) setProjects(data);
@@ -212,7 +223,7 @@ export function ExecutiveDashboard() {
   }, [fetchData]);
 
   const filteredAccounts = selectedAgency
-    ? accounts.filter((a) => a.agency_id === selectedAgency)
+    ? accounts.filter((a) => accountAgencies[a.id]?.includes(selectedAgency))
     : accounts;
 
   const filteredProjects = selectedAccount

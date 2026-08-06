@@ -139,6 +139,7 @@ export function useDailyGanttData(filters: DailyGanttFilters) {
     setLoading(true);
     setError(null);
 
+    (async () => {
     let projectsQuery = supabase
       .from("projects")
       .select("id, name, brief_date, end_date, launch_date, presentation_date, creative_status, accounts(id, name)");
@@ -157,8 +158,15 @@ export function useDailyGanttData(filters: DailyGanttFilters) {
       projectsQuery = projectsQuery.eq("account_id", filters.accountId);
       tasksQuery = tasksQuery.eq("projects.account_id", filters.accountId);
     } else if (filters.agencyId) {
-      projectsQuery = projectsQuery.eq("accounts.agency_id", filters.agencyId);
-      tasksQuery = tasksQuery.eq("projects.accounts.agency_id", filters.agencyId);
+      const accountIds = await supabase
+        .from("account_agencies")
+        .select("account_id")
+        .eq("agency_id", filters.agencyId)
+        .then(({ data }) => (data || []).map((r) => r.account_id));
+      if (accountIds.length > 0) {
+        projectsQuery = projectsQuery.in("account_id", accountIds);
+        tasksQuery = tasksQuery.in("projects.account_id", accountIds);
+      }
     }
 
     Promise.all([
@@ -231,6 +239,7 @@ export function useDailyGanttData(filters: DailyGanttFilters) {
       setItems(mapped);
       setLoading(false);
     });
+    })();
   }, [filters.agencyId, filters.accountId, filters.projectId]);
 
   return { items, loading, error };

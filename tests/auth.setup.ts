@@ -2,7 +2,7 @@ import { test as setup } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
 
-const DIRECTOR = { email: 'maria.directora@agenciacentral.com', password: 'Test1234!' };
+const DIRECTOR = { email: 'maria.pico@buentipo.com', password: 'Test1234!' };
 const SUPERADMIN = { email: 'jose.rodriguez@lobueno.co', password: 'Test1234!' };
 
 const authDir = path.join(__dirname, '.auth');
