@@ -322,6 +322,7 @@ export default function CatalogosPage() {
         <CatalogForm
           tab={tab}
           editing={editing}
+          areas={areas}
           agencies={agencies}
           accounts={accounts}
           teams={teams}
@@ -578,8 +579,8 @@ function Row({ item, onEdit, onDelete, children }: { item: unknown; onEdit: (ite
   );
 }
 
-function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone }: {
-  tab: string; editing: unknown; agencies: Agency[]; accounts: Account[]; teams: Team[]; profiles: { id: string; full_name: string }[]; onDone: () => void;
+function CatalogForm({ tab, editing, areas, agencies, accounts, teams, profiles, onDone }: {
+  tab: string; editing: unknown; areas: Area[]; agencies: Agency[]; accounts: Account[]; teams: Team[]; profiles: { id: string; full_name: string }[]; onDone: () => void;
 }) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);
@@ -593,6 +594,23 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
     const editId = editing && typeof editing === "object" && "id" in editing ? (editing as { id: string }).id : null;
 
     let error: any = null;
+
+    if (!editId) {
+      const name = String(data.name || "").toLowerCase().trim();
+      if (name) {
+        const source =
+          tab === "areas" ? areas :
+          tab === "agencies" ? agencies :
+          tab === "accounts" ? accounts :
+          tab === "teams" ? teams : null;
+        if (source && source.some((x) => ("name" in x ? String(x.name).toLowerCase().trim() : "") === name)) {
+          const label = tab === "teams" ? "un equipo" : tab === "areas" ? "un área" : tab === "agencies" ? "una agencia" : "una cuenta";
+          alert(`Ya existe ${label} con el nombre "${data.name}".`);
+          setSaving(false);
+          return;
+        }
+      }
+    }
 
     if (tab === "areas") {
       if (editId) { const r = await supabase.from("areas").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }

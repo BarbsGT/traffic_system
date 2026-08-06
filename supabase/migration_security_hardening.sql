@@ -175,7 +175,9 @@ DROP POLICY IF EXISTS "areas_select" ON areas;
 CREATE POLICY "catalogos_select" ON agencies FOR SELECT USING (
   auth.role() = 'authenticated' AND (
     is_sysadmin() OR EXISTS (
-      SELECT 1 FROM accounts a WHERE a.agency_id = agencies.id AND can_access_account(a.id)
+      SELECT 1 FROM account_agencies aa
+      JOIN accounts ac ON ac.id = aa.account_id
+      WHERE aa.agency_id = agencies.id AND can_access_account(aa.account_id)
     )
   )
 );
