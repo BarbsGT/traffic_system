@@ -8,7 +8,6 @@ export interface Agency {
 export interface Account {
   id: string;
   name: string;
-  agency_id?: string;
   code?: string;
 }
 
@@ -44,7 +43,7 @@ export async function loadAgencies(): Promise<Agency[]> {
 
 /** Carga las cuentas (order por nombre). */
 export async function loadAccounts(): Promise<Account[]> {
-  const { data } = await createClient().from("accounts").select("id, name, agency_id").order("name");
+  const { data } = await createClient().from("accounts").select("id, name, code").order("name");
   return (data as Account[]) || [];
 }
 

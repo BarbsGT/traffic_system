@@ -35,6 +35,7 @@ export function TaskList() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamAccounts, setTeamAccounts] = useState<Record<string, string[]>>({});
+  const [accountAgencies, setAccountAgencies] = useState<Record<string, string[]>>({});
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
@@ -56,7 +57,8 @@ export function TaskList() {
       loadAccounts(),
       loadTeams(),
       supabase.from("team_accounts").select("team_id, account_id"),
-    ]).then(([t, p, pr, a, ac, te, ta]) => {
+      supabase.from("account_agencies").select("account_id, agency_id"),
+    ]).then(([t, p, pr, a, ac, te, ta, aa]) => {
       if (t.data) setTasks(t.data);
       if (p.data) setProjects(p.data);
       setProfiles(pr.map((x) => ({ id: x.id, full_name: x.full_name })));
@@ -72,10 +74,21 @@ export function TaskList() {
         });
       }
       setTeamAccounts(grouped);
+
+      const agencyGrouped: Record<string, string[]> = {};
+      if (aa.data) {
+        aa.data.forEach((r) => {
+          agencyGrouped[r.account_id] = agencyGrouped[r.account_id] || [];
+          agencyGrouped[r.account_id].push(r.agency_id);
+        });
+      }
+      setAccountAgencies(agencyGrouped);
     });
   }, [supabase]);
 
-  const filteredAccounts = selectedAgency ? accounts.filter((a) => a.agency_id === selectedAgency) : accounts;
+  const filteredAccounts = selectedAgency
+    ? accounts.filter((a) => accountAgencies[a.id]?.includes(selectedAgency))
+    : accounts;
   const filteredTeams = selectedAccount
     ? teams.filter((t) => teamAccounts[t.id]?.includes(selectedAccount))
     : teams;

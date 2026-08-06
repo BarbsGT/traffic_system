@@ -15,7 +15,7 @@ type Tab = "usuarios" | "colaboradores" | "asignaciones";
 type Profile = UserProfile;
 
 interface Account { id: string; name: string; code: string }
-interface Team { id: string; name: string; code: string; account_id: string }
+interface Team { id: string; name: string; code: string }
 
 interface ProfileAccount { id: string; profile_id: string; account_id: string; manager_id: string | null; assigned_at: string }
 interface ProfileTeam { id: string; profile_id: string; team_id: string; assigned_at: string }
@@ -245,7 +245,7 @@ function BulkUsersForm({ profiles }: { profiles: Profile[] }) {
   useEffect(() => {
     Promise.all([
       supabase.from("accounts").select("id, name, code").order("name"),
-      supabase.from("teams").select("id, name, code, account_id").order("name"),
+      supabase.from("teams").select("id, name, code").order("name"),
     ]).then(([accRes, teamRes]) => {
       if (accRes.data) setAccounts(accRes.data);
       if (teamRes.data) setTeams(teamRes.data);
@@ -735,7 +735,7 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
   const refresh = useCallback(async () => {
     const [acRes, tRes, paRes, ptRes] = await Promise.all([
       supabase.from("accounts").select("id, name, code").order("name"),
-      supabase.from("teams").select("id, name, code, account_id").order("name"),
+      supabase.from("teams").select("id, name, code").order("name"),
       selectedUser ? supabase.from("profile_accounts").select("*").eq("profile_id", selectedUser) : Promise.resolve({ data: [] as ProfileAccount[] }),
       selectedUser ? supabase.from("profile_teams").select("*").eq("profile_id", selectedUser) : Promise.resolve({ data: [] as ProfileTeam[] }),
     ]);
