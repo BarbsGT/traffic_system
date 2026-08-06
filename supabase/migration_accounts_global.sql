@@ -31,7 +31,10 @@ INSERT INTO account_agencies (account_id, agency_id)
 SELECT id, agency_id FROM accounts WHERE agency_id IS NOT NULL
 ON CONFLICT (account_id, agency_id) DO NOTHING;
 
--- 3) Quitar agencia obligatoria de accounts
+-- 3) Quitar política dependiente en agencies antes de borrar la columna
+DROP POLICY IF EXISTS "catalogos_select" ON agencies;
+
+-- 4) Quitar agencia obligatoria de accounts
 ALTER TABLE accounts DROP CONSTRAINT IF EXISTS accounts_agency_id_fkey;
 DROP INDEX IF EXISTS idx_accounts_agency;
 ALTER TABLE accounts DROP COLUMN IF EXISTS agency_id;

@@ -592,22 +592,32 @@ function CatalogForm({ tab, editing, agencies, accounts, teams, profiles, onDone
     const data = Object.fromEntries(new FormData(form));
     const editId = editing && typeof editing === "object" && "id" in editing ? (editing as { id: string }).id : null;
 
+    let error: any = null;
+
     if (tab === "areas") {
-      if (editId) await supabase.from("areas").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
-      else await supabase.from("areas").insert({ name: data.name, code: data.code });
+      if (editId) { const r = await supabase.from("areas").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("areas").insert({ name: data.name, code: data.code }); error = r.error; }
     } else if (tab === "agencies") {
-      if (editId) await supabase.from("agencies").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
-      else await supabase.from("agencies").insert({ name: data.name, code: data.code });
+      if (editId) { const r = await supabase.from("agencies").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("agencies").insert({ name: data.name, code: data.code }); error = r.error; }
     } else if (tab === "accounts") {
-      if (editId) await supabase.from("accounts").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId);
-      else await supabase.from("accounts").insert({ name: data.name, code: data.code });
+      if (editId) { const r = await supabase.from("accounts").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("accounts").insert({ name: data.name, code: data.code }); error = r.error; }
     } else if (tab === "teams") {
-      if (editId) await supabase.from("teams").update({ name: data.name, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editId);
-      else await supabase.from("teams").insert({ name: data.name, code: data.code, director_id: data.director_id || null });
+      if (editId) { const r = await supabase.from("teams").update({ name: data.name, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("teams").insert({ name: data.name, code: data.code, director_id: data.director_id || null }); error = r.error; }
     } else if (tab === "directors") {
-      if (editId) await supabase.from("directors").update({ profile_id: data.profile_id, account_id: data.account_id || null, is_active: data.is_active === "on" }).eq("id", editId);
-      else await supabase.from("directors").insert({ profile_id: data.profile_id, account_id: data.account_id || null });
+      if (editId) { const r = await supabase.from("directors").update({ profile_id: data.profile_id, account_id: data.account_id || null, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("directors").insert({ profile_id: data.profile_id, account_id: data.account_id || null }); error = r.error; }
     }
+
+    if (error) {
+      console.error("Error guardando catálogo:", error);
+      alert("Error: " + error.message);
+      setSaving(false);
+      return;
+    }
+
     setSaving(false);
     onDone();
   };
