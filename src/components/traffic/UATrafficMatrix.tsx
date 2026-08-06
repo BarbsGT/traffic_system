@@ -13,6 +13,7 @@ import {
 interface UARow {
   id: string;
   account_id: string;
+  description: string;
   client_owner: string;
   area: string;
   project_name: string;
@@ -199,9 +200,11 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
   const [notesPopover, setNotesPopover] = useState<string | null>(null);
   const [notesEditValue, setNotesEditValue] = useState("");
   const [myRole, setMyRole] = useState<string>("");
+  const [areaOptions, setAreaOptions] = useState<string[]>([]);
+  const [respOptions, setRespOptions] = useState<{ id: string; full_name: string }[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({
-    project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "",
+    project_name: "", description: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "",
     resp_bt: "", end_date: "", launch_date: "", presentation_date: "",
     creative_status: "To do", status_btlive: "", status_migrante: "",
     brief_link: "", decks_link: "", team_notes: "",
@@ -228,6 +231,14 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     debounceTimers.current[key] = setTimeout(() => { delete debounceTimers.current[key]; fn(); }, ms);
   }, []);
   const supabase = createClient();
+
+  const areaChoices = areaOptions.length > 0 ? areaOptions : AREAS;
+
+  const respNamesFor = (current?: string) => {
+    const names = respOptions.map((o) => o.full_name);
+    if (current && !names.includes(current)) return [current, ...names];
+    return names;
+  };
 
   const canEdit = myRole === "SUPERADMIN" || myRole === "SYSADMIN" || myRole === "DIRECTOR" || myRole === "GERENTE";
   const canComment = true;
@@ -320,6 +331,37 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
       }
 
       setLoading(false);
+    })();
+  }, [accountId]);
+
+  useEffect(() => {
+    supabase
+      .from("areas")
+      .select("name")
+      .order("name")
+      .then(({ data }) => {
+        if (data && data.length > 0) setAreaOptions(data.map((a) => a.name));
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!accountId) return;
+    (async () => {
+      const ids = new Set<string>();
+      const [{ data: pa }, { data: dirs }] = await Promise.all([
+        supabase.from("profile_accounts").select("profile_id, manager_id").eq("account_id", accountId),
+        supabase.from("directors").select("profile_id").eq("account_id", accountId).eq("is_active", true),
+      ]);
+      (pa || []).forEach((r) => { if (r.profile_id) ids.add(r.profile_id); if (r.manager_id) ids.add(r.manager_id); });
+      (dirs || []).forEach((r) => { if (r.profile_id) ids.add(r.profile_id); });
+      const idList = [...ids];
+      if (idList.length === 0) { setRespOptions([]); return; }
+      const people: { id: string; full_name: string }[] = [];
+      for (const batch of chunk(idList, 100)) {
+        const { data } = await supabase.from("profiles").select("id, full_name").in("id", batch);
+        if (data) people.push(...(data as { id: string; full_name: string }[]));
+      }
+      setRespOptions(people.sort((a, b) => a.full_name.localeCompare(b.full_name)));
     })();
   }, [accountId]);
 
@@ -534,7 +576,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
     const mapped = { ...(payload as unknown as UARow), id: newId, project_name: createForm.project_name, account_id: accountId, budget: parseFloat(createForm.budget) || 0, creative_status: "To do" };
     setRows((prev) => [mapped, ...prev]);
     setShowCreateModal(false);
-    setCreateForm({ project_name: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "", resp_bt: "", end_date: "", launch_date: "", presentation_date: "", creative_status: "To do", status_btlive: "", status_migrante: "", brief_link: "", decks_link: "", team_notes: "" });
+    setCreateForm({ project_name: "", description: "", client_owner: "", area: "", tier: "", budget: "", brief_date: "", resp_bt: "", end_date: "", launch_date: "", presentation_date: "", creative_status: "To do", status_btlive: "", status_migrante: "", brief_link: "", decks_link: "", team_notes: "" });
     setTimeout(() => newRowRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
   }
 
@@ -809,7 +851,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
           className="px-2 py-1.5 rounded-lg text-[11px] outline-none"
           style={{ background: "var(--card-bg)", border: "1px solid var(--border)", color: "var(--text-secondary)" }}>
           <option value="">Área</option>
-          {AREAS.map((a) => (<option key={a} value={a}>{a}</option>))}
+          {areaChoices.map((a) => (<option key={a} value={a}>{a}</option>))}
         </select>
 
         <select value={filterTier} onChange={(e) => setFilterTier(e.target.value)}
@@ -1190,6 +1232,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                   className="w-full mt-0.5 px-3 py-2 rounded-lg text-[12px] outline-none"
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
               </div>
+              <div className="col-span-2">
+                <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Descripción</label>
+                <textarea value={createForm.description} onChange={(e) => setCreateForm((p) => ({ ...p, description: e.target.value }))}
+                  rows={3} className="w-full mt-0.5 px-3 py-2 rounded-lg text-[12px] outline-none resize-none"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+              </div>
               <div>
                 <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Cliente</label>
                 <input type="text" value={createForm.client_owner} onChange={(e) => setCreateForm((p) => ({ ...p, client_owner: e.target.value }))}
@@ -1202,7 +1250,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                   className="w-full mt-0.5 px-3 py-2 rounded-lg text-[12px] outline-none"
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
                   <option value="">Seleccionar</option>
-                  {AREAS.map((a) => (<option key={a} value={a}>{a}</option>))}
+                  {areaChoices.map((a) => (<option key={a} value={a}>{a}</option>))}
                 </select>
               </div>
               <div>
@@ -1222,9 +1270,12 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
               </div>
               <div>
                 <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable</label>
-                <input type="text" value={createForm.resp_bt} onChange={(e) => setCreateForm((p) => ({ ...p, resp_bt: e.target.value }))}
+                <select value={createForm.resp_bt} onChange={(e) => setCreateForm((p) => ({ ...p, resp_bt: e.target.value }))}
                   className="w-full mt-0.5 px-3 py-2 rounded-lg text-[12px] outline-none"
-                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+                  <option value="">Seleccionar</option>
+                  {respNamesFor(createForm.resp_bt).map((n) => (<option key={n} value={n}>{n}</option>))}
+                </select>
               </div>
               <div>
                 <label className="text-[10px] font-medium" style={{ color: "var(--text-muted)" }}>Brief Date</label>
@@ -1340,6 +1391,19 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                   style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
               </div>
 
+              {/* Descripción */}
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Descripción</span>
+                <textarea value={drawerProject.description || ""}
+                  readOnly={!canEdit}
+                  placeholder="—"
+                  onChange={(e) => setDrawerProject({ ...drawerProject, description: e.target.value })}
+                  onBlur={(e) => commitEdit(drawerProject.id, "description", e.target.value)}
+                  rows={3}
+                  className="w-full mt-1.5 px-3 py-2 rounded-lg text-[12px] outline-none resize-none"
+                  style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
+              </div>
+
               {/* Status */}
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>Estado Creativo</span>
@@ -1394,13 +1458,14 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 </div>
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Responsable</span>
-                  <input type="text" value={drawerProject.resp_bt || ""}
-                    readOnly={!canEdit}
-                    placeholder="—"
+                  <select value={drawerProject.resp_bt || ""}
+                    disabled={!canEdit}
                     onChange={(e) => setDrawerProject({ ...drawerProject, resp_bt: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "resp_bt", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
-                    style={{ color: "var(--text-primary)" }} />
+                    style={{ color: "var(--text-primary)" }}>
+                    {respNamesFor(drawerProject.resp_bt || "").map((n) => (<option key={n} value={n}>{n}</option>))}
+                  </select>
                 </div>
               </div>
 
@@ -1454,13 +1519,14 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 </div>
                 <div className="px-3 py-2 rounded-lg" style={{ background: "var(--card-bg)", border: "1px solid var(--card-border)" }}>
                   <span className="text-[9px] font-medium" style={{ color: "var(--text-muted)" }}>Área</span>
-                  <input type="text" value={drawerProject.area || ""}
-                    readOnly={!canEdit}
-                    placeholder="—"
+                  <select value={drawerProject.area || ""}
+                    disabled={!canEdit}
                     onChange={(e) => setDrawerProject({ ...drawerProject, area: e.target.value })}
                     onBlur={(e) => commitEdit(drawerProject.id, "area", e.target.value)}
                     className="w-full mt-0.5 bg-transparent text-[12px] font-medium outline-none"
-                    style={{ color: "var(--text-primary)" }} />
+                    style={{ color: "var(--text-primary)" }}>
+                    {areaChoices.map((a) => (<option key={a} value={a}>{a}</option>))}
+                  </select>
                 </div>
               </div>
 
