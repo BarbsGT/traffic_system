@@ -33,7 +33,7 @@ export interface UAMatrixData {
 export async function loadUAMatrix(accountId: string): Promise<UAMatrixData> {
   const supabase = createClient();
   let raw: Record<string, unknown>[] = [];
-  let tasksByProject: Record<string, UATask[]> = {};
+  const tasksByProject: Record<string, UATask[]> = {};
 
   const { data: rpcData, error: rpcError } = await supabase
     .rpc("get_ua_matrix", { p_account_id: accountId });
