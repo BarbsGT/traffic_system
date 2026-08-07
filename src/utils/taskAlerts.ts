@@ -2,6 +2,8 @@ export const RED_TASK_STATUSES = ["PENDING", "IN_PROGRESS", "REVIEW"];
 
 export const RED_PROJECT_STATUSES = ["Ajustes", "In Progress", "To do", "Review"];
 
+import { daysFromToday } from "@/lib/dates";
+
 export interface AlertProjectInfo {
   end_date?: string | null;
   delivered_at?: string | null;
@@ -16,9 +18,9 @@ export function isProjectOverdue(project: AlertProjectInfo | null | undefined): 
   if (!project?.end_date) return false;
   if (project.delivered_at) return false;
   if (!isProjectRedStatus(project.creative_status)) return false;
-  const end = new Date(project.end_date).getTime();
-  if (Number.isNaN(end)) return false;
-  return end < Date.now();
+  const days = daysFromToday(project.end_date);
+  if (days === null) return false;
+  return days < 0;
 }
 
 export function isTaskRedAlert(

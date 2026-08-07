@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { loadDashboardData, type DashboardTask, type DashboardProfile, type DashboardProject } from "@/lib/dashboard";
+import { localMidnight, startOfTodayLocal, daysFromToday } from "@/lib/dates";
 import {
   BarChart3, AlertTriangle, Clock, Users, TrendingUp,
   ChevronDown, AlertCircle, UserCheck, Activity,
@@ -123,12 +124,11 @@ export function ExecutiveDashboard() {
     setEfficiency(completedWithDue.length > 0 ? Math.round((onTime.length / completedWithDue.length) * 100) : 0);
     setEfficiencyInfo({ onTime: onTime.length, completedWithDue: completedWithDue.length });
 
-    const now = new Date();
-    const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const today = startOfTodayLocal();
     const dueSoon = tasks.filter((t) => {
       if (!t.due_date || t.status === "COMPLETED") return false;
-      const d = new Date(t.due_date);
-      return d <= in48h && d >= now;
+      const days = daysFromToday(t.due_date);
+      return days !== null && days >= 0 && days <= 2;
     });
     setAlert48Count(dueSoon.length);
 
@@ -546,7 +546,8 @@ export function ExecutiveDashboard() {
               </div>
             ) : (
               alertTasks.slice(0, 8).map((t) => {
-                const diffMs = new Date(t.dueDate).getTime() - Date.now();
+                const due = localMidnight(t.dueDate);
+                const diffMs = due ? due.getTime() - startOfTodayLocal().getTime() : 0;
                 const diffH = Math.round(diffMs / (1000 * 60 * 60));
                 const isUrgent = diffH <= 24;
                 return (
