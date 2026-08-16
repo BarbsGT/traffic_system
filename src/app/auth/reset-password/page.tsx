@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
         {success ? (
           <div className="space-y-4">
             <div className="flex justify-center">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(16,185,129,0.15)" }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: "rgba(125,216,125,0.15)" }}>
                 <CheckCircle size={28} style={{ color: "var(--accent-green)" }} />
               </div>
             </div>
@@ -87,7 +87,7 @@ export default function ResetPasswordPage() {
             </p>
             <button
               onClick={() => router.push("/login")}
-              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-[#690003] transition-all active:scale-[0.98]"
               style={{ background: "var(--accent-cyan)" }}
             >
               Iniciar Sesión
@@ -110,7 +110,7 @@ export default function ResetPasswordPage() {
           /* Reset form */
           <form onSubmit={handleReset} className="space-y-4">
             {error && (
-              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
                 {error}
               </div>
             )}
@@ -157,11 +157,11 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading || !password || !confirmPassword}
-              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-white transition-all disabled:opacity-50 active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-[#690003] transition-all disabled:opacity-50 active:scale-[0.98]"
               style={{ background: "var(--accent-cyan)" }}
             >
               {loading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#690003] border-t-transparent" />
               ) : (
                 "Guardar Contraseña"
               )}

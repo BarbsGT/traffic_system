@@ -63,24 +63,24 @@ const TASK_STATUSES = ["PENDING", "IN_PROGRESS", "REVIEW", "COMPLETED", "BLOCKED
 const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
 const PRIORITY_STYLE: Record<string, { bg: string; text: string }> = {
-  LOW: { bg: "rgba(148,163,184,0.15)", text: "var(--text-muted)" },
-  MEDIUM: { bg: "rgba(14,165,233,0.12)", text: "var(--accent-cyan)" },
-  HIGH: { bg: "rgba(245,158,11,0.15)", text: "var(--accent-amber)" },
-  URGENT: { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" },
+  LOW: { bg: "rgba(138,138,138,0.15)", text: "var(--text-secondary)" },
+  MEDIUM: { bg: "rgba(255,180,170,0.12)", text: "var(--accent-cyan)" },
+  HIGH: { bg: "rgba(255,209,102,0.15)", text: "var(--accent-amber)" },
+  URGENT: { bg: "rgba(255,138,138,0.15)", text: "var(--accent-rose)" },
 };
 
 const TASK_STATUS_STYLE: Record<string, { bg: string; text: string }> = {
-  PENDING: { bg: "rgba(245,158,11,0.22)", text: "var(--accent-amber)" },
-  IN_PROGRESS: { bg: "rgba(14,165,233,0.22)", text: "var(--accent-cyan)" },
-  REVIEW: { bg: "rgba(139,92,246,0.22)", text: "var(--accent-purple)" },
-  COMPLETED: { bg: "rgba(16,185,129,0.22)", text: "var(--accent-green)" },
-  BLOCKED: { bg: "rgba(244,63,94,0.22)", text: "var(--accent-rose)" },
+  PENDING: { bg: "rgba(255,209,102,0.22)", text: "var(--accent-amber)" },
+  IN_PROGRESS: { bg: "rgba(255,180,170,0.22)", text: "var(--accent-cyan)" },
+  REVIEW: { bg: "rgba(143,163,255,0.22)", text: "var(--accent-purple)" },
+  COMPLETED: { bg: "rgba(125,216,125,0.22)", text: "var(--accent-green)" },
+  BLOCKED: { bg: "rgba(255,138,138,0.22)", text: "var(--accent-rose)" },
 };
 
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
-  Gold: { bg: "rgba(245,158,11,0.15)", text: "rgb(217,119,6)" },
-  Silver: { bg: "rgba(148,163,184,0.2)", text: "rgb(100,116,139)" },
-  Bronze: { bg: "rgba(180,83,9,0.12)", text: "rgb(146,64,14)" },
+  Gold: { bg: "rgba(255,209,102,0.15)", text: "#ffd166" },
+  Silver: { bg: "rgba(138,138,138,0.2)", text: "#8a8a8a" },
+  Bronze: { bg: "rgba(255,180,170,0.12)", text: "#ffb4aa" },
 };
 
 const AREA_COLORS: Record<string, string> = {
@@ -609,7 +609,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
             <button
               onClick={(e) => { e.stopPropagation(); if (!expandedRows.has(row.id)) toggleExpand(row.id); }}
               className="px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none inline-flex items-center gap-0.5 hover:opacity-80 transition-all"
-              style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}
+              style={{ background: "rgba(255,138,138,0.18)", color: "var(--accent-rose)" }}
               title="Tareas en alerta (vencidas o bloqueadas)">
               <Lock size={9} /> {blocked} ALERTA{blocked > 1 ? "S" : ""}
             </button>
@@ -647,7 +647,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
         {info.label !== "—" && (
           <span className={`px-1 py-0.5 rounded text-[9px] font-semibold leading-none ${isOverdue ? "" : ""}`}
             style={{
-              background: isOverdue ? "rgba(244,63,94,0.15)" : "rgba(148,163,184,0.15)",
+              background: isOverdue ? "rgba(255,138,138,0.15)" : "rgba(138,138,138,0.15)",
               color: isOverdue ? "rgb(244,63,94)" : "var(--text-muted)",
             }}>
             {info.label}
@@ -756,7 +756,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
       return (
         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
           style={{
-            background: isRed ? "rgba(244,63,94,0.15)" : "var(--card-bg)",
+            background: isRed ? "rgba(255,138,138,0.15)" : "var(--card-bg)",
             color: isRed ? "rgb(244,63,94)" : "var(--text-muted)",
           }}>
           {strVal || "—"}
@@ -892,7 +892,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
 
         {canEdit && (
           <button onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white transition-all ml-auto"
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-[#690003] transition-all ml-auto"
             style={{ background: "var(--accent-cyan)" }}>
             <Plus size={13} /> +Proyecto
           </button>
@@ -983,7 +983,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
                           <div className="flex items-center gap-2 mt-1">
                             <button onClick={() => saveNotes(row.id)}
-                              className="px-3 py-1 rounded text-[10px] font-semibold text-white"
+                              className="px-3 py-1 rounded text-[10px] font-semibold text-[#690003]"
                               style={{ background: "var(--accent-cyan)" }}>
                               Guardar notas
                             </button>
@@ -1016,7 +1016,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                 const assignee = profiles.find((p) => p.id === task.assignee_id);
                                 const isRedAlert = isTaskRedAlert(task.status, row);
                                 const statusStyle = isRedAlert
-                                  ? { bg: "rgba(244,63,94,0.32)", text: "var(--accent-rose)" }
+                                  ? { bg: "rgba(255,138,138,0.32)", text: "var(--accent-rose)" }
                                   : (TASK_STATUS_STYLE[task.status] || { bg: "var(--card-bg)", text: "var(--text-muted)" });
                                 const priorityStyle = PRIORITY_STYLE[task.priority] || { bg: "var(--divider)", text: "var(--text-muted)" };
                                 return (
@@ -1085,7 +1085,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                           </span>
                                           {isRedAlert && (
                                             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap"
-                                              style={{ background: "rgba(244,63,94,0.18)", color: "var(--accent-rose)" }}>
+                                              style={{ background: "rgba(255,138,138,0.18)", color: "var(--accent-rose)" }}>
                                               <Lock size={9} className="inline mr-0.5 -mt-0.5" /> {task.status === "BLOCKED" ? "BLOQUEADA" : "ALERTA"}
                                             </span>
                                           )}
@@ -1140,7 +1140,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                           className="flex-1 px-1.5 py-0.5 rounded text-[10px] outline-none"
                                           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }} />
                                         <button onClick={() => addComment(task.id)}
-                                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-white"
+                                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold text-[#690003]"
                                           style={{ background: "var(--accent-cyan)" }}>
                                           Enviar
                                         </button>
@@ -1184,7 +1184,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                 {profiles.map((p) => (<option key={p.id} value={p.id}>{p.full_name}</option>))}
                               </select>
                               <button onClick={() => addTask(row.id)}
-                                className="px-2 py-1 rounded text-[10px] font-semibold text-white"
+                                className="px-2 py-1 rounded text-[10px] font-semibold text-[#690003]"
                                 style={{ background: "var(--accent-cyan)" }}>+Tarea</button>
                             </div>
                             <textarea value={nf.description} onChange={(e) => setNewTaskForm((prev) => ({ ...prev, [row.id]: { ...nf, description: e.target.value } }))}
@@ -1338,7 +1338,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 className="px-4 py-2 rounded-lg text-[11px] font-medium"
                 style={{ color: "var(--text-muted)" }}>Cancelar</button>
               <button onClick={handleCreateProject}
-                className="px-4 py-2 rounded-lg text-[11px] font-semibold text-white"
+                className="px-4 py-2 rounded-lg text-[11px] font-semibold text-[#690003]"
                 style={{ background: "var(--accent-cyan)" }}>Crear Proyecto</button>
             </div>
           </div>
@@ -1602,7 +1602,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                 Cancelar
               </button>
               <button onClick={confirmDelivery}
-                className="px-4 py-2 rounded-lg text-[11px] font-semibold text-white"
+                className="px-4 py-2 rounded-lg text-[11px] font-semibold text-[#131313]"
                 style={{ background: "var(--accent-green)" }}>
                 Confirmar entrega
               </button>

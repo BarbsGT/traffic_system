@@ -33,12 +33,12 @@ interface AlertTask {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  PENDING: "#F59E0B",
-  IN_PROGRESS: "#0EA5E9",
-  REVIEW: "#8B5CF6",
-  COMPLETED: "#10B981",
-  BLOCKED: "#F43F5E",
-  BACKLOG: "#94A3B8",
+  PENDING: "#ffd166",
+  IN_PROGRESS: "#ffb4aa",
+  REVIEW: "#8fa3ff",
+  COMPLETED: "#7dd87d",
+  BLOCKED: "#ff8a8a",
+  BACKLOG: "#8a8a8a",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -241,7 +241,7 @@ export function ExecutiveDashboard() {
       metric: `${activeTrend}% del total`,
       icon: <BarChart3 size={20} />,
       color: "var(--accent-cyan)",
-      bg: "rgba(14,165,233,0.1)",
+      bg: "rgba(255,180,170,0.1)",
       trend: activeTrend,
     },
     {
@@ -250,7 +250,7 @@ export function ExecutiveDashboard() {
       metric: "Requieren atención",
       icon: <AlertTriangle size={20} />,
       color: "var(--accent-rose)",
-      bg: "rgba(244,63,94,0.1)",
+      bg: "rgba(255,138,138,0.1)",
       trend: -blockedCount,
     },
     {
@@ -262,7 +262,7 @@ export function ExecutiveDashboard() {
         : "Sin entregas completadas con fecha límite aún.",
       icon: <TrendingUp size={20} />,
       color: efficiencyInfo.completedWithDue > 0 && efficiency >= 70 ? "var(--accent-green)" : "var(--accent-amber)",
-      bg: efficiencyInfo.completedWithDue > 0 && efficiency >= 70 ? "rgba(16,185,129,0.1)" : "rgba(245,158,11,0.1)",
+      bg: efficiencyInfo.completedWithDue > 0 && efficiency >= 70 ? "rgba(125,216,125,0.1)" : "rgba(255,209,102,0.1)",
       trend: efficiencyInfo.completedWithDue > 0 ? efficiency : 0,
     },
     {
@@ -271,7 +271,7 @@ export function ExecutiveDashboard() {
       metric: "Vencen próximamente",
       icon: <Clock size={20} />,
       color: alert48Count > 0 ? "var(--accent-amber)" : "var(--accent-green)",
-      bg: alert48Count > 0 ? "rgba(245,158,11,0.1)" : "rgba(16,185,129,0.1)",
+      bg: alert48Count > 0 ? "rgba(255,209,102,0.1)" : "rgba(125,216,125,0.1)",
       trend: -alert48Count,
     },
   ];
@@ -410,7 +410,7 @@ export function ExecutiveDashboard() {
                 {statusData.map((entry) => (
                   <Cell
                     key={entry.status}
-                    fill={STATUS_COLORS[entry.status] || "#94A3B8"}
+                    fill={STATUS_COLORS[entry.status] || "#8a8a8a"}
                   />
                 ))}
               </Pie>
@@ -427,7 +427,7 @@ export function ExecutiveDashboard() {
               <div key={s.status} className="flex items-center gap-1.5 text-xs">
                 <div
                   className="w-2.5 h-2.5 rounded-full"
-                  style={{ background: STATUS_COLORS[s.status] || "#94A3B8" }}
+                  style={{ background: STATUS_COLORS[s.status] || "#8a8a8a" }}
                 />
                 <span style={{ color: "var(--text-secondary)" }}>
                   {STATUS_LABELS[s.status] || s.status}: {s.count}
@@ -460,8 +460,8 @@ export function ExecutiveDashboard() {
                         className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium"
                         style={{
                           background: isOver
-                            ? "rgba(244,63,94,0.15)"
-                            : "rgba(16,185,129,0.15)",
+                            ? "rgba(255,138,138,0.15)"
+                            : "rgba(125,216,125,0.15)",
                           color: isOver
                             ? "var(--accent-rose)"
                             : "var(--accent-green)",
@@ -501,8 +501,8 @@ export function ExecutiveDashboard() {
                     <div
                       className="mt-1.5 p-2 rounded-lg text-[11px]"
                       style={{
-                        background: "rgba(244,63,94,0.08)",
-                        border: "1px solid rgba(244,63,94,0.15)",
+                        background: "rgba(255,138,138,0.08)",
+                        border: "1px solid rgba(255,138,138,0.15)",
                       }}
                     >
                       <div className="flex items-center gap-1 mb-1" style={{ color: "var(--accent-rose)" }}>
@@ -556,11 +556,11 @@ export function ExecutiveDashboard() {
                     className="p-3 rounded-lg"
                     style={{
                       background: isUrgent
-                        ? "rgba(244,63,94,0.08)"
+                        ? "rgba(255,138,138,0.08)"
                         : "var(--accordion-bg)",
                       border: `1px solid ${
                         isUrgent
-                          ? "rgba(244,63,94,0.2)"
+                          ? "rgba(255,138,138,0.2)"
                           : "var(--border-light)"
                       }`,
                     }}

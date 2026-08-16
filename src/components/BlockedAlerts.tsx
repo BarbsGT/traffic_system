@@ -175,23 +175,23 @@ export function BlockedAlerts() {
                       <div className="flex items-center gap-2">
                         {isUnblocked ? (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(16,185,129,0.15)", color: "var(--accent-green)" }}>
+                            style={{ background: "rgba(125,216,125,0.15)", color: "var(--accent-green)" }}>
                             DESBLOQUEADA
                           </span>
                         ) : isManaged ? (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(245,158,11,0.15)", color: "var(--accent-amber)" }}>
+                            style={{ background: "rgba(255,209,102,0.15)", color: "var(--accent-amber)" }}>
                             GESTIONADA
                           </span>
                         ) : (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: isRed ? "rgba(244,63,94,0.15)" : "var(--card-bg)", color: isRed ? "var(--accent-rose)" : "var(--text-muted)" }}>
+                            style={{ background: isRed ? "rgba(255,138,138,0.15)" : "var(--card-bg)", color: isRed ? "var(--accent-rose)" : "var(--text-muted)" }}>
                             {t.status === "BLOCKED" ? "BLOQUEADA" : "VENCIDA"}
                           </span>
                         )}
                         {isManaged && t.status === "BLOCKED" && (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(244,63,94,0.15)", color: "var(--accent-rose)" }}>
+                            style={{ background: "rgba(255,138,138,0.15)", color: "var(--accent-rose)" }}>
                             SIGUE BLOQUEADA
                           </span>
                         )}
@@ -214,7 +214,7 @@ export function BlockedAlerts() {
                       <button
                         onClick={() => (isManaged ? openUnblock(t) : changeStatus(t, "GESTIONADA"))}
                         disabled={busyId === t.id}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#131313] disabled:opacity-50"
                         style={{ background: isManaged ? "var(--accent-green)" : "var(--accent-amber)" }}
                       >
                         {isManaged ? <CheckCheck size={13} /> : <CircleDot size={13} />}
@@ -267,7 +267,7 @@ export function BlockedAlerts() {
               </button>
               <button onClick={() => changeStatus(unblockTarget, "DESBLOQUEADA", unblockStatus)}
                 disabled={busyId === unblockTarget.id}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white disabled:opacity-50"
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-[#131313] disabled:opacity-50"
                 style={{ background: "var(--accent-green)" }}>
                 Desbloquear
               </button>

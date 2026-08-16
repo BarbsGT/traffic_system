@@ -30,11 +30,11 @@ const MILESTONE_STYLE: Record<MilestoneType, { bar: string; dot: string; label: 
 };
 
 const TASK_STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  PENDING: { label: "Pendiente", color: "var(--accent-amber)", bg: "rgba(245,158,11,0.15)" },
-  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(14,165,233,0.15)" },
-  REVIEW: { label: "Revisión", color: "var(--accent-purple)", bg: "rgba(139,92,246,0.15)" },
-  COMPLETED: { label: "Completado", color: "var(--accent-green)", bg: "rgba(16,185,129,0.15)" },
-  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(244,63,94,0.15)" },
+  PENDING: { label: "Pendiente", color: "var(--accent-amber)", bg: "rgba(255,209,102,0.15)" },
+  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(255,180,170,0.15)" },
+  REVIEW: { label: "Revisión", color: "var(--accent-purple)", bg: "rgba(143,163,255,0.15)" },
+  COMPLETED: { label: "Completado", color: "var(--accent-green)", bg: "rgba(125,216,125,0.15)" },
+  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(255,138,138,0.15)" },
 };
 
 const STICKY_W = 572;
@@ -366,7 +366,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
           {/* Today focus */}
           <button
             onClick={goToToday}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-85"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#131313] transition-all hover:opacity-85"
             style={{ background: "var(--accent-rose)" }}
           >
             <LocateFixed size={14} /> Hoy
@@ -482,13 +482,13 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                       onClick={() => scrollToDayIndex(i)}
                       style={{
                         width: DAY_W,
-                        background: isToday ? "rgba(244,63,94,0.12)" : isWeekend ? "rgba(148,163,184,0.10)" : "transparent",
+                        background: isToday ? "rgba(255,138,138,0.12)" : isWeekend ? "rgba(138,138,138,0.10)" : "transparent",
                       }}>
                       <span className="text-[9px] leading-none" style={{ color: isToday ? "var(--accent-rose)" : "var(--text-muted)", fontWeight: isToday ? 700 : 500 }}>
                         {d.getDate()}
                       </span>
                       <span className="text-[8px] leading-tight" style={{ color: "var(--text-muted)" }}>{MONTHS[d.getMonth()].toLowerCase()}</span>
-                      {isToday && <span className="absolute top-full left-1/2 -translate-x-1/2 text-[7px] font-bold text-white px-1 rounded-sm" style={{ background: "var(--accent-rose)" }}>HOY</span>}
+                      {isToday && <span className="absolute top-full left-1/2 -translate-x-1/2 text-[7px] font-bold text-[#131313] px-1 rounded-sm" style={{ background: "var(--accent-rose)" }}>HOY</span>}
                     </div>
                   );
                 })}
@@ -536,7 +536,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                             )}
                           </div>
                         </div>
-                        <div className="relative flex-1 shrink-0" style={{ width: gridWidth, background: "rgba(148,163,184,0.03)", borderBottom: "1px solid var(--divider)" }}>
+                        <div className="relative flex-1 shrink-0" style={{ width: gridWidth, background: "rgba(138,138,138,0.03)", borderBottom: "1px solid var(--divider)" }}>
                           {days.map((d, i) => {
                             const isWeekend = d.getDay() === 0 || d.getDay() === 6;
                             const isToday = i === todayIdx;
@@ -545,7 +545,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                                 style={{
                                   left: i * DAY_W,
                                   width: DAY_W,
-                                  background: isToday ? "rgba(244,63,94,0.10)" : isWeekend ? "rgba(148,163,184,0.07)" : "transparent",
+                                  background: isToday ? "rgba(255,138,138,0.10)" : isWeekend ? "rgba(138,138,138,0.07)" : "transparent",
                                   borderRight: "1px solid var(--border-light)",
                                 }} />
                             );
@@ -577,7 +577,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                                 <span className="text-[10px] font-medium truncate" style={{ color: "var(--text-primary)" }}>{fmtDay(parseDay(it.endDate))}</span>
                               </div>
                               <div className="flex items-center gap-1.5 w-[124px] px-1.5">
-                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-white shrink-0"
+                                <span className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold text-[#131313] shrink-0"
                                   style={{ background: getAvatarColor(it.responsibleName) }}>
                                   {initials(it.responsibleName)}
                                 </span>
@@ -607,7 +607,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                                     style={{
                                       left: i * DAY_W,
                                       width: DAY_W,
-                                      background: isToday ? "rgba(244,63,94,0.10)" : isWeekend ? "rgba(148,163,184,0.07)" : "transparent",
+                                      background: isToday ? "rgba(255,138,138,0.10)" : isWeekend ? "rgba(138,138,138,0.07)" : "transparent",
                                       borderRight: "1px solid var(--border-light)",
                                     }} />
                                 );
@@ -664,7 +664,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
             </p>
           )}
           <p className="text-[10px] mb-2 flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
-            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-white" style={{ background: getAvatarColor(tooltip.item.responsibleName) }}>
+            <span className="w-4 h-4 rounded-full flex items-center justify-center text-[7px] font-bold text-[#131313]" style={{ background: getAvatarColor(tooltip.item.responsibleName) }}>
               {initials(tooltip.item.responsibleName)}
             </span>
             {tooltip.item.responsibleName}
@@ -673,7 +673,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
             <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{fmtDay(parseDay(tooltip.item.startDate))}</span>
             <span style={{ color: "var(--text-muted)" }}>→</span>
             <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{fmtDay(parseDay(tooltip.item.endDate))}</span>
-            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "var(--accent-cyan)", color: "#fff" }}>
+            <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "var(--accent-cyan)", color: "var(--primary-fg)" }}>
               {workingDays(tooltip.item.startDate, tooltip.item.endDate)}d háb
             </span>
           </div>

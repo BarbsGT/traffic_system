@@ -173,7 +173,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
       <div className="glass p-6 flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+            className="w-12 h-12 rounded-full flex items-center justify-center text-[#131313] font-bold text-lg"
             style={{ background: "var(--accent-purple)" }}
           >
             {accountName.charAt(0)}
@@ -189,7 +189,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
           <div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
             style={{
-              background: healthPct >= 50 ? "rgba(16,185,129,0.12)" : "rgba(244,63,94,0.12)",
+              background: healthPct >= 50 ? "rgba(125,216,125,0.12)" : "rgba(255,138,138,0.12)",
               color: healthPct >= 50 ? "var(--accent-green)" : "var(--accent-rose)",
             }}
           >
@@ -199,7 +199,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
           {overdueCount > 0 && (
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-              style={{ background: "rgba(244,63,94,0.12)", color: "var(--accent-rose)" }}
+              style={{ background: "rgba(255,138,138,0.12)", color: "var(--accent-rose)" }}
             >
               ⚠️ {overdueCount} vencidos
             </div>
@@ -207,7 +207,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
           {ajustesCount > 0 && (
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-              style={{ background: "rgba(245,158,11,0.12)", color: "var(--accent-amber)" }}
+              style={{ background: "rgba(255,209,102,0.12)", color: "var(--accent-amber)" }}
             >
               🔄 {ajustesCount} en ajustes
             </div>
@@ -244,7 +244,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
             ${budgetAtRisk.toLocaleString("es")}
           </p>
           {budgetAtRisk > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
               💡 ${budgetAtRisk.toLocaleString("es")} retenidos en espera de aprobación
             </div>
           )}
@@ -377,7 +377,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
                     </span>
                     <div className="flex-1 h-5 rounded-lg" style={{ background: "var(--divider)" }}>
                       <div
-                        className="h-full rounded-lg flex items-center px-2 text-xs font-medium text-white"
+                        className="h-full rounded-lg flex items-center px-2 text-xs font-medium text-[#131313]"
                         style={{
                           width: `${Math.max(pct, 8)}%`,
                           background: i === 0 ? "var(--accent-rose)" : "var(--accent-cyan)",
@@ -434,7 +434,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
                 <div
                   key={p.id}
                   className="flex items-center justify-between px-3 py-2 rounded-lg text-xs"
-                  style={{ background: "rgba(244,63,94,0.06)" }}
+                  style={{ background: "rgba(255,138,138,0.06)" }}
                 >
                   <div className="flex-1 min-w-0">
                     <span className="font-medium block truncate" style={{ color: "var(--text-primary)" }}>{p.project_name}</span>
@@ -465,7 +465,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
                   <div
                     key={p.id}
                     className="flex items-center justify-between px-3 py-2 rounded-lg text-xs"
-                    style={{ background: "rgba(245,158,11,0.06)" }}
+                    style={{ background: "rgba(255,209,102,0.06)" }}
                   >
                     <span className="font-medium" style={{ color: "var(--text-primary)" }}>{p.project_name}</span>
                     <span style={{ color: "var(--text-muted)" }}>{p.client_owner} · {p.resp_bt}</span>

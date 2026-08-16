@@ -131,7 +131,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
         <div className="flex -space-x-2">
           {members.slice(0, 5).map((m) => (
             <div key={m.id} className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{ background: "var(--accent-cyan)", color: "#fff", border: "2px solid var(--card-bg)" }}>
+              style={{ background: "var(--accent-cyan)", color: "var(--primary-fg)", border: "2px solid var(--card-bg)" }}>
               {m.full_name?.charAt(0) || "?"}
             </div>
           ))}
@@ -148,7 +148,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
         {displayedMessages.map((m) => (
           <div key={m.id} className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: "rgba(14,165,233,0.2)", color: "var(--accent-cyan)" }}>
+              style={{ background: "rgba(255,180,170,0.2)", color: "var(--accent-cyan)" }}>
               {m.full_name?.charAt(0) || "?"}
             </div>
             <div>
@@ -176,7 +176,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
         />
         <button onClick={sendMessage}
           className="p-2 rounded-lg"
-          style={{ background: "var(--accent-cyan)", color: "#fff" }}>
+          style={{ background: "var(--accent-cyan)", color: "var(--primary-fg)" }}>
           <Send size={16} />
         </button>
       </div>

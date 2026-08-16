@@ -33,7 +33,7 @@ export default function GuiasPage() {
                 onClick={() => setActive(s.id)}
                 className="text-left px-3 py-2 rounded-lg text-sm transition-all"
                 style={{
-                  background: active === s.id ? "rgba(14, 165, 233, 0.15)" : "transparent",
+                  background: active === s.id ? "rgba(255, 180, 170, 0.12)" : "transparent",
                   color: active === s.id ? "var(--accent-cyan)" : "var(--text-secondary)",
                 }}
               >
@@ -72,15 +72,15 @@ function IntroContent() {
       <div className="glass p-6 mb-4">
         <h3 className="font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Flujo de Trabajo</h3>
         <div className="flex items-center gap-2 flex-wrap text-sm" style={{ color: "var(--text-secondary)" }}>
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(14,165,233,0.15)", color: "var(--accent-cyan)" }}>Agencia</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(255,180,170,0.15)", color: "var(--accent-cyan)" }}>Agencia</span>
           <ArrowRight size={14} />
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.15)", color: "var(--accent-purple)" }}>Cuenta</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(143,163,255,0.15)", color: "var(--accent-purple)" }}>Cuenta</span>
           <ArrowRight size={14} />
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(16,185,129,0.15)", color: "var(--accent-green)" }}>Equipo</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(125,216,125,0.15)", color: "var(--accent-green)" }}>Equipo</span>
           <ArrowRight size={14} />
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(245,158,11,0.15)", color: "var(--accent-amber)" }}>Proyecto</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(255,209,102,0.15)", color: "var(--accent-amber)" }}>Proyecto</span>
           <ArrowRight size={14} />
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(244,63,94,0.15)", color: "var(--accent-rose)" }}>Tarea</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(255,138,138,0.15)", color: "var(--accent-rose)" }}>Tarea</span>
         </div>
       </div>
     </div>
@@ -119,31 +119,31 @@ function RolesContent() {
     {
       role: "SUPERADMIN",
       color: "var(--accent-rose)",
-      bg: "rgba(244,63,94,0.15)",
+      bg: "rgba(255,138,138,0.15)",
       desc: "Acceso total al sistema. Puede crear, editar y eliminar proyectos, tareas, usuarios, directores de cuenta, cuentas, agencias y equipos.",
     },
     {
       role: "SYSADMIN",
       color: "var(--accent-purple)",
-      bg: "rgba(139,92,246,0.15)",
+      bg: "rgba(143,163,255,0.15)",
       desc: "Gestión completa de recursos. Crea y edita proyectos, tareas, usuarios, cuentas y equipos. No puede eliminar registros críticos.",
     },
     {
       role: "DIRECTOR",
       color: "var(--accent-amber)",
-      bg: "rgba(245,158,11,0.15)",
+      bg: "rgba(255,209,102,0.15)",
       desc: "Administra equipos y proyectos. Crea, edita proyectos y tareas. Asigna colaboradores a cuentas y equipos. Gestiona el día a día operativo.",
     },
     {
       role: "GERENTE",
       color: "var(--accent-cyan)",
-      bg: "rgba(14,165,233,0.15)",
+      bg: "rgba(255,180,170,0.15)",
       desc: "Apoya al director dentro de sus cuentas asignadas. Crea y edita proyectos y tareas de sus cuentas y da seguimiento al equipo. No gestiona catálogos globales.",
     },
     {
       role: "COLABORADOR",
       color: "var(--accent-green)",
-      bg: "rgba(16,185,129,0.15)",
+      bg: "rgba(125,216,125,0.15)",
       desc: "Usuario base. Visualiza proyectos y tareas. Puede actualizar el estado y descripción de sus tareas asignadas.",
     },
   ];

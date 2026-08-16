@@ -1,102 +1,151 @@
 @import "tailwindcss";
 
+/* =============================================
+   AgencyGrid — Design System "Trafico"
+   Dark-only. Mismas variables de API (no rompe
+   componentes), nuevos valores + clases nuevas.
+   ============================================= */
+
 :root {
-  --bg-primary: #F8FAFC;
-  --background: #F8FAFC;
-  --bg-secondary: #FFFFFF;
-  --text-primary: #0F172A;
-  --text-secondary: #64748B;
-  --text-muted: #94A3B8;
-  --border: #E2E8F0;
-  --border-light: #F1F5F9;
-  --glass-bg: #FFFFFF;
+  /* Base */
+  --bg-primary: #000000;
+  --background: #000000;
+  --bg-secondary: #1b1b1b;
+  --bg-deep: #0e0e0e;
+  --bg-input: #131313;
 
-  --accent-cyan: #0EA5E9;
-  --accent-purple: #8B5CF6;
-  --accent-green: #10B981;
-  --accent-amber: #F59E0B;
-  --accent-rose: #F43F5E;
-  --accent-blue: #3B82F6;
+  /* Texto */
+  --text-primary: #e2e2e2;
+  --text-secondary: #8a8a8a;
+  --text-muted: #e0bfbb;
 
-  --tag-green-bg: #DCFCE7;
-  --tag-green-text: #166534;
-  --tag-blue-bg: #DBEAFE;
-  --tag-blue-text: #1E40AF;
-  --tag-amber-bg: #FEF3C7;
-  --tag-amber-text: #92400E;
-  --tag-rose-bg: #FEE2E2;
-  --tag-rose-text: #991B1B;
-  --tag-purple-bg: #F3E8FF;
-  --tag-purple-text: #6B21A8;
+  /* Bordes */
+  --border: #2a2a2a;
+  --border-light: #2a2a2a;
 
-  --header-bg: #FFFFFF;
-  --hover-bg: #F8FAFC;
-  --card-bg: #FFFFFF;
-  --card-border: #E2E8F0;
-  --accordion-bg: #F8FAFC;
-  --input-bg: #FFFFFF;
-  --input-border: #E2E8F0;
-  --table-header-bg: #F8FAFC;
-  --table-row-hover: #F8FAFC;
-  --divider: #E2E8F0;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.07);
+  /* Glass / cards */
+  --glass-bg: #1b1b1b;
+
+  /* Acentos */
+  --accent-cyan: #ffb4aa;
+  --accent-purple: #8fa3ff;
+  --accent-green: #7dd87d;
+  --accent-amber: #ffd166;
+  --accent-rose: #ff8a8a;
+  --accent-blue: #8fa3ff;
+
+  /* Primary (Trafico) */
+  --primary: #ffb4aa;
+  --primary-fg: #690003;
+  --primary-ghost: #58413e;
+
+  /* Tags / pills de estado */
+  --tag-green-bg: rgba(125, 216, 125, 0.15);
+  --tag-green-text: #7dd87d;
+  --tag-blue-bg: rgba(143, 163, 255, 0.15);
+  --tag-blue-text: #8fa3ff;
+  --tag-amber-bg: rgba(255, 209, 102, 0.15);
+  --tag-amber-text: #ffd166;
+  --tag-rose-bg: rgba(255, 138, 138, 0.15);
+  --tag-rose-text: #ff8a8a;
+  --tag-purple-bg: rgba(143, 163, 255, 0.15);
+  --tag-purple-text: #8fa3ff;
+
+  /* Superficies */
+  --header-bg: #1b1b1b;
+  --hover-bg: #2a2a2a;
+  --card-bg: #1b1b1b;
+  --card-border: #2a2a2a;
+  --accordion-bg: #131313;
+  --input-bg: #131313;
+  --input-border: #2a2a2a;
+  --table-header-bg: #131313;
+  --table-row-hover: #2a2a2a;
+  --divider: #2a2a2a;
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  /* Sidebar */
+  --sidebar-text: rgba(255, 255, 255, 0.65);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] {
-  --bg-primary: #0F172A;
-  --background: #0F172A;
-  --bg-secondary: #1E293B;
-  --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --border: #334155;
-  --border-light: #1E293B;
+/* Dark-only: ambos data-theme apuntan a la misma paleta oscura */
+[data-theme="dark"],
+[data-theme="light"] {
+  --bg-primary: #000000;
+  --background: #000000;
+  --bg-secondary: #1b1b1b;
+  --bg-deep: #0e0e0e;
+  --bg-input: #131313;
 
-  --accent-cyan: #38BDF8;
-  --accent-purple: #A78BFA;
-  --accent-green: #34D399;
-  --accent-amber: #FBBF24;
-  --accent-rose: #FB7185;
-  --accent-blue: #60A5FA;
+  --text-primary: #e2e2e2;
+  --text-secondary: #8a8a8a;
+  --text-muted: #e0bfbb;
 
-  --tag-green-bg: #14532D;
-  --tag-green-text: #BBF7D0;
-  --tag-blue-bg: #1E3A5F;
-  --tag-blue-text: #BFDBFE;
-  --tag-amber-bg: #451A03;
-  --tag-amber-text: #FDE68A;
-  --tag-rose-bg: #450A0A;
-  --tag-rose-text: #FECACA;
-  --tag-purple-bg: #3B0764;
-  --tag-purple-text: #E9D5FF;
+  --border: #2a2a2a;
+  --border-light: #2a2a2a;
+  --glass-bg: #1b1b1b;
 
-  --header-bg: #1E293B;
-  --hover-bg: #1E293B;
-  --card-bg: #1E293B;
-  --glass-bg: #1E293B;
-  --card-border: #334155;
-  --accordion-bg: #1E293B;
-  --input-bg: #1E293B;
-  --input-border: #334155;
-  --table-header-bg: #1E293B;
-  --table-row-hover: #1E293B;
-  --divider: #334155;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+  --accent-cyan: #ffb4aa;
+  --accent-purple: #8fa3ff;
+  --accent-green: #7dd87d;
+  --accent-amber: #ffd166;
+  --accent-rose: #ff8a8a;
+  --accent-blue: #8fa3ff;
+
+  --primary: #ffb4aa;
+  --primary-fg: #690003;
+  --primary-ghost: #58413e;
+
+  --tag-green-bg: rgba(125, 216, 125, 0.15);
+  --tag-green-text: #7dd87d;
+  --tag-blue-bg: rgba(143, 163, 255, 0.15);
+  --tag-blue-text: #8fa3ff;
+  --tag-amber-bg: rgba(255, 209, 102, 0.15);
+  --tag-amber-text: #ffd166;
+  --tag-rose-bg: rgba(255, 138, 138, 0.15);
+  --tag-rose-text: #ff8a8a;
+  --tag-purple-bg: rgba(143, 163, 255, 0.15);
+  --tag-purple-text: #8fa3ff;
+
+  --header-bg: #1b1b1b;
+  --hover-bg: #2a2a2a;
+  --card-bg: #1b1b1b;
+  --card-border: #2a2a2a;
+  --accordion-bg: #131313;
+  --input-bg: #131313;
+  --input-border: #2a2a2a;
+  --table-header-bg: #131313;
+  --table-row-hover: #2a2a2a;
+  --divider: #2a2a2a;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+  --sidebar-text: rgba(255, 255, 255, 0.65);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
 }
 
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: 'Geist', sans-serif;
+  font-family: var(--font-hanken), "Hanken Grotesk", sans-serif;
   min-height: 100vh;
 }
 
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+h1, h2, h3 {
+  font-family: var(--font-sora), "Sora", sans-serif;
+}
 
+/* Scrollbar oculto */
+::-webkit-scrollbar { display: none; }
+
+/* =============================================
+   Glass (compatibilidad con API existente)
+   ============================================= */
 .glass {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -110,21 +159,126 @@ body {
 }
 
 .sidebar-glass {
-  background: #0F172A;
-  border-right: 1px solid rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.8);
-  --sidebar-text: rgba(255,255,255,0.65);
-  --sidebar-hover: rgba(255,255,255,0.08);
+  background: #0e0e0e;
+  border-right: 1px solid #2a2a2a;
+  color: rgba(255, 255, 255, 0.8);
+  --sidebar-text: rgba(255, 255, 255, 0.65);
+  --sidebar-hover: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="light"] .sidebar-glass {
-  background: #FFFFFF;
-  border-right: 1px solid var(--border);
-  color: var(--text-primary);
-  --sidebar-text: var(--text-secondary);
-  --sidebar-hover: var(--table-row-hover);
+/* =============================================
+   Design System (Trafico) — clases globales
+   ============================================= */
+.card {
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
 }
 
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: opacity 0.15s ease;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: #ffb4aa;
+  color: #690003;
+}
+.btn-dark {
+  background: #2a2a2a;
+  color: #e2e2e2;
+}
+.btn-danger {
+  background: rgba(255, 180, 171, 0.12);
+  color: #ffb4ab;
+  border: 1px solid rgba(255, 180, 171, 0.3);
+}
+.btn-ghost {
+  background: transparent;
+  color: #e0bfbb;
+  border: 1px solid #58413e;
+}
+
+.input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #131313;
+  color: #e2e2e2;
+  font-size: 16px;
+}
+.input:focus {
+  border-color: #ffb4aa;
+  outline: none;
+}
+.input::placeholder {
+  color: #8a8a8a;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #e0bfbb;
+  margin-bottom: 6px;
+}
+
+.pill {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.pill-primary {
+  background: rgba(255, 180, 170, 0.15);
+  border: 1px solid #ffb4aa;
+  color: #ffb4aa;
+}
+.pill-muted {
+  background: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  color: #e0bfbb;
+}
+
+.mono {
+  font-family: var(--font-mono), "JetBrains Mono", monospace;
+}
+
+.icon {
+  font-family: "Material Symbols Outlined";
+  font-size: 20px;
+  line-height: 1;
+}
+
+.hatching {
+  background: repeating-linear-gradient(45deg, transparent 0 4px, rgba(0, 0, 0, 0.3) 4px 5px);
+}
+
+.title-outline {
+  font-family: var(--font-sora), "Sora", sans-serif;
+  font-weight: 800;
+  color: transparent;
+  -webkit-text-stroke: 1px #e2e2e2;
+}
+
+/* Animaciones (compatibilidad con API existente) */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }

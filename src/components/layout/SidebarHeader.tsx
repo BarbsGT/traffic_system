@@ -27,19 +27,19 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
           className="relative flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all duration-200"
           style={{
             background: isDark
-              ? "linear-gradient(135deg, rgba(56,189,248,0.15), rgba(96,165,250,0.15))"
-              : "linear-gradient(135deg, rgba(14,165,233,0.12), rgba(59,130,246,0.12))",
-            border: `1px solid ${isDark ? "rgba(56,189,248,0.25)" : "rgba(14,165,233,0.2)"}`,
+              ? "linear-gradient(135deg, rgba(255,180,170,0.15), rgba(255,180,170,0.08))"
+              : "linear-gradient(135deg, rgba(255,180,170,0.12), rgba(255,180,170,0.06))",
+            border: `1px solid ${isDark ? "rgba(255,180,170,0.3)" : "rgba(255,180,170,0.25)"}`,
             boxShadow: isDark
-              ? "0 0 14px rgba(56,189,248,0.18), inset 0 1px 0 rgba(255,255,255,0.05)"
-              : "0 0 12px rgba(14,165,233,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
+              ? "0 0 14px rgba(255,180,170,0.18), inset 0 1px 0 rgba(255,255,255,0.05)"
+              : "0 0 12px rgba(255,180,170,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
           }}
         >
           <Grid3X3
             size={16}
             style={{
-              color: isDark ? "#38BDF8" : "#0EA5E9",
-              filter: isDark ? "drop-shadow(0 0 4px rgba(56,189,248,0.4))" : "none",
+              color: isDark ? "#ffb4aa" : "#ffb4aa",
+              filter: isDark ? "drop-shadow(0 0 4px rgba(255,180,170,0.4))" : "none",
             }}
           />
         </div>
@@ -54,21 +54,21 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
         >
           <span
             className="text-sm font-extrabold tracking-tight"
-            style={{ color: isDark ? "#F1F5F9" : "#0F172A" }}
+            style={{ color: isDark ? "#e2e2e2" : "#e2e2e2" }}
           >
             AGENCY
           </span>
           <span
-            className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent"
+            className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-[#ffb4aa] to-[#8fa3ff] bg-clip-text text-transparent"
           >
             GRID
           </span>
           <span
             className="text-[9px] font-bold px-1 py-0.5 rounded ml-0.5"
             style={{
-              background: isDark ? "rgba(56,189,248,0.15)" : "rgba(14,165,233,0.1)",
-              color: isDark ? "#38BDF8" : "#0EA5E9",
-              border: `1px solid ${isDark ? "rgba(56,189,248,0.2)" : "rgba(14,165,233,0.15)"}`,
+              background: isDark ? "rgba(255,180,170,0.15)" : "rgba(255,180,170,0.1)",
+              color: isDark ? "#ffb4aa" : "#ffb4aa",
+              border: `1px solid ${isDark ? "rgba(255,180,170,0.3)" : "rgba(255,180,170,0.2)"}`,
             }}
           >
             PRO

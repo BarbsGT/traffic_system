@@ -5,15 +5,15 @@ interface StatusBadgeProps {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  PENDING: { label: "Pendiente", color: "var(--accent-amber)", bg: "rgba(245,158,11,0.15)" },
-  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(14,165,233,0.15)" },
-  REVIEW: { label: "Revisión", color: "var(--accent-purple)", bg: "rgba(139,92,246,0.15)" },
-  COMPLETED: { label: "Completado", color: "var(--accent-green)", bg: "rgba(16,185,129,0.15)" },
-  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(244,63,94,0.15)" },
+  PENDING: { label: "Pendiente", color: "var(--accent-amber)", bg: "rgba(255,209,102,0.15)" },
+  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(255,180,170,0.15)" },
+  REVIEW: { label: "Revisión", color: "var(--accent-purple)", bg: "rgba(143,163,255,0.15)" },
+  COMPLETED: { label: "Completado", color: "var(--accent-green)", bg: "rgba(125,216,125,0.15)" },
+  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(255,138,138,0.15)" },
 };
 
 const toneConfig = {
-  red: { color: "var(--accent-rose)", bg: "rgba(244,63,94,0.15)" },
+  red: { color: "var(--accent-rose)", bg: "rgba(255,138,138,0.15)" },
   gray: { color: "var(--text-muted)", bg: "var(--card-bg)" },
 };
 

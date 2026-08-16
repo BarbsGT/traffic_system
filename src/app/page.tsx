@@ -55,7 +55,7 @@ export default function HomePage() {
           <Link
             href="/login"
             className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-all"
-            style={{ background: "var(--accent-cyan)", color: "#fff" }}
+            style={{ background: "var(--accent-cyan)", color: "var(--primary-fg)" }}
           >
             Comenzar <ArrowRight size={16} />
           </Link>

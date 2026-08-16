@@ -167,7 +167,7 @@ export default function CatalogosPage() {
           </button>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#690003]"
             style={{ background: "var(--accent-cyan)" }}
           >
             <Plus size={16} /> Nuevo
@@ -260,7 +260,7 @@ export default function CatalogosPage() {
                 </td>
                 <td className="p-3 text-sm">
                   <button onClick={() => setEditing(asgn)}
-                    className="px-3 py-1 rounded text-xs font-medium text-white"
+                    className="px-3 py-1 rounded text-xs font-medium text-[#690003]"
                     style={{ background: "var(--accent-cyan)" }}>
                     Editar
                   </button>
@@ -277,7 +277,7 @@ export default function CatalogosPage() {
                 </td>
                 <td className="p-3 text-sm">
                   <button onClick={() => setEditing(asgn)}
-                    className="px-3 py-1 rounded text-xs font-medium text-white"
+                    className="px-3 py-1 rounded text-xs font-medium text-[#690003]"
                     style={{ background: "var(--accent-cyan)" }}>
                     Editar
                   </button>
@@ -343,7 +343,7 @@ export default function CatalogosPage() {
               Cancelar
             </button>
             <button onClick={() => confirmDelete && handleDelete(confirmDelete.table, confirmDelete.id)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--accent-rose)" }}>
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-[#131313]" style={{ background: "var(--accent-rose)" }}>
               Eliminar
             </button>
           </div>
@@ -554,7 +554,7 @@ function BulkCatalogForm({ tab, agencies, accounts, profiles }: {
 
       <div className="flex gap-2 justify-end">
         <button onClick={handleSubmit} disabled={saving || parsed.length === 0}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Creando registros..." : "Crear registros"}
         </button>
@@ -708,7 +708,7 @@ function CatalogForm({ tab, editing, areas, agencies, accounts, teams, profiles,
 
       <div className="flex gap-2 justify-end">
         <button type="submit" disabled={saving}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Guardando..." : "Guardar"}
         </button>
@@ -793,7 +793,7 @@ function AssignmentForm({ editing, teams, accounts, onDone }: {
 
       <div className="flex gap-2 justify-end">
         <button type="submit" disabled={saving || !selectedTeamId}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Guardando..." : "Guardar"}
         </button>
@@ -878,7 +878,7 @@ function AccountAssignmentForm({ editing, accounts, agencies, onDone }: {
 
       <div className="flex gap-2 justify-end">
         <button type="submit" disabled={saving || !selectedAccountId}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Guardando..." : "Guardar"}
         </button>

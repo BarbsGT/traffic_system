@@ -61,11 +61,11 @@ export default function UsersPage() {
   ];
 
   const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
-    SUPERADMIN: { bg: "rgba(244,63,94,0.15)", text: "var(--accent-rose)" },
-    SYSADMIN: { bg: "rgba(139,92,246,0.15)", text: "var(--accent-purple)" },
-    DIRECTOR: { bg: "rgba(245,158,11,0.15)", text: "var(--accent-amber)" },
-    GERENTE: { bg: "rgba(14,165,233,0.15)", text: "var(--accent-cyan)" },
-    COLABORADOR: { bg: "rgba(16,185,129,0.15)", text: "var(--accent-green)" },
+    SUPERADMIN: { bg: "rgba(255,138,138,0.15)", text: "var(--accent-rose)" },
+    SYSADMIN: { bg: "rgba(143,163,255,0.15)", text: "var(--accent-purple)" },
+    DIRECTOR: { bg: "rgba(255,209,102,0.15)", text: "var(--accent-amber)" },
+    GERENTE: { bg: "rgba(255,180,170,0.15)", text: "var(--accent-cyan)" },
+    COLABORADOR: { bg: "rgba(125,216,125,0.15)", text: "var(--accent-green)" },
   };
 
   return (
@@ -82,7 +82,7 @@ export default function UsersPage() {
           </button>
           <button
             onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[#690003]"
             style={{ background: "var(--accent-cyan)" }}
           >
             <Plus size={16} /> Nuevo Usuario
@@ -207,7 +207,7 @@ export default function UsersPage() {
           <div className="flex gap-2 justify-end">
             <button onClick={() => setConfirmDelete(null)} className="px-4 py-2 rounded-lg text-sm" style={{ color: "var(--text-muted)" }}>Cancelar</button>
             <button onClick={() => handleDelete(confirmDelete!.id)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--accent-rose)" }}>
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-[#131313]" style={{ background: "var(--accent-rose)" }}>
               Desactivar
             </button>
           </div>
@@ -398,7 +398,7 @@ function BulkUsersForm({ profiles }: { profiles: Profile[] }) {
 
       <div className="flex gap-2 justify-end">
         <button onClick={handleSubmit} disabled={saving || parsed.length === 0}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Creando usuarios..." : "Crear usuarios"}
         </button>
@@ -472,7 +472,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
       {error && (
-        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
           {error}
         </div>
       )}
@@ -550,7 +550,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
               <div key={a.id} className="flex items-center gap-2">
                 <button type="button" onClick={() => toggleAccount(a.id)}
                   className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all flex-1"
-                  style={{ background: checked ? "rgba(14,165,233,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
+                  style={{ background: checked ? "rgba(255,180,170,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
                   <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
                     style={{ borderColor: checked ? "var(--accent-cyan)" : "var(--text-muted)" }}>
                     {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
@@ -581,8 +581,8 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
             return (
               <button key={t.id} type="button" onClick={() => toggleTeam(t.id)}
                 className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all"
-                style={{ background: checked ? "rgba(14,165,233,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
-                <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
+style={{ background: checked ? "rgba(255,180,170,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
+                  <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
                   style={{ borderColor: checked ? "var(--accent-cyan)" : "var(--text-muted)" }}>
                   {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
                 </span>
@@ -595,7 +595,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
 
       <div className="flex gap-2 justify-end sticky bottom-0 py-2" style={{ background: "var(--card-bg)" }}>
         <button type="submit" disabled={saving}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Creando..." : "Crear Usuario"}
         </button>
@@ -653,7 +653,7 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {error && (
-        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(244,63,94,0.1)", color: "var(--accent-rose)" }}>
+        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
           {error}
         </div>
       )}
@@ -712,7 +712,7 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
       </div>
       <div className="flex gap-2 justify-end">
         <button type="submit" disabled={saving}
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-[#690003] disabled:opacity-50"
           style={{ background: "var(--accent-cyan)" }}>
           {saving ? "Guardando..." : "Guardar"}
         </button>
@@ -851,7 +851,7 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
                   accountSelectRef.current.value = "";
                 }
               }} disabled={saving}
-                className="px-3 py-1.5 rounded text-xs font-semibold text-white disabled:opacity-50"
+                className="px-3 py-1.5 rounded text-xs font-semibold text-[#690003] disabled:opacity-50"
                 style={{ background: "var(--accent-cyan)" }}>+</button>
             </div>
           </GlassCard>
@@ -893,7 +893,7 @@ function AssignmentsTab({ profiles }: { profiles: Profile[] }) {
                   teamSelectRef.current.value = "";
                 }
               }} disabled={saving}
-                className="px-3 py-1.5 rounded text-xs font-semibold text-white disabled:opacity-50"
+                className="px-3 py-1.5 rounded text-xs font-semibold text-[#690003] disabled:opacity-50"
                 style={{ background: "var(--accent-cyan)" }}>+</button>
             </div>
           </GlassCard>
@@ -912,7 +912,7 @@ function TreeNode({ profile, allProfiles, depth }: { profile: Profile; allProfil
         <span style={{ color: "var(--text-primary)" }}>{profile.full_name}</span>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>{profile.position}</span>
         <span className="text-xs px-1.5 py-0.5 rounded" style={{
-          background: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "rgba(245,158,11,0.15)" : "rgba(16,185,129,0.15)",
+          background: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "rgba(255,209,102,0.15)" : "rgba(125,216,125,0.15)",
           color: profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "var(--accent-amber)" : "var(--accent-green)",
         }}>
           {roleLabel(profile.role)}

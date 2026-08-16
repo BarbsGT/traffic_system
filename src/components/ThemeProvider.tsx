@@ -10,34 +10,28 @@ interface ThemeContext {
 }
 
 const ThemeCtx = createContext<ThemeContext>({
-  theme: "light",
+  theme: "dark",
   toggleTheme: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("agencygrid-theme") as Theme | null;
-      if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-        setTheme("dark");
-        document.documentElement.setAttribute("data-theme", "dark");
-      } else {
-        setTheme("light");
-        document.documentElement.setAttribute("data-theme", "light");
-      }
+      setTheme("dark");
+      document.documentElement.setAttribute("data-theme", "dark");
+      localStorage.setItem("agencygrid-theme", "dark");
     } catch {
-      setTheme("light");
+      setTheme("dark");
     }
   }, []);
 
   const toggleTheme = () => {
-    const next = theme === "light" ? "dark" : "light";
-    setTheme(next);
-    document.documentElement.setAttribute("data-theme", next);
+    setTheme("dark");
+    document.documentElement.setAttribute("data-theme", "dark");
     try {
-      localStorage.setItem("agencygrid-theme", next);
+      localStorage.setItem("agencygrid-theme", "dark");
     } catch {}
   };
 

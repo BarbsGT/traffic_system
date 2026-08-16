@@ -82,7 +82,7 @@ export default function ProjectDetailPage() {
           <button
             onClick={() => setShowNewTask(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
-            style={{ background: "var(--accent-cyan)", color: "#fff" }}
+            style={{ background: "var(--accent-cyan)", color: "var(--primary-fg)" }}
           >
             <Plus size={16} /> Nueva Tarea
           </button>
@@ -169,7 +169,7 @@ function NewTaskForm({ projectId, onClose }: { projectId: string; onClose: () =>
       <button
         type="submit"
         className="rounded-lg px-4 py-2 text-sm font-medium"
-        style={{ background: "var(--accent-cyan)", color: "#fff" }}
+        style={{ background: "var(--accent-cyan)", color: "var(--primary-fg)" }}
       >
         Crear Tarea
       </button>
