@@ -89,7 +89,7 @@ export default function AccountDashboardPage() {
               border: tab === "matrix" ? "none" : "1px solid var(--card-border)",
             }}
           >
-            Matriz de Tráfico
+            Matriz de Producción
           </button>
           <button
             onClick={() => setTab("timeline")}

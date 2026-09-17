@@ -110,21 +110,21 @@ export function ProfileForm() {
       <GlassCard className="p-6">
         <form onSubmit={handleSave} className="flex flex-col gap-4">
           {saveError && (
-            <div className="px-3 py-2 rounded-lg text-xs flex items-center justify-between" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
+            <div className="px-3 py-2 rounded-lg text-xs flex items-center justify-between" style={{ background: "rgba(235, 62, 64, 0.1)", color: "var(--accent-rose)" }}>
               <span>{saveError}</span>
               <button type="button" onClick={() => setSaveError("")} className="font-semibold hover:opacity-70">✕</button>
             </div>
           )}
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold"
-              style={{ background: "rgba(255,180,170,0.15)", color: "var(--accent-cyan)", border: "2px solid var(--accent-cyan)" }}>
+              style={{ background: "rgba(235, 62, 64, 0.15)", color: "var(--accent-cyan)", border: "2px solid var(--accent-cyan)" }}>
               {profile.full_name?.charAt(0) || "?"}
             </div>
             <div>
               <h2 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>{profile.full_name}</h2>
               <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{profile.email}</p>
               <span className="text-xs px-2 py-0.5 rounded-full mt-1 inline-block" style={{
-                background: profile.role === "SUPERADMIN" ? "rgba(255,138,138,0.15)" :
+                background: profile.role === "SUPERADMIN" ? "rgba(235, 62, 64, 0.15)" :
                   profile.role === "SYSADMIN" ? "rgba(143,163,255,0.15)" :
                   profile.role === "DIRECTOR" || profile.role === "GERENTE" ? "rgba(255,209,102,0.15)" :
                   "rgba(125,216,125,0.15)",

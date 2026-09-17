@@ -185,13 +185,13 @@ export function BlockedAlerts() {
                           </span>
                         ) : (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: isRed ? "rgba(255,138,138,0.15)" : "var(--card-bg)", color: isRed ? "var(--accent-rose)" : "var(--text-muted)" }}>
+                            style={{ background: isRed ? "rgba(235, 62, 64, 0.15)" : "var(--card-bg)", color: isRed ? "var(--accent-rose)" : "var(--text-muted)" }}>
                             {t.status === "BLOCKED" ? "BLOQUEADA" : "VENCIDA"}
                           </span>
                         )}
                         {isManaged && t.status === "BLOCKED" && (
                           <span className="text-xs px-2 py-0.5 rounded-full font-medium"
-                            style={{ background: "rgba(255,138,138,0.15)", color: "var(--accent-rose)" }}>
+                            style={{ background: "rgba(235, 62, 64, 0.15)", color: "var(--accent-rose)" }}>
                             SIGUE BLOQUEADA
                           </span>
                         )}

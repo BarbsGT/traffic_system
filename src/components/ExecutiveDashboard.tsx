@@ -34,10 +34,10 @@ interface AlertTask {
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: "#ffd166",
-  IN_PROGRESS: "#ffb4aa",
+  IN_PROGRESS: "#EB3E40",
   REVIEW: "#8fa3ff",
   COMPLETED: "#7dd87d",
-  BLOCKED: "#ff8a8a",
+  BLOCKED: "#EB3E40",
   BACKLOG: "#8a8a8a",
 };
 
@@ -241,7 +241,7 @@ export function ExecutiveDashboard() {
       metric: `${activeTrend}% del total`,
       icon: <BarChart3 size={20} />,
       color: "var(--accent-cyan)",
-      bg: "rgba(255,180,170,0.1)",
+      bg: "rgba(235, 62, 64, 0.1)",
       trend: activeTrend,
     },
     {
@@ -250,7 +250,7 @@ export function ExecutiveDashboard() {
       metric: "Requieren atención",
       icon: <AlertTriangle size={20} />,
       color: "var(--accent-rose)",
-      bg: "rgba(255,138,138,0.1)",
+      bg: "rgba(235, 62, 64, 0.1)",
       trend: -blockedCount,
     },
     {
@@ -460,7 +460,7 @@ export function ExecutiveDashboard() {
                         className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium"
                         style={{
                           background: isOver
-                            ? "rgba(255,138,138,0.15)"
+                            ? "rgba(235, 62, 64, 0.15)"
                             : "rgba(125,216,125,0.15)",
                           color: isOver
                             ? "var(--accent-rose)"
@@ -501,8 +501,8 @@ export function ExecutiveDashboard() {
                     <div
                       className="mt-1.5 p-2 rounded-lg text-[11px]"
                       style={{
-                        background: "rgba(255,138,138,0.08)",
-                        border: "1px solid rgba(255,138,138,0.15)",
+                        background: "rgba(235, 62, 64, 0.08)",
+                        border: "1px solid rgba(235, 62, 64, 0.15)",
                       }}
                     >
                       <div className="flex items-center gap-1 mb-1" style={{ color: "var(--accent-rose)" }}>
@@ -556,11 +556,11 @@ export function ExecutiveDashboard() {
                     className="p-3 rounded-lg"
                     style={{
                       background: isUrgent
-                        ? "rgba(255,138,138,0.08)"
+                        ? "rgba(235, 62, 64, 0.08)"
                         : "var(--accordion-bg)",
                       border: `1px solid ${
                         isUrgent
-                          ? "rgba(255,138,138,0.2)"
+                          ? "rgba(235, 62, 64, 0.2)"
                           : "var(--border-light)"
                       }`,
                     }}

@@ -6,10 +6,8 @@ import { ArrowRight, BarChart3, FolderKanban, CheckSquare, Shield } from "lucide
 export default function HomePage() {
   return (
     <div className="flex min-h-screen flex-col" style={{ background: "var(--background)" }}>
-      <header className="flex items-center justify-between px-8 py-4">
-        <span className="text-xl font-bold" style={{ color: "var(--accent-cyan)" }}>
-          AGENCYGRID
-        </span>
+<header className="flex items-center justify-between px-8 py-4">
+        <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 34, width: "auto" }} />
         <div className="flex gap-4">
           <Link
             href="/login"
@@ -23,17 +21,9 @@ export default function HomePage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 text-center">
         <div className="glass p-12 max-w-2xl animate-fadeIn">
-          <h1 className="text-5xl font-bold mb-3" style={{ color: "var(--text-primary)" }}>
-            AgencyGrid
+          <h1 className="mb-8 flex items-center justify-center">
+            <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 64, width: "auto" }} />
           </h1>
-          <p className="text-xl mb-8" style={{ color: "var(--accent-cyan)" }}>
-            Visibilidad 360° para tu agencia
-          </p>
-          <p className="mb-10 max-w-md mx-auto" style={{ color: "var(--text-secondary)" }}>
-            Gestiona múltiples cuentas, marcas, equipos y proyectos con trazabilidad total
-            de tiempo y costo por cliente.
-          </p>
-
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {[
               { icon: <BarChart3 size={24} />, label: "Dashboard" },
@@ -63,7 +53,7 @@ export default function HomePage() {
       </main>
 
       <footer className="py-4 text-center text-xs" style={{ color: "var(--text-muted)" }}>
-        Synapse Traffic System &copy; {new Date().getFullYear()}
+        <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 24, width: "auto" }} className="mx-auto" />
       </footer>
     </div>
   );

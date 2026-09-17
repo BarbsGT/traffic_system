@@ -61,10 +61,10 @@ export default function UsersPage() {
   ];
 
   const ROLE_STYLES: Record<string, { bg: string; text: string }> = {
-    SUPERADMIN: { bg: "rgba(255,138,138,0.15)", text: "var(--accent-rose)" },
+    SUPERADMIN: { bg: "rgba(235, 62, 64, 0.15)", text: "var(--accent-rose)" },
     SYSADMIN: { bg: "rgba(143,163,255,0.15)", text: "var(--accent-purple)" },
     DIRECTOR: { bg: "rgba(255,209,102,0.15)", text: "var(--accent-amber)" },
-    GERENTE: { bg: "rgba(255,180,170,0.15)", text: "var(--accent-cyan)" },
+    GERENTE: { bg: "rgba(235, 62, 64, 0.15)", text: "var(--accent-cyan)" },
     COLABORADOR: { bg: "rgba(125,216,125,0.15)", text: "var(--accent-green)" },
   };
 
@@ -472,7 +472,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-h-[70vh] overflow-y-auto pr-1">
       {error && (
-        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
+        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(235, 62, 64, 0.1)", color: "var(--accent-rose)" }}>
           {error}
         </div>
       )}
@@ -550,7 +550,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
               <div key={a.id} className="flex items-center gap-2">
                 <button type="button" onClick={() => toggleAccount(a.id)}
                   className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all flex-1"
-                  style={{ background: checked ? "rgba(255,180,170,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
+                  style={{ background: checked ? "rgba(235, 62, 64, 0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
                   <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
                     style={{ borderColor: checked ? "var(--accent-cyan)" : "var(--text-muted)" }}>
                     {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
@@ -581,7 +581,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
             return (
               <button key={t.id} type="button" onClick={() => toggleTeam(t.id)}
                 className="flex items-center gap-2 px-2 py-1 rounded text-xs transition-all"
-style={{ background: checked ? "rgba(255,180,170,0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
+style={{ background: checked ? "rgba(235, 62, 64, 0.12)" : "var(--accordion-bg)", border: `1px solid ${checked ? "var(--accent-cyan)" : "var(--border)"}` }}>
                   <span className="w-3.5 h-3.5 rounded border flex items-center justify-center"
                   style={{ borderColor: checked ? "var(--accent-cyan)" : "var(--text-muted)" }}>
                   {checked && <Check size={10} style={{ color: "var(--accent-cyan)" }} />}
@@ -653,7 +653,7 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       {error && (
-        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
+        <div className="px-3 py-2 rounded-lg text-xs" style={{ background: "rgba(235, 62, 64, 0.1)", color: "var(--accent-rose)" }}>
           {error}
         </div>
       )}

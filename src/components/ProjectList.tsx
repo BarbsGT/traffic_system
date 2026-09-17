@@ -64,7 +64,7 @@ export function ProjectList() {
                 <div className="flex items-center gap-2">
                   {isProjectOverdue(p) && (
                     <span className="inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full"
-                      style={{ background: "rgba(255,138,138,0.15)", color: "var(--accent-rose)" }}>
+                      style={{ background: "rgba(235, 62, 64, 0.15)", color: "var(--accent-rose)" }}>
                       <AlertTriangle size={11} className="mr-1" /> VENCIDO
                     </span>
                   )}

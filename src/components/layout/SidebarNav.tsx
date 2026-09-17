@@ -108,7 +108,7 @@ export function SidebarNav({ user, mobileOpen, onCloseMobile }: { user: { id: st
                 href={item.href}
                 className="flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm transition-all"
                 style={{
-                  background: active ? "rgba(255, 180, 170, 0.12)" : "transparent",
+                  background: active ? "rgba(235, 62, 64, 0.12)" : "transparent",
                   color: active ? "var(--accent-cyan)" : "var(--sidebar-text)",
                 }}
                 onMouseEnter={(e) => {

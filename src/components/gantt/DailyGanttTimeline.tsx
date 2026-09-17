@@ -31,10 +31,10 @@ const MILESTONE_STYLE: Record<MilestoneType, { bar: string; dot: string; label: 
 
 const TASK_STATUS_STYLE: Record<string, { label: string; color: string; bg: string }> = {
   PENDING: { label: "Pendiente", color: "var(--accent-amber)", bg: "rgba(255,209,102,0.15)" },
-  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(255,180,170,0.15)" },
+  IN_PROGRESS: { label: "En Progreso", color: "var(--accent-cyan)", bg: "rgba(235, 62, 64, 0.15)" },
   REVIEW: { label: "Revisión", color: "var(--accent-purple)", bg: "rgba(143,163,255,0.15)" },
   COMPLETED: { label: "Completado", color: "var(--accent-green)", bg: "rgba(125,216,125,0.15)" },
-  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(255,138,138,0.15)" },
+  BLOCKED: { label: "Bloqueado", color: "var(--accent-rose)", bg: "rgba(235, 62, 64, 0.15)" },
 };
 
 const STICKY_W = 572;
@@ -482,7 +482,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                       onClick={() => scrollToDayIndex(i)}
                       style={{
                         width: DAY_W,
-                        background: isToday ? "rgba(255,138,138,0.12)" : isWeekend ? "rgba(138,138,138,0.10)" : "transparent",
+                        background: isToday ? "rgba(235, 62, 64, 0.12)" : isWeekend ? "rgba(138,138,138,0.10)" : "transparent",
                       }}>
                       <span className="text-[9px] leading-none" style={{ color: isToday ? "var(--accent-rose)" : "var(--text-muted)", fontWeight: isToday ? 700 : 500 }}>
                         {d.getDate()}
@@ -545,7 +545,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                                 style={{
                                   left: i * DAY_W,
                                   width: DAY_W,
-                                  background: isToday ? "rgba(255,138,138,0.10)" : isWeekend ? "rgba(138,138,138,0.07)" : "transparent",
+                                  background: isToday ? "rgba(235, 62, 64, 0.10)" : isWeekend ? "rgba(138,138,138,0.07)" : "transparent",
                                   borderRight: "1px solid var(--border-light)",
                                 }} />
                             );
@@ -607,7 +607,7 @@ export function DailyGanttTimeline({ items, loading = false, error = null }: Pro
                                     style={{
                                       left: i * DAY_W,
                                       width: DAY_W,
-                                      background: isToday ? "rgba(255,138,138,0.10)" : isWeekend ? "rgba(138,138,138,0.07)" : "transparent",
+                                      background: isToday ? "rgba(235, 62, 64, 0.10)" : isWeekend ? "rgba(138,138,138,0.07)" : "transparent",
                                       borderRight: "1px solid var(--border-light)",
                                     }} />
                                 );

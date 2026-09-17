@@ -12,7 +12,7 @@ export function StrategicDashboard() {
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "ejecutivo", label: "Dashboard Ejecutivo" },
-    { key: "matriz", label: "Matriz de Tráfico" },
+    { key: "matriz", label: "Matriz de Producción" },
     { key: "gantt", label: "Gantt" },
   ];
 

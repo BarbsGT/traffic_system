@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid3X3, PanelLeftClose, PanelLeft } from "lucide-react";
+import { PanelLeftClose, PanelLeft } from "lucide-react";
 import { useTheme } from "@/components/ThemeProvider";
 
 interface SidebarHeaderProps {
@@ -22,29 +22,20 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
         className="flex items-center gap-2.5 px-4 h-full transition-all duration-300"
         style={{ width: collapsed ? "100%" : "auto", justifyContent: collapsed ? "center" : "flex-start" }}
       >
-        {/* Isotipo */}
+        {/* Isotipo (logo recortado, visible en modo colapsado) */}
         <div
-          className="relative flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-all duration-200"
+          className="relative flex items-center justify-center w-8 h-8 rounded-lg shrink-0 overflow-hidden transition-all duration-200"
           style={{
             background: isDark
-              ? "linear-gradient(135deg, rgba(255,180,170,0.15), rgba(255,180,170,0.08))"
-              : "linear-gradient(135deg, rgba(255,180,170,0.12), rgba(255,180,170,0.06))",
-            border: `1px solid ${isDark ? "rgba(255,180,170,0.3)" : "rgba(255,180,170,0.25)"}`,
-            boxShadow: isDark
-              ? "0 0 14px rgba(255,180,170,0.18), inset 0 1px 0 rgba(255,255,255,0.05)"
-              : "0 0 12px rgba(255,180,170,0.12), inset 0 1px 0 rgba(255,255,255,0.05)",
+              ? "linear-gradient(135deg, rgba(235, 62, 64, 0.15), rgba(235, 62, 64, 0.08))"
+              : "linear-gradient(135deg, rgba(235, 62, 64, 0.12), rgba(235, 62, 64, 0.06))",
+            border: `1px solid ${isDark ? "rgba(235, 62, 64, 0.3)" : "rgba(235, 62, 64, 0.25)"}`,
           }}
         >
-          <Grid3X3
-            size={16}
-            style={{
-              color: isDark ? "#ffb4aa" : "#ffb4aa",
-              filter: isDark ? "drop-shadow(0 0 4px rgba(255,180,170,0.4))" : "none",
-            }}
-          />
+          <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
         </div>
 
-        {/* Brand Text */}
+{/* Brand Text */}
         <div
           className="flex items-center gap-1.5 transition-all duration-300 overflow-hidden whitespace-nowrap"
           style={{
@@ -52,27 +43,7 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
             width: collapsed ? 0 : "auto",
           }}
         >
-          <span
-            className="text-sm font-extrabold tracking-tight"
-            style={{ color: isDark ? "#e2e2e2" : "#e2e2e2" }}
-          >
-            AGENCY
-          </span>
-          <span
-            className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-[#ffb4aa] to-[#8fa3ff] bg-clip-text text-transparent"
-          >
-            GRID
-          </span>
-          <span
-            className="text-[9px] font-bold px-1 py-0.5 rounded ml-0.5"
-            style={{
-              background: isDark ? "rgba(255,180,170,0.15)" : "rgba(255,180,170,0.1)",
-              color: isDark ? "#ffb4aa" : "#ffb4aa",
-              border: `1px solid ${isDark ? "rgba(255,180,170,0.3)" : "rgba(255,180,170,0.2)"}`,
-            }}
-          >
-            PRO
-          </span>
+          <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 26, width: "auto", borderRadius: 4 }} />
         </div>
       </div>
 

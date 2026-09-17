@@ -64,23 +64,23 @@ const TASK_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"];
 
 const PRIORITY_STYLE: Record<string, { bg: string; text: string }> = {
   LOW: { bg: "rgba(138,138,138,0.15)", text: "var(--text-secondary)" },
-  MEDIUM: { bg: "rgba(255,180,170,0.12)", text: "var(--accent-cyan)" },
+  MEDIUM: { bg: "rgba(235, 62, 64, 0.12)", text: "var(--accent-cyan)" },
   HIGH: { bg: "rgba(255,209,102,0.15)", text: "var(--accent-amber)" },
-  URGENT: { bg: "rgba(255,138,138,0.15)", text: "var(--accent-rose)" },
+  URGENT: { bg: "rgba(235, 62, 64, 0.15)", text: "var(--accent-rose)" },
 };
 
 const TASK_STATUS_STYLE: Record<string, { bg: string; text: string }> = {
   PENDING: { bg: "rgba(255,209,102,0.22)", text: "var(--accent-amber)" },
-  IN_PROGRESS: { bg: "rgba(255,180,170,0.22)", text: "var(--accent-cyan)" },
+  IN_PROGRESS: { bg: "rgba(235, 62, 64, 0.22)", text: "var(--accent-cyan)" },
   REVIEW: { bg: "rgba(143,163,255,0.22)", text: "var(--accent-purple)" },
   COMPLETED: { bg: "rgba(125,216,125,0.22)", text: "var(--accent-green)" },
-  BLOCKED: { bg: "rgba(255,138,138,0.22)", text: "var(--accent-rose)" },
+  BLOCKED: { bg: "rgba(235, 62, 64, 0.22)", text: "var(--accent-rose)" },
 };
 
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   Gold: { bg: "rgba(255,209,102,0.15)", text: "#ffd166" },
   Silver: { bg: "rgba(138,138,138,0.2)", text: "#8a8a8a" },
-  Bronze: { bg: "rgba(255,180,170,0.12)", text: "#ffb4aa" },
+  Bronze: { bg: "rgba(235, 62, 64, 0.12)", text: "#EB3E40" },
 };
 
 const AREA_COLORS: Record<string, string> = {
@@ -609,7 +609,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
             <button
               onClick={(e) => { e.stopPropagation(); if (!expandedRows.has(row.id)) toggleExpand(row.id); }}
               className="px-1.5 py-0.5 rounded-full text-[9px] font-bold leading-none inline-flex items-center gap-0.5 hover:opacity-80 transition-all"
-              style={{ background: "rgba(255,138,138,0.18)", color: "var(--accent-rose)" }}
+              style={{ background: "rgba(235, 62, 64, 0.18)", color: "var(--accent-rose)" }}
               title="Tareas en alerta (vencidas o bloqueadas)">
               <Lock size={9} /> {blocked} ALERTA{blocked > 1 ? "S" : ""}
             </button>
@@ -647,7 +647,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
         {info.label !== "—" && (
           <span className={`px-1 py-0.5 rounded text-[9px] font-semibold leading-none ${isOverdue ? "" : ""}`}
             style={{
-              background: isOverdue ? "rgba(255,138,138,0.15)" : "rgba(138,138,138,0.15)",
+              background: isOverdue ? "rgba(235, 62, 64, 0.15)" : "rgba(138,138,138,0.15)",
               color: isOverdue ? "rgb(244,63,94)" : "var(--text-muted)",
             }}>
             {info.label}
@@ -756,7 +756,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
       return (
         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
           style={{
-            background: isRed ? "rgba(255,138,138,0.15)" : "var(--card-bg)",
+            background: isRed ? "rgba(235, 62, 64, 0.15)" : "var(--card-bg)",
             color: isRed ? "rgb(244,63,94)" : "var(--text-muted)",
           }}>
           {strVal || "—"}
@@ -1016,7 +1016,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                 const assignee = profiles.find((p) => p.id === task.assignee_id);
                                 const isRedAlert = isTaskRedAlert(task.status, row);
                                 const statusStyle = isRedAlert
-                                  ? { bg: "rgba(255,138,138,0.32)", text: "var(--accent-rose)" }
+                                  ? { bg: "rgba(235, 62, 64, 0.32)", text: "var(--accent-rose)" }
                                   : (TASK_STATUS_STYLE[task.status] || { bg: "var(--card-bg)", text: "var(--text-muted)" });
                                 const priorityStyle = PRIORITY_STYLE[task.priority] || { bg: "var(--divider)", text: "var(--text-muted)" };
                                 return (
@@ -1085,7 +1085,7 @@ export function UATrafficMatrix({ accountId, disableSearch = false }: Props) {
                                           </span>
                                           {isRedAlert && (
                                             <span className="px-1.5 py-0.5 rounded text-[9px] font-bold whitespace-nowrap"
-                                              style={{ background: "rgba(255,138,138,0.18)", color: "var(--accent-rose)" }}>
+                                              style={{ background: "rgba(235, 62, 64, 0.18)", color: "var(--accent-rose)" }}>
                                               <Lock size={9} className="inline mr-0.5 -mt-0.5" /> {task.status === "BLOCKED" ? "BLOQUEADA" : "ALERTA"}
                                             </span>
                                           )}

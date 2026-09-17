@@ -125,18 +125,18 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg-primary)" }}>
       <div className="glass p-10 w-full max-w-sm animate-fadeIn text-center">
-        <h1 className="text-3xl font-bold mb-1" style={{ color: "var(--text-primary)" }}>
-          AgencyGrid
+        <h1 className="flex items-center justify-center mb-1">
+          <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 40, width: "auto" }} />
         </h1>
         <p className="text-sm mb-8" style={{ color: "var(--accent-cyan)" }}>
-          Visibilidad 360°
+          Acceso tipo agencia
         </p>
 
         {/* ===== LOGIN VIEW ===== */}
         {view === "login" && (
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
+              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(235, 62, 64, 0.1)", color: "var(--accent-rose)" }}>
                 {error}
               </div>
             )}
@@ -229,7 +229,7 @@ export default function LoginPage() {
             </p>
 
             {forgotError && (
-              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
+              <div className="px-3 py-2 rounded-lg text-xs text-left" style={{ background: "rgba(235, 62, 64, 0.1)", color: "var(--accent-rose)" }}>
                 {forgotError}
               </div>
             )}
@@ -297,7 +297,7 @@ export default function LoginPage() {
         )}
 
         <p className="text-[11px] mt-6" style={{ color: "var(--text-muted)" }}>
-          AgencyGrid — Grupo Lo Bueno
+          <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 20, width: "auto" }} className="mx-auto" />
         </p>
       </div>
     </div>

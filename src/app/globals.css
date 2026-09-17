@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* =============================================
-   AgencyGrid — Design System "Trafico"
+   Ogilvy — Design System
    Dark-only. Mismas variables de API (no rompe
    componentes), nuevos valores + clases nuevas.
    ============================================= */
@@ -27,16 +27,16 @@
   --glass-bg: #1b1b1b;
 
   /* Acentos */
-  --accent-cyan: #ffb4aa;
+  --accent-cyan: #EB3E40;
   --accent-purple: #8fa3ff;
   --accent-green: #7dd87d;
   --accent-amber: #ffd166;
-  --accent-rose: #ff8a8a;
+  --accent-rose: #EB3E40;
   --accent-blue: #8fa3ff;
 
-  /* Primary (Trafico) */
-  --primary: #ffb4aa;
-  --primary-fg: #690003;
+  /* Primary */
+  --primary: #EB3E40;
+  --primary-fg: #ffffff;
   --primary-ghost: #58413e;
 
   /* Tags / pills de estado */
@@ -46,8 +46,8 @@
   --tag-blue-text: #8fa3ff;
   --tag-amber-bg: rgba(255, 209, 102, 0.15);
   --tag-amber-text: #ffd166;
-  --tag-rose-bg: rgba(255, 138, 138, 0.15);
-  --tag-rose-text: #ff8a8a;
+  --tag-rose-bg: rgba(235, 62, 64, 0.15);
+  --tag-rose-text: #EB3E40;
   --tag-purple-bg: rgba(143, 163, 255, 0.15);
   --tag-purple-text: #8fa3ff;
 
@@ -89,15 +89,15 @@
   --border-light: #2a2a2a;
   --glass-bg: #1b1b1b;
 
-  --accent-cyan: #ffb4aa;
+  --accent-cyan: #EB3E40;
   --accent-purple: #8fa3ff;
   --accent-green: #7dd87d;
   --accent-amber: #ffd166;
-  --accent-rose: #ff8a8a;
+  --accent-rose: #EB3E40;
   --accent-blue: #8fa3ff;
 
-  --primary: #ffb4aa;
-  --primary-fg: #690003;
+  --primary: #EB3E40;
+  --primary-fg: #ffffff;
   --primary-ghost: #58413e;
 
   --tag-green-bg: rgba(125, 216, 125, 0.15);
@@ -106,8 +106,8 @@
   --tag-blue-text: #8fa3ff;
   --tag-amber-bg: rgba(255, 209, 102, 0.15);
   --tag-amber-text: #ffd166;
-  --tag-rose-bg: rgba(255, 138, 138, 0.15);
-  --tag-rose-text: #ff8a8a;
+  --tag-rose-bg: rgba(235, 62, 64, 0.15);
+  --tag-rose-text: #EB3E40;
   --tag-purple-bg: rgba(143, 163, 255, 0.15);
   --tag-purple-text: #8fa3ff;
 
@@ -167,7 +167,7 @@ h1, h2, h3 {
 }
 
 /* =============================================
-   Design System (Trafico) — clases globales
+   Design System — clases globales
    ============================================= */
 .card {
   background: #1b1b1b;
@@ -192,7 +192,7 @@ h1, h2, h3 {
   cursor: not-allowed;
 }
 .btn-primary {
-  background: #ffb4aa;
+  background: #EB3E40;
   color: #690003;
 }
 .btn-dark {
@@ -219,7 +219,7 @@ h1, h2, h3 {
   font-size: 16px;
 }
 .input:focus {
-  border-color: #ffb4aa;
+  border-color: #EB3E40;
   outline: none;
 }
 .input::placeholder {
@@ -247,9 +247,9 @@ h1, h2, h3 {
   text-transform: uppercase;
 }
 .pill-primary {
-  background: rgba(255, 180, 170, 0.15);
-  border: 1px solid #ffb4aa;
-  color: #ffb4aa;
+  background: rgba(235, 62, 64, 0.15);
+  border: 1px solid #EB3E40;
+  color: #EB3E40;
 }
 .pill-muted {
   background: #1b1b1b;

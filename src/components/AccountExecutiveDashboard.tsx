@@ -189,7 +189,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
           <div
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
             style={{
-              background: healthPct >= 50 ? "rgba(125,216,125,0.12)" : "rgba(255,138,138,0.12)",
+              background: healthPct >= 50 ? "rgba(125,216,125,0.12)" : "rgba(235, 62, 64, 0.12)",
               color: healthPct >= 50 ? "var(--accent-green)" : "var(--accent-rose)",
             }}
           >
@@ -199,7 +199,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
           {overdueCount > 0 && (
             <div
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold"
-              style={{ background: "rgba(255,138,138,0.12)", color: "var(--accent-rose)" }}
+              style={{ background: "rgba(235, 62, 64, 0.12)", color: "var(--accent-rose)" }}
             >
               ⚠️ {overdueCount} vencidos
             </div>
@@ -244,7 +244,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
             ${budgetAtRisk.toLocaleString("es")}
           </p>
           {budgetAtRisk > 0 && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: "rgba(255,138,138,0.1)", color: "var(--accent-rose)" }}>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: "rgba(235, 62, 64, 0.1)", color: "var(--accent-rose)" }}>
               💡 ${budgetAtRisk.toLocaleString("es")} retenidos en espera de aprobación
             </div>
           )}
@@ -434,7 +434,7 @@ export function AccountExecutiveDashboard({ accountId, accountName }: Props) {
                 <div
                   key={p.id}
                   className="flex items-center justify-between px-3 py-2 rounded-lg text-xs"
-                  style={{ background: "rgba(255,138,138,0.06)" }}
+                  style={{ background: "rgba(235, 62, 64, 0.06)" }}
                 >
                   <div className="flex-1 min-w-0">
                     <span className="font-medium block truncate" style={{ color: "var(--text-primary)" }}>{p.project_name}</span>

@@ -27,8 +27,8 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgencyGrid — Visibilidad 360° para tu agencia",
-  description: "AgencyGrid — Web App para agencias de publicidad",
+  title: "Ogilvy",
+  description: "Ogilvy — Web App para agencias de publicidad",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

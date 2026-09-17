@@ -33,7 +33,7 @@ export default function GuiasPage() {
                 onClick={() => setActive(s.id)}
                 className="text-left px-3 py-2 rounded-lg text-sm transition-all"
                 style={{
-                  background: active === s.id ? "rgba(255, 180, 170, 0.12)" : "transparent",
+                  background: active === s.id ? "rgba(235, 62, 64, 0.12)" : "transparent",
                   color: active === s.id ? "var(--accent-cyan)" : "var(--text-secondary)",
                 }}
               >
@@ -62,17 +62,17 @@ export default function GuiasPage() {
 function IntroContent() {
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
-        Bienvenido a AgencyGrid
+      <h2 className="flex items-center gap-2 text-xl font-bold mb-4" style={{ color: "var(--text-primary)" }}>
+        Bienvenido a <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: 28, width: "auto" }} />
       </h2>
       <p className="mb-4" style={{ color: "var(--text-secondary)" }}>
-        AgencyGrid es una Web App para agencias de publicidad. Te permite administrar
+        Esta es una Web App para agencias de publicidad. Te permite administrar
         múltiples cuentas, marcas, equipos y proyectos con trazabilidad total.
       </p>
       <div className="glass p-6 mb-4">
         <h3 className="font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Flujo de Trabajo</h3>
         <div className="flex items-center gap-2 flex-wrap text-sm" style={{ color: "var(--text-secondary)" }}>
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(255,180,170,0.15)", color: "var(--accent-cyan)" }}>Agencia</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(235, 62, 64, 0.15)", color: "var(--accent-cyan)" }}>Agencia</span>
           <ArrowRight size={14} />
           <span className="px-3 py-1 rounded-full" style={{ background: "rgba(143,163,255,0.15)", color: "var(--accent-purple)" }}>Cuenta</span>
           <ArrowRight size={14} />
@@ -80,7 +80,7 @@ function IntroContent() {
           <ArrowRight size={14} />
           <span className="px-3 py-1 rounded-full" style={{ background: "rgba(255,209,102,0.15)", color: "var(--accent-amber)" }}>Proyecto</span>
           <ArrowRight size={14} />
-          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(255,138,138,0.15)", color: "var(--accent-rose)" }}>Tarea</span>
+          <span className="px-3 py-1 rounded-full" style={{ background: "rgba(235, 62, 64, 0.15)", color: "var(--accent-rose)" }}>Tarea</span>
         </div>
       </div>
     </div>
@@ -119,7 +119,7 @@ function RolesContent() {
     {
       role: "SUPERADMIN",
       color: "var(--accent-rose)",
-      bg: "rgba(255,138,138,0.15)",
+      bg: "rgba(235, 62, 64, 0.15)",
       desc: "Acceso total al sistema. Puede crear, editar y eliminar proyectos, tareas, usuarios, directores de cuenta, cuentas, agencias y equipos.",
     },
     {
@@ -137,7 +137,7 @@ function RolesContent() {
     {
       role: "GERENTE",
       color: "var(--accent-cyan)",
-      bg: "rgba(255,180,170,0.15)",
+      bg: "rgba(235, 62, 64, 0.15)",
       desc: "Apoya al director dentro de sus cuentas asignadas. Crea y edita proyectos y tareas de sus cuentas y da seguimiento al equipo. No gestiona catálogos globales.",
     },
     {

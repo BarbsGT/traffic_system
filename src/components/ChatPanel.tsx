@@ -148,7 +148,7 @@ export function ChatPanel({ projectId }: { projectId: string }) {
         {displayedMessages.map((m) => (
           <div key={m.id} className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: "rgba(255,180,170,0.2)", color: "var(--accent-cyan)" }}>
+              style={{ background: "rgba(235, 62, 64, 0.2)", color: "var(--accent-cyan)" }}>
               {m.full_name?.charAt(0) || "?"}
             </div>
             <div>

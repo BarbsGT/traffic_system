@@ -7,17 +7,19 @@ import { Modal } from "@/components/ui/Modal";
 import { Plus, Edit2, Trash2, X, Upload, FileDown } from "lucide-react";
 import { parseCSV, downloadCSV, csvToBool, type CsvRow } from "@/utils/csv";
 
-type Tab = "agencies" | "accounts" | "teams" | "directors" | "areas" | "assignments" | "account-assignments";
+type Tab = "agencies" | "accounts" | "teams" | "directors" | "areas" | "assignments" | "account-assignments" | "countries" | "brands";
 
 interface Area { id: string; name: string; code: string; is_active: boolean }
 interface Agency { id: string; name: string; code: string; is_active: boolean }
 interface Account { id: string; name: string; code: string; is_active: boolean }
+interface Country { id: string; name: string; code: string; is_active: boolean }
+interface Brand { id: string; name: string; account_id: string | null; code: string; is_active: boolean }
 interface Team { id: string; name: string; code: string; is_active: boolean; director_id: string | null }
 interface Director { id: string; profile_id: string; account_id: string | null; is_active: boolean; name?: string }
 interface TeamAssignment { team_id: string; team_name: string; account_ids: string[] }
 interface AccountAssignment { account_id: string; account_name: string; agency_ids: string[] }
 
-type CatalogItem = Area | Agency | Account | Team | Director;
+type CatalogItem = Area | Agency | Account | Country | Brand | Team | Director;
 type CatalogFormData = Record<string, unknown>;
 
 export default function CatalogosPage() {
@@ -25,6 +27,8 @@ export default function CatalogosPage() {
   const [areas, setAreas] = useState<Area[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
   const [directors, setDirectors] = useState<Director[]>([]);
   const [profiles, setProfiles] = useState<{ id: string; full_name: string }[]>([]);
@@ -42,10 +46,12 @@ export default function CatalogosPage() {
   const supabase = createClient();
 
   const fetchData = useCallback(async () => {
-    const [ar, a, ac, t, d, p] = await Promise.all([
+    const [ar, a, ac, c, b, t, d, p] = await Promise.all([
       supabase.from("areas").select("*").order("name"),
       supabase.from("agencies").select("*").order("name"),
       supabase.from("accounts").select("*").order("name"),
+      supabase.from("countries").select("*").order("name"),
+      supabase.from("brands").select("*").order("name"),
       supabase.from("teams").select("*").order("name"),
       supabase.from("directors").select("*"),
       supabase.from("profiles").select("id, full_name").order("full_name"),
@@ -53,6 +59,8 @@ export default function CatalogosPage() {
     if (ar.data) setAreas(ar.data);
     if (a.data) setAgencies(a.data);
     if (ac.data) setAccounts(ac.data);
+    if (c.data) setCountries(c.data);
+    if (b.data) setBrands(b.data);
     if (t.data) setTeams(t.data);
     if (d.data) setDirectors(d.data);
     if (p.data) setProfiles(p.data);
@@ -128,13 +136,17 @@ export default function CatalogosPage() {
     if (t === "areas") return "areas";
     if (t === "agencies") return "agencies";
     if (t === "accounts") return "accounts";
+    if (t === "countries") return "countries";
+    if (t === "brands") return "brands";
     if (t === "teams") return "teams";
     return "directors";
   };
 
   const tabs: { key: Tab; label: string }[] = [
+    { key: "countries", label: "Países" },
     { key: "agencies", label: "Agencias" },
     { key: "accounts", label: "Cuentas" },
+    { key: "brands", label: "Marcas" },
     { key: "account-assignments", label: "Asignación Cuentas" },
     { key: "teams", label: "Equipos" },
     { key: "assignments", label: "Asignación Equipos" },
@@ -142,7 +154,7 @@ export default function CatalogosPage() {
     { key: "directors", label: "Directores de Cuenta" },
   ];
 
-  const currentData = tab === "areas" ? areas : tab === "agencies" ? agencies : tab === "accounts" ? accounts : tab === "teams" ? teams : tab === "assignments" ? [] : tab === "account-assignments" ? [] : directors;
+  const currentData = tab === "areas" ? areas : tab === "agencies" ? agencies : tab === "accounts" ? accounts : tab === "countries" ? countries : tab === "brands" ? brands : tab === "teams" ? teams : tab === "assignments" ? [] : tab === "account-assignments" ? [] : directors;
   const totalPages = Math.max(1, Math.ceil(currentData.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages - 1);
   const pageStart = currentPage * PAGE_SIZE;
@@ -150,6 +162,8 @@ export default function CatalogosPage() {
   const visibleAreas = areas.slice(pageStart, pageEnd);
   const visibleAgencies = agencies.slice(pageStart, pageEnd);
   const visibleAccounts = accounts.slice(pageStart, pageEnd);
+  const visibleCountries = countries.slice(pageStart, pageEnd);
+  const visibleBrands = brands.slice(pageStart, pageEnd);
   const visibleTeams = teams.slice(pageStart, pageEnd);
   const visibleDirectors = directors.slice(pageStart, pageEnd);
 
@@ -198,6 +212,8 @@ export default function CatalogosPage() {
               {tab === "areas" && <Headers cols={["Nombre", "Código", "Activo"]} />}
               {tab === "agencies" && <Headers cols={["Nombre", "Código", "Activo"]} />}
               {tab === "accounts" && <Headers cols={["Nombre", "Código", "Activo"]} />}
+              {tab === "countries" && <Headers cols={["Nombre", "Código", "Activo"]} />}
+              {tab === "brands" && <Headers cols={["Nombre", "Cuenta", "Código", "Activo"]} />}
               {tab === "teams" && <Headers cols={["Nombre", "Código", "Director", "Activo"]} />}
               {tab === "directors" && <Headers cols={["Perfil", "Cuenta / Marca", "Activo"]} />}
               {tab === "assignments" && <Headers cols={["Equipo", "Cuentas Asignadas", "Acción"]} />}
@@ -225,6 +241,23 @@ export default function CatalogosPage() {
             {tab === "accounts" && visibleAccounts.map((item) => (
               <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "accounts", id: item.id, name: item.name })}>
                 <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
+                <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{item.code}</td>
+                <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
+              </Row>
+            ))}
+            {tab === "countries" && visibleCountries.map((item) => (
+              <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "countries", id: item.id, name: item.name })}>
+                <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
+                <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{item.code}</td>
+                <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
+              </Row>
+            ))}
+            {tab === "brands" && visibleBrands.map((item) => (
+              <Row key={item.id} item={item} onEdit={openEdit} onDelete={() => setConfirmDelete({ table: "brands", id: item.id, name: item.name })}>
+                <td className="p-3 text-sm" style={{ color: "var(--text-primary)" }}>{item.name}</td>
+                <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  {accounts.find((acc) => acc.id === item.account_id)?.name || "-"}
+                </td>
                 <td className="p-3 text-sm" style={{ color: "var(--text-secondary)" }}>{item.code}</td>
                 <td className="p-3 text-sm">{item.is_active ? "✓" : "✗"}</td>
               </Row>
@@ -285,7 +318,7 @@ export default function CatalogosPage() {
               </Row>
             ))}
             {(() => {
-              const colSpan = tab === "areas" ? 4 : tab === "agencies" ? 4 : tab === "accounts" ? 4 : tab === "teams" ? 5 : tab === "assignments" ? 3 : tab === "account-assignments" ? 3 : 4;
+              const colSpan = tab === "areas" ? 4 : tab === "agencies" ? 4 : tab === "accounts" ? 4 : tab === "countries" ? 4 : tab === "brands" ? 5 : tab === "teams" ? 5 : tab === "assignments" ? 3 : tab === "account-assignments" ? 3 : 4;
               return currentData.length === 0 ? (
                 <tr>
                   <td colSpan={colSpan} className="p-6 text-center text-sm" style={{ color: "var(--text-muted)" }}>
@@ -325,6 +358,8 @@ export default function CatalogosPage() {
           areas={areas}
           agencies={agencies}
           accounts={accounts}
+          countries={countries}
+          brands={brands}
           teams={teams}
           profiles={profiles}
           onDone={() => { setShowModal(false); setEditing(null); fetchData(); }}
@@ -390,6 +425,8 @@ const TEMPLATES: Record<string, { headers: string[]; example: string[] }> = {
   areas: { headers: ["name", "code", "active"], example: ["Área Creativa", "CREA", "1"] },
   agencies: { headers: ["name", "code", "active"], example: ["Agencia Central", "AGC", "1"] },
   accounts: { headers: ["name", "code", "active"], example: ["Cuenta Coca-Cola", "CCL", "1"] },
+  countries: { headers: ["name", "code", "active"], example: ["Colombia", "COL", "1"] },
+  brands: { headers: ["name", "account", "code", "active"], example: ["KitKat", "Nestlé", "KT", "1"] },
   teams: { headers: ["name", "code", "director", "active"], example: ["Equipo Digital", "EQD", "Maria Directora", "1"] },
   directors: { headers: ["profile", "account", "active"], example: ["Maria Directora", "Cuenta Coca-Cola", "1"] },
 };
@@ -398,6 +435,8 @@ function getTableNameForBulk(t: string): string {
   if (t === "areas") return "areas";
   if (t === "agencies") return "agencies";
   if (t === "accounts") return "accounts";
+  if (t === "countries") return "countries";
+  if (t === "brands") return "brands";
   if (t === "teams") return "teams";
   return "directors";
 }
@@ -447,6 +486,12 @@ function BulkCatalogForm({ tab, agencies, accounts, profiles }: {
         rows.push({ name, code, is_active: active });
       } else if (tab === "accounts") {
         rows.push({ name, code, is_active: active });
+      } else if (tab === "countries") {
+        rows.push({ name, code, is_active: active });
+      } else if (tab === "brands") {
+        const account = findByName(accounts, (row.account || "").trim());
+        if (!account) { errors.push({ row: rowNumber, error: `Cuenta "${row.account || ""}" no encontrada` }); return; }
+        rows.push({ name, account_id: account.id, code, is_active: active });
       } else if (tab === "teams") {
         const account = findByName(accounts, (row.account || "").trim());
         if (!account) { errors.push({ row: rowNumber, error: `Cuenta "${row.account || ""}" no encontrada` }); return; }
@@ -579,8 +624,8 @@ function Row({ item, onEdit, onDelete, children }: { item: unknown; onEdit: (ite
   );
 }
 
-function CatalogForm({ tab, editing, areas, agencies, accounts, teams, profiles, onDone }: {
-  tab: string; editing: unknown; areas: Area[]; agencies: Agency[]; accounts: Account[]; teams: Team[]; profiles: { id: string; full_name: string }[]; onDone: () => void;
+function CatalogForm({ tab, editing, areas, agencies, accounts, countries, brands, teams, profiles, onDone }: {
+  tab: string; editing: unknown; areas: Area[]; agencies: Agency[]; accounts: Account[]; countries: Country[]; brands: Brand[]; teams: Team[]; profiles: { id: string; full_name: string }[]; onDone: () => void;
 }) {
   const supabase = createClient();
   const [saving, setSaving] = useState(false);
@@ -602,9 +647,11 @@ function CatalogForm({ tab, editing, areas, agencies, accounts, teams, profiles,
           tab === "areas" ? areas :
           tab === "agencies" ? agencies :
           tab === "accounts" ? accounts :
+          tab === "countries" ? countries :
+          tab === "brands" ? brands :
           tab === "teams" ? teams : null;
         if (source && source.some((x) => ("name" in x ? String(x.name).toLowerCase().trim() : "") === name)) {
-          const label = tab === "teams" ? "un equipo" : tab === "areas" ? "un área" : tab === "agencies" ? "una agencia" : "una cuenta";
+          const label = tab === "teams" ? "un equipo" : tab === "areas" ? "un área" : tab === "agencies" ? "una agencia" : tab === "countries" ? "un país" : tab === "brands" ? "una marca" : "una cuenta";
           alert(`Ya existe ${label} con el nombre "${data.name}".`);
           setSaving(false);
           return;
@@ -621,6 +668,12 @@ function CatalogForm({ tab, editing, areas, agencies, accounts, teams, profiles,
     } else if (tab === "accounts") {
       if (editId) { const r = await supabase.from("accounts").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
       else { const r = await supabase.from("accounts").insert({ name: data.name, code: data.code }); error = r.error; }
+    } else if (tab === "countries") {
+      if (editId) { const r = await supabase.from("countries").update({ name: data.name, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("countries").insert({ name: data.name, code: data.code }); error = r.error; }
+    } else if (tab === "brands") {
+      if (editId) { const r = await supabase.from("brands").update({ name: data.name, account_id: data.account_id || null, code: data.code, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
+      else { const r = await supabase.from("brands").insert({ name: data.name, account_id: data.account_id || null, code: data.code }); error = r.error; }
     } else if (tab === "teams") {
       if (editId) { const r = await supabase.from("teams").update({ name: data.name, code: data.code, director_id: data.director_id || null, is_active: data.is_active === "on" }).eq("id", editId); error = r.error; }
       else { const r = await supabase.from("teams").insert({ name: data.name, code: data.code, director_id: data.director_id || null }); error = r.error; }
@@ -652,6 +705,18 @@ function CatalogForm({ tab, editing, areas, agencies, accounts, teams, profiles,
       )}
 
       {/* accounts no tiene agencia obligatoria; se asigna en pestaña Asignación Cuentas */}
+
+      {tab === "brands" && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Cuenta</label>
+          <select name="account_id" defaultValue={String(editData?.account_id || "")}
+            className="rounded-lg px-3 py-2 text-sm outline-none"
+            style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
+            <option value="">Seleccionar cuenta...</option>
+            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        </div>
+      )}
 
       {tab === "teams" && (
         <>
