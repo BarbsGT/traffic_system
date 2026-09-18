@@ -17,25 +17,11 @@ export function SidebarHeader({ collapsed, onToggle }: SidebarHeaderProps) {
       className="flex items-center h-14 border-b shrink-0 overflow-hidden"
       style={{ borderColor: isDark ? "rgba(255,255,255,0.06)" : "var(--border)" }}
     >
-      {/* Isotipo + Brand */}
+      {/* Brand */}
       <div
         className="flex items-center gap-2.5 px-4 h-full transition-all duration-300"
         style={{ width: collapsed ? "100%" : "auto", justifyContent: collapsed ? "center" : "flex-start" }}
       >
-        {/* Isotipo (logo recortado, visible en modo colapsado) */}
-        <div
-          className="relative flex items-center justify-center w-8 h-8 rounded-lg shrink-0 overflow-hidden transition-all duration-200"
-          style={{
-            background: isDark
-              ? "linear-gradient(135deg, rgba(235, 62, 64, 0.15), rgba(235, 62, 64, 0.08))"
-              : "linear-gradient(135deg, rgba(235, 62, 64, 0.12), rgba(235, 62, 64, 0.06))",
-            border: `1px solid ${isDark ? "rgba(235, 62, 64, 0.3)" : "rgba(235, 62, 64, 0.25)"}`,
-          }}
-        >
-          <img src="/ogilvy-logo.png" alt="Ogilvy" style={{ height: "100%", width: "100%", objectFit: "cover" }} />
-        </div>
-
-{/* Brand Text */}
         <div
           className="flex items-center gap-1.5 transition-all duration-300 overflow-hidden whitespace-nowrap"
           style={{

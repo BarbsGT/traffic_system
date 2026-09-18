@@ -64,6 +64,7 @@ export default function UsersPage() {
     SUPERADMIN: { bg: "rgba(235, 62, 64, 0.15)", text: "var(--accent-rose)" },
     SYSADMIN: { bg: "rgba(143,163,255,0.15)", text: "var(--accent-purple)" },
     DIRECTOR: { bg: "rgba(255,209,102,0.15)", text: "var(--accent-amber)" },
+    EJECUTIVO: { bg: "rgba(235, 62, 64, 0.12)", text: "var(--accent-cyan)" },
     GERENTE: { bg: "rgba(235, 62, 64, 0.15)", text: "var(--accent-cyan)" },
     COLABORADOR: { bg: "rgba(125,216,125,0.15)", text: "var(--accent-green)" },
   };
@@ -225,7 +226,7 @@ export default function UsersPage() {
   );
 }
 
-const VALID_ROLES = ["COLABORADOR", "DIRECTOR", "GERENTE", "SYSADMIN", "SUPERADMIN"] as const;
+const VALID_ROLES = ["COLABORADOR", "EJECUTIVO", "DIRECTOR", "GERENTE", "SYSADMIN", "SUPERADMIN"] as const;
 const MIN_PASSWORD_LENGTH = 8;
 
 const BULK_TEMPLATE = [
@@ -503,6 +504,7 @@ function CreateUserForm({ profiles, onDone }: { profiles: Profile[]; onDone: () 
             className="rounded-lg px-3 py-2 text-sm outline-none"
             style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
             <option value="COLABORADOR">Colaborador</option>
+            <option value="EJECUTIVO">Ejecutivo de Cuenta</option>
             <option value="DIRECTOR">Director</option>
             <option value="GERENTE">Gerente</option>
             <option value="SYSADMIN">Sys Admin</option>
@@ -671,10 +673,11 @@ function UserEditForm({ profile, profiles, onDone }: { profile: Profile | null; 
       </div>
       <div className="flex flex-col gap-1">
         <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>Rol</label>
-        <select name="role" defaultValue={profile.role}
+      <select name="role" defaultValue={profile.role}
           className="rounded-lg px-3 py-2 text-sm outline-none"
           style={{ background: "var(--input-bg)", border: "1px solid var(--input-border)", color: "var(--text-primary)" }}>
           <option value="COLABORADOR">Colaborador</option>
+          <option value="EJECUTIVO">Ejecutivo de Cuenta</option>
           <option value="DIRECTOR">Director</option>
           <option value="GERENTE">Gerente</option>
           <option value="SYSADMIN">Sys Admin</option>

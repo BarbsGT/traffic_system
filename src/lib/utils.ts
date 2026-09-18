@@ -8,6 +8,7 @@ export const ROLE_LABELS: Record<string, string> = {
   SUPERADMIN: "Super Admin",
   SYSADMIN: "Sys Admin",
   DIRECTOR: "Director",
+  EJECUTIVO: "Ejecutivo de Cuenta",
   GERENTE: "Gerente",
   COLABORADOR: "Colaborador",
 };

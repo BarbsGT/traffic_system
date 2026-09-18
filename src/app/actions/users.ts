@@ -3,7 +3,7 @@
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createServerClient } from "@/utils/supabase/server";
 
-const VALID_ROLES = ["COLABORADOR", "DIRECTOR", "GERENTE", "SYSADMIN", "SUPERADMIN"] as const;
+const VALID_ROLES = ["COLABORADOR", "EJECUTIVO", "DIRECTOR", "GERENTE", "SYSADMIN", "SUPERADMIN"] as const;
 type Role = (typeof VALID_ROLES)[number];
 
 export interface AccountAssignmentInput {
